@@ -60,9 +60,7 @@ private:
 	
 	KammoGUI::SVGCanvas::ElementReference *knobBody_element;
 	KammoGUI::SVGCanvas::ElementReference *google_element;
-	KammoGUI::SVGCanvas::ElementReference *example_element;
 	KammoGUI::SVGCanvas::ElementReference *start_element;
-	KammoGUI::SVGCanvas::ElementReference *tutorial_element;
 
 	static void element_on_event(KammoGUI::SVGCanvas::SVGDocument *source, KammoGUI::SVGCanvas::ElementReference *e_ref,
 				     const KammoGUI::SVGCanvas::MotionEvent &event);

@@ -169,19 +169,6 @@ void LogoScreen::element_on_event(KammoGUI::SVGCanvas::SVGDocument *source,
 		} else if(e_ref == ctx->google_element) {
 			// show google+ community
 			KammoGUI::external_uri("https://plus.google.com/u/0/communities/117584425255812411008");
-		} else if(e_ref == ctx->example_element) {
-			// clear everything and prepare for start
-			Machine::prepare_baseline();
-			SatanProjectEntry::clear_satan_project();
-
-			// connect to localhost
-			RemoteInterface::Client::start_client("localhost", remote_interface_disconnected, failure_response);
-			
-			// load example and show main UI
-			static KammoGUI::UserEvent *ue = NULL;
-			KammoGUI::get_widget((KammoGUI::Widget **)&ue, "loadExampleSelected");
-			if(ue != NULL)
-				KammoGUI::EventHandler::trigger_user_event(ue);
 		} else if(e_ref == ctx->start_element) {
 			// clear everything and prepare for start
 			Machine::prepare_baseline();
@@ -195,9 +182,6 @@ void LogoScreen::element_on_event(KammoGUI::SVGCanvas::SVGDocument *source,
 			KammoGUI::get_widget((KammoGUI::Widget **)&ue, "showMainUIContainer");
 			if(ue != NULL)
 				KammoGUI::EventHandler::trigger_user_event(ue);
-		} else if(e_ref == ctx->tutorial_element) {
-			SATAN_DEBUG("  Tutorial Link, yeah\n");
-			KammoGUI::external_uri("http://youtu.be/9gI_gUIh3DY");
 		}
 	}
 }
@@ -227,12 +211,8 @@ static void ask_question(void *ignored) {
 LogoScreen::LogoScreen(KammoGUI::SVGCanvas *cnvs, std::string fname) : SVGDocument(fname, cnvs), logo_base_got(false) {
 	google_element = new KammoGUI::SVGCanvas::ElementReference(this, "google");
 	google_element->set_event_handler(element_on_event);
-	example_element = new KammoGUI::SVGCanvas::ElementReference(this, "example");
-	example_element->set_event_handler(element_on_event);
 	start_element = new KammoGUI::SVGCanvas::ElementReference(this, "start");
 	start_element->set_event_handler(element_on_event);
-	tutorial_element = new KammoGUI::SVGCanvas::ElementReference(this, "tutorial");
-	tutorial_element->set_event_handler(element_on_event);
 	knobBody_element = new KammoGUI::SVGCanvas::ElementReference(this, "knobBody");
 	knobBody_element->set_event_handler(element_on_event);
 	
@@ -253,7 +233,7 @@ KammoEventHandler_Declare(LogoScreenHandler,"logoScreen");
 virtual void on_init(KammoGUI::Widget *wid) {
 	if(wid->get_id() == "logoScreen") {
 		KammoGUI::SVGCanvas *cnvs = (KammoGUI::SVGCanvas *)wid;		
-		cnvs->set_bg_color(1.0, 1.0, 1.0);
+		cnvs->set_bg_color(1.0, 0.631373, 0.137254);
 		(void)new LogoScreen(cnvs, std::string(SVGLoader::get_svg_directory() + "/logoScreen.svg"));
 
 		// start up local VuKNOB server here

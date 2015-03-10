@@ -100,7 +100,7 @@ static void refresh_directory(std::string path) {
 	directories.push_back("/");
 
 	// also push a shortcut to the installation directory
-	directories.push_back("/BACK2SATAN");
+	directories.push_back("/BACK2VUKNOB");
 #endif	
 	while((ent = readdir(d)) != NULL) {
 		if(ent->d_type == DT_DIR) {
@@ -156,7 +156,7 @@ virtual void on_select_row(KammoGUI::Widget *widget, KammoGUI::List::iterator ro
 			0,
 			current_directory.find_last_of('/',  current_directory.size()));
 #ifdef ANDROID
-	} else if(file == "/BACK2SATAN") {
+	} else if(file == "/BACK2VUKNOB") {
 		new_path = KAMOFLAGE_ANDROID_ROOT_DIRECTORY;
 #endif
 	} else if(current_directory == "/") {

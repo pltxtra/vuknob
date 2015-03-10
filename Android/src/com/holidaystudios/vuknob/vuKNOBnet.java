@@ -55,7 +55,7 @@ import java.util.zip.*;
 import com.toolkits.kamoflage.Kamoflage;
 import com.toolkits.kamoflage.KamoflageActivity;
 
-public class VuKNOB extends KamoflageActivity
+public class vuKNOBnet extends KamoflageActivity
 	implements 
 	android.media.AudioManager.OnAudioFocusChangeListener
 {
@@ -145,7 +145,7 @@ public class VuKNOB extends KamoflageActivity
 		exceptionStack = (TextView) findViewById(R.id.exceptionStack);
 
 		Log.v("VuKNOB", "Bringing up VuKNOB - reading Kamoflage UI layout");
-		istream = this.getResources().openRawResource(R.raw.satanui);
+		istream = this.getResources().openRawResource(R.raw.vuknobui);
 
 		Log.v("VuKNOB", "Bringing up VuKNOB - request audio focus");
 		android.media.AudioManager audioManager = (AudioManager) getSystemService(this.AUDIO_SERVICE);

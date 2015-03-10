@@ -47,7 +47,7 @@ else
 
 endif # TARGET_ARCH_ABI == armeabi-v7a
 
-LOCAL_CFLAGS += -DLIBSVG_EXPAT -DCONFIG_DIR=\"/\" -Ijni/libexpat/ -Ijni/libexpat/expat/ -Ijni/libpng/ -Ijni/libjpeg/ -Ijni/libsvg/ -I../../asio-1.10.2/include -DHAVE_CONFIG_H -DHAVE_EXPAT_CONFIG_H -DKAMOFLAGE_ANDROID_ROOT_DIRECTORY=\"/data/data/com.holidaystudios.satan\" -Ijni/libkamoflage/ -Wall -I../../libvorbis_new/include/ -DDEFAULT_PROJECT_SAVE_PATH=\"/mnt/sdcard/Satan/Projects\" -DDEFAULT_SATAN_ROOT=\"/mnt/sdcard/Satan\" -DDEFAULT_EXPORT_PATH=\"/mnt/sdcard/Satan/Export\"  #-D__DO_TIME_MEASURE
+LOCAL_CFLAGS += -DLIBSVG_EXPAT -DCONFIG_DIR=\"/\" -Ijni/libexpat/ -Ijni/libexpat/expat/ -Ijni/libpng/ -Ijni/libjpeg/ -Ijni/libsvg/ -I../../asio-1.10.2/include -DHAVE_CONFIG_H -DHAVE_EXPAT_CONFIG_H -DKAMOFLAGE_ANDROID_ROOT_DIRECTORY=\"/data/data/com.holidaystudios.vuknob\" -Ijni/libkamoflage/ -Wall -I../../libvorbis_new/include/ -DDEFAULT_PROJECT_SAVE_PATH=\"/mnt/sdcard/vuknob/Projects\" -DDEFAULT_SATAN_ROOT=\"/mnt/sdcard/vuknob\" -DDEFAULT_EXPORT_PATH=\"/mnt/sdcard/vuknob/Export\"  #-D__DO_TIME_MEASURE
 LOCAL_CPPFLAGS += -DASIO_STANDALONE -std=c++11 
 
 # libjpeg stuff

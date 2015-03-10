@@ -102,7 +102,7 @@ echo "    public final static String DATE = \"timestamp$SECONDS_SINCE_EPOCH.file
 echo "}" >> src/com/holidaystudios/vuknob/AutogenDate.java
 echo "" >> src/com/holidaystudios/vuknob/AutogenDate.java
 
-touch src/com/holidaystudios/vuknob/VuKNOB.java
+touch src/com/holidaystudios/vuknob/vuKNOBnet.java
 
 # build native libraries, then run ant to build java stuff 'n create the .apk
 

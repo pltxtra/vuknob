@@ -24,3 +24,7 @@ proguard/
 
 # Log Files
 *.log
+Android/res/raw/nativefiletreearchive
+Android/src/com/holidaystudios/vuknob/AutogenDate.java
+Android/libs/
+Android/obj/

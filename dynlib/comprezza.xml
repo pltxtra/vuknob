@@ -1,0 +1,11 @@
+<machine hint="effect" >
+<name>comprezza</name>
+<input premix="true" dimension="0" channels="2">Stereo</input>
+<output dimension="0" channels="2">Stereo</output>
+
+<controller name="comp" type="float" min="-1.0" max="0.0" step="0.1" />
+<controller name="dry" type="float" min="0.0" max="1.0" step="0.1" />
+
+<controller name="decay" type="float" min="0.01" max="5.0" step="0.001" />
+
+</machine>

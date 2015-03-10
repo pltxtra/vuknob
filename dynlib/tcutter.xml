@@ -1,0 +1,18 @@
+<machine hint="effect" >
+<name>tcutter</name>
+
+<input dimension="midi" channels="1">midi</input>
+<input premix="true" dimension="0" channels="2">Stereo</input>
+<output dimension="0" channels="2">Stereo</output>
+
+<controller name="volume" type="float" min="0" max="2.0" step="0.01"/>
+
+<controller name="dry" type="float" min="0.0" max="1.0" step="0.01" />
+
+<controller name="ampAttack" type="float" min="0.01" max="5.0" step="0.01" />
+<controller name="ampHold" type="float" min="0.01" max="10.0" step="0.01" />
+<controller name="ampDecay" type="float" min="0.01" max="10.0" step="0.01" />
+<controller name="ampSustain" type="float" min="0.01" max="1.0" step="0.001" />
+<controller name="ampRelease" type="float" min="0.01" max="5.0" step="0.01" />
+
+</machine>

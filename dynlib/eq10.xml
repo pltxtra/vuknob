@@ -1,0 +1,17 @@
+<machine hint="effect" >
+<name>eq10</name>
+<input premix="true" dimension="0" channels="2">Stereo</input>
+<output dimension="0" channels="2">Stereo</output>
+
+<controller name="B0" type="float" min="0.0" max="2.0" step="0.0125" />
+<controller name="B1" type="float" min="0.0" max="2.0" step="0.0125" />
+<controller name="B2" type="float" min="0.0" max="2.0" step="0.0125" />
+<controller name="B3" type="float" min="0.0" max="2.0" step="0.0125" />
+<controller name="B4" type="float" min="0.0" max="2.0" step="0.0125" />
+<controller name="B5" type="float" min="0.0" max="2.0" step="0.0125" />
+<controller name="B6" type="float" min="0.0" max="2.0" step="0.0125" />
+<controller name="B7" type="float" min="0.0" max="2.0" step="0.0125" />
+<controller name="B8" type="float" min="0.0" max="2.0" step="0.0125" />
+<controller name="B9" type="float" min="0.0" max="2.0" step="0.0125" />
+
+</machine>

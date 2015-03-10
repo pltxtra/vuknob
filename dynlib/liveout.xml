@@ -1,0 +1,8 @@
+<machineset>
+<name>liveout</name>
+<machine sink="true" hint="sink" >
+<name>sink</name>
+<input premix="true" dimension="0" channels="2">stereo</input>
+<controller name="volume" type="float" min="0.0" max="1.0" step="0.01" />
+</machine>
+</machineset>

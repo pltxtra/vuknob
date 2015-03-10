@@ -1,0 +1,8 @@
+<machine hint="generator" >
+<name>ssynth</name>
+<input dimension="midi" channels="1">midi</input>
+<output dimension="0" channels="1">Mono</output>
+
+<controller name="volume" type="float" min="0" max="1.0" step="0.1"/>
+
+</machine>

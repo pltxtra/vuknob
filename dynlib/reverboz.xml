@@ -1,0 +1,6 @@
+<machine hint="effect" >
+<name>reverboz</name>
+<input premix="true" dimension="0" channels="2">Stereo</input>
+<output dimension="0" channels="2">Stereo</output>
+
+</machine>

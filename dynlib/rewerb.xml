@@ -1,0 +1,21 @@
+<machine hint="effect" >
+<name>rewerb</name>
+
+<input premix="true" dimension="0" channels="1">Mono</input>
+<output dimension="0" channels="1">Mono</output>
+
+<controller name="Highpass" type="float" min="500.0" max="14000.0" step="1.0" />
+<controller name="Lowpass" type="float" min="500.0" max="14000.0" step="1.0" />
+
+<controller name="WetLevel" type="float" min="0.0" max="1.0" step="0.01" />
+<controller name="DryLevel" type="float" min="0.0" max="1.0" step="0.01" />
+
+<controller name="FeedbackGain" type="float" min="0.0" max="0.99" step="0.01" />
+
+<controller name="Type" type="enumerated">
+  <enum value="0" name="Medium" />
+  <enum value="1" name="Small" />
+  <enum value="2" name="Large" />
+</controller>
+
+</machine>

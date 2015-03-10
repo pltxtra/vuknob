@@ -1,0 +1,55 @@
+<machine hint="generator" >
+<name>subastard</name>
+
+<input dimension="midi" channels="1">midi</input>
+<output dimension="0" channels="1">Mono</output>
+
+<controller group="ENV-1" name="Attack" type="FTYPE" min="0.001" max="2.0" step="0.001" />
+<controller group="ENV-1" name="Decay" type="FTYPE" min="0.001" max="2.0" step="0.001" />
+<controller group="ENV-1" name="Sustain" type="FTYPE" min="0.001" max="1.0" step="0.001" />
+<controller group="ENV-1" name="Release" type="FTYPE" min="0.001" max="2.0" step="0.001" />
+
+<controller group="ENV-2" name="Attack" type="FTYPE" min="0.001" max="2.0" step="0.001" />
+<controller group="ENV-2" name="Decay" type="FTYPE" min="0.001" max="2.0" step="0.001" />
+<controller group="ENV-2" name="Sustain" type="FTYPE" min="0.001" max="1.0" step="0.001" />
+<controller group="ENV-2" name="Release" type="FTYPE" min="0.001" max="2.0" step="0.001" />
+
+<controller group="General" name="Mix" type="FTYPE" min="0.0" max="1.0" step="0.01" />
+<controller group="General" name="Volume" type="FTYPE" min="0.0" max="1.0" step="0.01" />
+
+<controller group="VCO-1" name="Sin" type="enumerated">
+  <enum value="0" name="disabled" />
+  <enum value="1" name="enabled" />
+</controller>
+<controller group="VCO-1" name="Saw" type="enumerated">
+  <enum value="0" name="disabled" />
+  <enum value="1" name="enabled" />
+</controller>
+<controller group="VCO-1" name="Pulse" type="enumerated">
+  <enum value="0" name="disabled" />
+  <enum value="1" name="enabled" />
+</controller>
+<controller group="VCO-1" name="Begin" type="FTYPE" min="1" max="24" step="1.0" />
+<controller group="VCO-1" name="Slide" type="FTYPE" min="0.01" max="5.0" step="0.01" />
+
+<controller group="VCO-2" name="Sin" type="enumerated">
+  <enum value="0" name="disabled" />
+  <enum value="1" name="enabled" />
+</controller>
+<controller group="VCO-2" name="Saw" type="enumerated">
+  <enum value="0" name="disabled" />
+  <enum value="1" name="enabled" />
+</controller>
+<controller group="VCO-2" name="Pulse" type="enumerated">
+  <enum value="0" name="disabled" />
+  <enum value="1" name="enabled" />
+</controller>
+<controller group="VCO-2" name="Begin" type="FTYPE" min="1" max="24" step="1.0" />
+<controller group="VCO-2" name="Slide" type="FTYPE" min="0.01" max="5.0" step="0.01" />
+
+<controller group="VCF" name="Cutoff" type="FTYPE" min="0.01" max="0.95" step="0.01" />
+<controller group="VCF" name="Resonance" type="FTYPE" min="0.0" max="0.98" step="0.01" />
+<controller group="VCF" name="Env" type="FTYPE" min="0.0" max="1.0" step="0.01" />
+
+</machine>
+ 

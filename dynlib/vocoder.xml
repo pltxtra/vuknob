@@ -1,0 +1,10 @@
+<machine hint="effect" >
+<name>vocoder</name>
+
+<input premix="true" dimension="0" channels="1">Modulator</input>
+<input premix="true" dimension="0" channels="1">Carrier</input>
+<output dimension="0" channels="1">Mono</output>
+
+<controller name="volume" type="float" min="0.0" max="4.0" step="0.01" />
+
+</machine>

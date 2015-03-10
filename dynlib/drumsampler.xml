@@ -1,0 +1,56 @@
+<machine hint="generator" >
+<name>drumsampler</name>
+<input dimension="midi" channels="1">midi</input>
+<output dimension="0" channels="1">Mono</output>
+
+<controller group="general" name="volume" type="float" min="0" max="10.0" step="0.1"/>
+
+<controller group="Sample Index" name="sampleIndexC-" type="signalid" min="0" max="127" />
+<controller group="Sample Frequency" name="sampleFrequencyC-" type="integer" min="10" max="128000" />
+<controller group="Sample Volume" name="sampleVolumeC-" type="float" min="0" max="10.0" step="0.1"/>
+
+<controller group="Sample Index" name="sampleIndexC#" type="signalid" min="0" max="127" />
+<controller group="Sample Frequency" name="sampleFrequencyC#" type="integer" min="10" max="128000" />
+<controller group="Sample Volume" name="sampleVolumeC#" type="float" min="0" max="10.0" step="0.1"/>
+
+<controller group="Sample Index" name="sampleIndexD-" type="signalid" min="0" max="127" />
+<controller group="Sample Frequency" name="sampleFrequencyD-" type="integer" min="10" max="128000" />
+<controller group="Sample Volume" name="sampleVolumeD-" type="float" min="0" max="10.0" step="0.1"/>
+
+<controller group="Sample Index" name="sampleIndexD#" type="signalid" min="0" max="127" />
+<controller group="Sample Frequency" name="sampleFrequencyD#" type="integer" min="10" max="128000" />
+<controller group="Sample Volume" name="sampleVolumeD#" type="float" min="0" max="10.0" step="0.1"/>
+
+<controller group="Sample Index" name="sampleIndexE-" type="signalid" min="0" max="127" />
+<controller group="Sample Frequency" name="sampleFrequencyE-" type="integer" min="10" max="128000" />
+<controller group="Sample Volume" name="sampleVolumeE-" type="float" min="0" max="10.0" step="0.1"/>
+
+<controller group="Sample Index" name="sampleIndexF-" type="signalid" min="0" max="127" />
+<controller group="Sample Frequency" name="sampleFrequencyF-" type="integer" min="10" max="128000" />
+<controller group="Sample Volume" name="sampleVolumeF-" type="float" min="0" max="10.0" step="0.1"/>
+
+<controller group="Sample Index" name="sampleIndexF#" type="signalid" min="0" max="127" />
+<controller group="Sample Frequency" name="sampleFrequencyF#" type="integer" min="10" max="128000" />
+<controller group="Sample Volume" name="sampleVolumeF#" type="float" min="0" max="10.0" step="0.1"/>
+
+<controller group="Sample Index" name="sampleIndexG-" type="signalid" min="0" max="127" />
+<controller group="Sample Frequency" name="sampleFrequencyG-" type="integer" min="10" max="128000" />
+<controller group="Sample Volume" name="sampleVolumeG-" type="float" min="0" max="10.0" step="0.1"/>
+
+<controller group="Sample Index" name="sampleIndexG#" type="signalid" min="0" max="127" />
+<controller group="Sample Frequency" name="sampleFrequencyG#" type="integer" min="10" max="128000" />
+<controller group="Sample Volume" name="sampleVolumeG#" type="float" min="0" max="10.0" step="0.1"/>
+
+<controller group="Sample Index" name="sampleIndexA-" type="signalid" min="0" max="127" />
+<controller group="Sample Frequency" name="sampleFrequencyA-" type="integer" min="10" max="128000" />
+<controller group="Sample Volume" name="sampleVolumeA-" type="float" min="0" max="10.0" step="0.1"/>
+
+<controller group="Sample Index" name="sampleIndexA#" type="signalid" min="0" max="127" />
+<controller group="Sample Frequency" name="sampleFrequencyA#" type="integer" min="10" max="128000" />
+<controller group="Sample Volume" name="sampleVolumeA#" type="float" min="0" max="10.0" step="0.1"/>
+
+<controller group="Sample Index" name="sampleIndexB-" type="signalid" min="0" max="127" />
+<controller group="Sample Frequency" name="sampleFrequencyB-" type="integer" min="10" max="128000" />
+<controller group="Sample Volume" name="sampleVolumeB-" type="float" min="0" max="10.0" step="0.1"/>
+
+</machine>

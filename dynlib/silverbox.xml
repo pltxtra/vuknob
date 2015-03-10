@@ -1,0 +1,17 @@
+<machine hint="generator" >
+<name>silverbox</name>
+<input dimension="midi" channels="1">midi</input>
+<output dimension="0" channels="1">Mono</output>
+
+<controller group="general" name="cutoff" type="FTYPE" min="0.0" max="1.0" step="0.01" has_midi="yes" coarse="74" />
+<controller group="general" name="resonance" type="FTYPE" min="0.0" max="1.0" step="0.01" has_midi="yes" coarse="73" />
+<controller group="general" name="env_mod" type="FTYPE" min="0.0" max="1.0" step="0.01" has_midi="yes" coarse="72" />
+<controller group="general" name="decay" type="FTYPE" min="0.0" max="1.0" step="0.01" has_midi="yes" coarse="71" />
+<controller group="general" name="volume" type="FTYPE" min="0.0" max="1.0" step="0.01" />
+<controller group="general" name="wave" type="enumerated">
+  <enum value="0" name="saw" />
+  <enum value="1" name="square" />
+</controller>
+
+</machine>
+ 

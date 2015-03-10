@@ -1,0 +1,23 @@
+<machine hint="generator" >
+	<name>digitar</name>
+	<input dimension="midi" channels="1">midi</input>
+	<output dimension="0" channels="1">Mono</output>
+
+	<controller name="signalBase" type="enumerated" >
+	  <enum value="0" name="sine" />
+	  <enum value="1" name="noise" />
+	  <enum value="2" name="square" />
+	</controller>
+
+	<controller name="preFilter" type="enumerated" min="0" max="1">
+	  <enum value="0" name="off" />
+	  <enum value="1" name="on" />
+	</controller>
+
+	<controller name="preFilterCutoff" type="FTYPE" min="0.01" max="0.4" step="0.01" />
+	<controller name="postFilterCutoff" type="FTYPE" min="0.01" max="0.4" step="0.01" />
+
+	<controller name="gain" type="FTYPE" min="0.0" max="5.0" step="0.01" />
+
+	<controller name="spread" type="float" min="0.0" max="1.0" step="0.01" />	
+</machine>

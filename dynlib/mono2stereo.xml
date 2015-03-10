@@ -1,0 +1,6 @@
+<machine hint="effect:deprecated" >
+	<name>mono2stereo</name>
+	<input premix="true" dimension="0" channels="1">Mono</input>
+	<output dimension="0" channels="2">Stereo</output>
+	<controller name="pan" type="float" min="0.0" max="2.0" step="0.01" />
+</machine>

@@ -1,0 +1,5 @@
+ffa123 - orange
+009383 - dark turquoise
+04baab - light turquoise
+33ccff - blue turquoise
+c0c0c0 - light gray

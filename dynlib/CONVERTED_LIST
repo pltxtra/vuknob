@@ -1,0 +1,24 @@
+# list that shows which machines have been confirmed working in regular floating mode
+# * = working
+# - = not working
+*dynlib/comprezza.xml
+*dynlib/delay.xml
+*dynlib/digitar.xml
+*dynlib/drumsampler.xml
+*dynlib/eq10.xml
+*dynlib/europa4.xml
+*dynlib/filterbox.xml
+*dynlib/flanger.xml
+*dynlib/grooveiator.xml
+*dynlib/liveout.xml
+*dynlib/mono2stereo.xml
+*dynlib/reverboz.xml
+*dynlib/rewerb.xml
+*dynlib/sampler.xml
+*dynlib/sima_overdrive.xml
+*dynlib/ssynth.xml
+*dynlib/stereospread.xml
+*dynlib/subastard.xml
+*dynlib/tcutter.xml
+*dynlib/vocoder.xml
+*dynlib/xecho.xml

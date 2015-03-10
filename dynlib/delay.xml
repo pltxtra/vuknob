@@ -1,0 +1,18 @@
+<machine hint="effect" >
+<name>delay</name>
+<input premix="true" dimension="0" channels="1">Mono</input>
+<output dimension="0" channels="1">Mono</output>
+
+<controller name="delay" type="float" min="0.005" max="1.0" step="0.001"/>
+<controller name="amplitude" type="float" min="0.0005" max="1.0" step="0.0001"/>
+
+<controller name="cutoff" type="FTYPE" min="0.0" max="1.0" step="0.001" />
+<controller name="resonance" type="FTYPE" min="0.0" max="1.0" step="0.001" />
+<controller name="filter" type="enumerated">
+  <enum value="0" name="none" />
+  <enum value="1" name="lopass" />
+  <enum value="2" name="hipass" />
+</controller>
+
+
+</machine>

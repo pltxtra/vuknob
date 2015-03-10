@@ -1,0 +1,32 @@
+<machine hint="generator" >
+<name>grooveiator</name>
+<input dimension="midi" channels="1">midi</input>
+<output dimension="0" channels="1">Mono</output>
+
+<controller group="wave" name="wave_A" type="integer" min="0" max="3" />
+<controller group="wave" name="wave_B" type="integer" min="0" max="3" />
+<controller group="wave" name="wave_mix" type="float" min="0.0" max="1.0" step="0.01" />
+<controller group="wave" name="wave_transpose" type="integer" min="0" max="12" />
+<controller group="wave" name="wave_detune" type="integer" min="0" max="100" />
+
+<controller group="general" name="volume" type="float" min="0" max="1.0" step="0.01"/>
+<controller group="general" name="ampAttack" type="float" min="0.0" max="5.0" step="0.01" />
+<controller group="general" name="ampHold" type="float" min="0.01" max="10.0" step="0.01" />
+<controller group="general" name="ampDecay" type="float" min="0.01" max="10.0" step="0.01" />
+<controller group="general" name="ampSustain" type="float" min="0.01" max="1.0" step="0.001" />
+<controller group="general" name="ampRelease" type="float" min="0.01" max="5.0" step="0.01" />
+
+<controller group="filter" name="enable" type="enumerated">
+  <enum value="0" name="no" />
+  <enum value="1" name="yes" />
+</controller>
+<controller group="filter" name="cutoff" type="float" min="0.0" max="11000.0" step="1.0" has_midi="yes" coarse="74" />
+<controller group="filter" name="resonance" type="float" min="1.0" max="90.0" step="1.0" />
+<controller group="filter" name="filAttack" type="float" min="0.01" max="5.0" step="0.01" />
+<controller group="filter" name="filHold" type="float" min="0.01" max="5.0" step="0.01" />
+<controller group="filter" name="filDecay" type="float" min="0.01" max="5.0" step="0.01" />
+<controller group="filter" name="filSustain" type="float" min="0.01" max="1.0" step="0.001" />
+<controller group="filter" name="filRelease" type="float" min="0.01" max="5.0" step="0.01" />
+
+</machine>
+ 

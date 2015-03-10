@@ -1,0 +1,9 @@
+<machine hint="effect" >
+<name>stereospread</name>
+<input premix="true" dimension="0" channels="2">Stereo</input>
+<output dimension="0" channels="2">Stereo</output>
+
+<controller name="delay" type="float" min="-0.20" max="0.20" step="0.0001"/>
+<controller name="invert" type="boolean" />
+
+</machine>

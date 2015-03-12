@@ -55,9 +55,6 @@ import java.util.zip.*;
 import com.toolkits.kamoflage.Kamoflage;
 import com.toolkits.kamoflage.KamoflageActivity;
 
-import com.holidaystudios.vuknobbase.VuknobAndroidAudio;
-import com.holidaystudios.vuknobbase.JavaInterface;
-
 public class vuKNOBnet extends KamoflageActivity
 	implements 
 	android.media.AudioManager.OnAudioFocusChangeListener
@@ -157,11 +154,11 @@ public class vuKNOBnet extends KamoflageActivity
 								    AudioManager.AUDIOFOCUS_GAIN);
 
 		Log.v("VuKNOB", "Bringing up VuKNOB - prepare(audioManager);");
-		VuknobAndroidAudio.prepare(audioManager);
+		SatanAudio.prepare(audioManager);
 		buffersizeField.setText(
 			"Device: " + android.os.Build.DEVICE + ", " +
-			"Frequency: " + String.valueOf(VuknobAndroidAudio.default_frequency) + ", " +
-			"Buffer: " + String.valueOf(VuknobAndroidAudio.default_buffer_size)
+			"Frequency: " + String.valueOf(SatanAudio.default_frequency) + ", " +
+			"Buffer: " + String.valueOf(SatanAudio.default_buffer_size)
 			);
 		Log.v("VuKNOB", "   prepare returned OK.");
 		JavaInterface.SetupNativeJavaInterface(this);

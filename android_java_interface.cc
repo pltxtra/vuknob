@@ -54,7 +54,7 @@ jmethodID AndroidJavaInterface::stop_record = NULL;
 std::string __ANDROID_installation_id = "not set";
 
 extern "C" {
-	JNIEXPORT void Java_com_holidaystudios_vuknob_JavaInterface_SetupInterface
+	JNIEXPORT void Java_com_holidaystudios_vuknobbase_JavaInterface_SetupInterface
 	(JNIEnv *env, jclass jc, jstring installation_id) {
 		__setup_env_for_thread(env);
 

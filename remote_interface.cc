@@ -55,9 +55,12 @@
 #define __MSG_FLUSH_ALL_OBJECTS -2
 #define __MSG_DELETE_OBJECT -3
 #define __MSG_FAILURE_RESPONSE -4
+#define __MSG_PROTOCOL_VERSION -5
 
 #define __FCT_HANDLELIST     "HandleList"
 #define __FCT_RIMACHINE      "RIMachine"
+
+#define __VUKNOB_PROTOCOL_VERSION__ 1
 
 /***************************
  *
@@ -1121,6 +1124,14 @@ void RemoteInterface::Client::on_message_received(const Message &msg) {
 	int identifier = std::stol(msg.get_value("id"));
 
 	switch(identifier) {
+	case __MSG_PROTOCOL_VERSION:
+	{
+		auto protocol_version = std::stol(msg.get_value("pversion"));
+		if(protocol_version > __VUKNOB_PROTOCOL_VERSION__) {
+			failure_response_callback("Server is to new - you must upgrade before you can connect.");
+			disconnect();
+		}
+	}
 	case __MSG_CREATE_OBJECT:
 	{
 		std::shared_ptr<BaseObject> new_obj = BaseObject::create_object_from_message(msg);
@@ -1473,6 +1484,7 @@ void RemoteInterface::Server::do_accept() {
 			if (!ec) {
 				std::shared_ptr<ClientAgent> new_client_agent = std::make_shared<ClientAgent>(std::move(acceptor_socket), this);
 				client_agents.insert(new_client_agent);
+				send_protocol_version_to_new_client(new_client_agent);
 				send_all_objects_to_new_client(new_client_agent);
 				new_client_agent->start();
 			} else {
@@ -1500,6 +1512,13 @@ void RemoteInterface::Server::add_create_object_header(std::shared_ptr<Message> 
 void RemoteInterface::Server::add_destroy_object_header(std::shared_ptr<Message> &target, std::shared_ptr<BaseObject> obj) {
 	target->set_value("id", std::to_string(__MSG_DELETE_OBJECT));
 	target->set_value("objid", std::to_string(obj->get_obj_id()));
+}
+
+void RemoteInterface::Server::send_protocol_version_to_new_client(std::shared_ptr<MessageHandler> client_agent) {
+	std::shared_ptr<Message> pv_message = acquire_message();
+	pv_message->set_value("id", std::to_string(__MSG_PROTOCOL_VERSION));
+	pv_message->set_value("pversion", std::to_string(__VUKNOB_PROTOCOL_VERSION__));
+	client_agent->deliver_message(pv_message);
 }
 
 void RemoteInterface::Server::send_all_objects_to_new_client(std::shared_ptr<MessageHandler> client_agent) {

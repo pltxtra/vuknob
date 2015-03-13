@@ -46,6 +46,7 @@
 #include "dynamic_machine.hh"
 #include "machine_sequencer.hh"
 #include "build_at_seconds_since.h"
+#include "common.hh"
 
 //#define __DO_SATAN_DEBUG
 #include "satan_debug.hh"
@@ -895,15 +896,15 @@ DynamicMachine::DynamicMachine(
 }
 
 #ifdef ANDROID
-extern "C" void AndroidAudio__CLEANUP_STUFF();
-extern "C" void AndroidAudio__SETUP_STUFF(
+extern "C" void VuknobAndroidAudio__CLEANUP_STUFF();
+extern "C" void VuknobAndroidAudio__SETUP_STUFF(
 	int *period_size, int *rate,
 	int (*__entry)(void *data),
 	void *__data,
 	int (**android_audio_callback)(FTYPE vol, FTYPE *in, int il, int ic),
 	void (**android_audio_stop_f)(void)
 	);
-extern "C" int AndroidAudio__get_native_audio_configuration_data(int *frequency, int *buffersize);
+extern "C" int VuknobAndroidAudio__get_native_audio_configuration_data(int *frequency, int *buffersize);
 #endif
 
 /* Prepares the dynamic table, and calls the dynamic machines init function.
@@ -948,9 +949,9 @@ void DynamicMachine::setup_dynamic_machine() {
 	dt.run_async_operation = &(Machine::run_async_operation);
 	
 #ifdef ANDROID
-	dt.AndroidAudio__CLEANUP_STUFF = AndroidAudio__CLEANUP_STUFF;
-	dt.AndroidAudio__SETUP_STUFF = AndroidAudio__SETUP_STUFF;
-	dt.AndroidAudio__get_native_audio_configuration_data = AndroidAudio__get_native_audio_configuration_data;
+	dt.VuknobAndroidAudio__CLEANUP_STUFF = VuknobAndroidAudio__CLEANUP_STUFF;
+	dt.VuknobAndroidAudio__SETUP_STUFF = VuknobAndroidAudio__SETUP_STUFF;
+	dt.VuknobAndroidAudio__get_native_audio_configuration_data = VuknobAndroidAudio__get_native_audio_configuration_data;
 #endif
 	
 	init_dynamic *init = ((Handle *)dh)->init;

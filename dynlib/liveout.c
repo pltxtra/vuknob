@@ -1302,7 +1302,7 @@ fail_unlock_return:
 	return _sinkCallbackFAIL;
 }
 
-// this functions is called by the Android thread AndroidAudio::java_thread_loop()
+// this functions is called by the Android thread VuknobAndroidAudio::java_thread_loop()
 // this function will basically tell the Machine tree to generate all signals
 // that will in the end trigger the execute_sink() function, which then calls BACK
 // into the AndroidAudio class...
@@ -1405,7 +1405,7 @@ void execute_sink(MachineTable *mt, AndroidInstance *inst) {
  */
 
 static AndroidInstance *init_android(MachineTable *mt) {
-	DYNLIB_DEBUG("AndroidAudio\n");
+	DYNLIB_DEBUG("VuknobAndroidAudio\n");
 
 	AndroidInstance *inst = NULL;
 	
@@ -1429,11 +1429,11 @@ static AndroidInstance *init_android(MachineTable *mt) {
 		
 		int period_size = 0, rate = 0;
 		
-		mt->AndroidAudio__SETUP_STUFF(&period_size, &rate,
-					      android_dynamic_machine_entry,
-					      inst,
-					      &(inst->android_audio_callback),
-					      &(inst->android_audio_stop_f)
+		mt->VuknobAndroidAudio__SETUP_STUFF(&period_size, &rate,
+						    android_dynamic_machine_entry,
+						    inst,
+						    &(inst->android_audio_callback),
+						    &(inst->android_audio_stop_f)
 			);
 		
 		inst->android_open = 1;
@@ -1457,7 +1457,7 @@ return_unlock:
 }
 
 void cleanup_android(MachineTable *mt) {
-	mt->AndroidAudio__CLEANUP_STUFF();
+	mt->VuknobAndroidAudio__CLEANUP_STUFF();
 }
 
 void *init(MachineTable *mt, const char *name) {
@@ -1626,7 +1626,7 @@ void finalize_audio(OpenSLInstance *p, FTYPE *buffer, FTYPE vol) {
 OpenSLInstance *init_OpenSL(MachineTable *mt) {
 	int period_size = 44100 / 40, rate = 44100;
 
-	int playback_mode = mt->AndroidAudio__get_native_audio_configuration_data(&rate, &period_size);
+	int playback_mode = mt->VuknobAndroidAudio__get_native_audio_configuration_data(&rate, &period_size);
 	DYNLIB_DEBUG("   -------------- playback mode: %s\n", playback_mode == __PLAYBACK_OPENSL_BUFFERED ? "OpenSL Buffered" : "OpenSL Direct");
 	DYNLIB_DEBUG("   -------------- rate %d\n", rate);
 	DYNLIB_DEBUG("   -------------- period size %d\n", period_size);

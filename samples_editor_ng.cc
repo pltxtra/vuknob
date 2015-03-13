@@ -53,6 +53,7 @@ using namespace std;
 #include "machine.hh"
 #include "signal.hh"
 #include "advanced_file_request_ui.hh"
+#include "common.hh"
 
 #include <jngldrum/jinformer.hh>
 

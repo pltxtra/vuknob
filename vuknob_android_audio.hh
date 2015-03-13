@@ -38,7 +38,7 @@
 #include "machine.hh"
 #include "dynlib/dynlib.h"
 
-class AndroidAudio : public jThread::Synchronizer {
+class VuknobAndroidAudio : public jThread::Synchronizer {
 private:	
 	bool java_bridge_created;
 
@@ -64,8 +64,8 @@ private:
 	bool setup_audio_bridge();
 	
 	// instanziation
-	AndroidAudio();
-	static AndroidAudio *audio_object;
+	VuknobAndroidAudio();
+	static VuknobAndroidAudio *audio_object;
 
 public:
 	static void *dynamic_machine_data;
@@ -75,7 +75,7 @@ public:
 public:
 	void java_thread_loop(JNIEnv *e, jclass sac);
 	
-	static AndroidAudio *instance();
+	static VuknobAndroidAudio *instance();
 
 	static int fill_buffers(fp8p24_t vol, fp8p24_t *in, int il, int ic);
 	static void stop_audio();

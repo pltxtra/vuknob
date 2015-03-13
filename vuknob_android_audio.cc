@@ -36,7 +36,7 @@
 
 #include <fixedpointmath.h>
 
-#include "android_audio.hh"
+#include "vuknob_android_audio.hh"
 
 //#define __DO_SATAN_DEBUG
 #include "satan_debug.hh"
@@ -46,25 +46,25 @@
 #include <time.h>
 #include <math.h>
 
-JNIEnv *AndroidAudio::android_audio_env = NULL;
+JNIEnv *VuknobAndroidAudio::android_audio_env = NULL;
 
-int AndroidAudio::srate = 0;
-int AndroidAudio::bfsiz = 0;
-int AndroidAudio::bytesPsample = 0;
+int VuknobAndroidAudio::srate = 0;
+int VuknobAndroidAudio::bfsiz = 0;
+int VuknobAndroidAudio::bytesPsample = 0;
 
-jobject AndroidAudio::audio_bridge = NULL;
-jmethodID AndroidAudio::bridge_write = NULL;
-jmethodID AndroidAudio::bridge_stop = NULL;
-jshort *AndroidAudio::java_target_buffer = NULL;
-jshortArray AndroidAudio::bridge_buffer = NULL;
+jobject VuknobAndroidAudio::audio_bridge = NULL;
+jmethodID VuknobAndroidAudio::bridge_write = NULL;
+jmethodID VuknobAndroidAudio::bridge_stop = NULL;
+jshort *VuknobAndroidAudio::java_target_buffer = NULL;
+jshortArray VuknobAndroidAudio::bridge_buffer = NULL;
 
-AndroidAudio *AndroidAudio::audio_object = new AndroidAudio();
-void *AndroidAudio::dynamic_machine_data = NULL;
-int (*AndroidAudio::dynamic_machine_entry)(void *data) = NULL;
+VuknobAndroidAudio *VuknobAndroidAudio::audio_object = new VuknobAndroidAudio();
+void *VuknobAndroidAudio::dynamic_machine_data = NULL;
+int (*VuknobAndroidAudio::dynamic_machine_entry)(void *data) = NULL;
 
 /* main android audio machine class */
 
-void AndroidAudio::java_thread_loop(JNIEnv *e, jclass sac) {
+void VuknobAndroidAudio::java_thread_loop(JNIEnv *e, jclass sac) {
 	enter();
 	if(android_audio_env != e) {
 		android_audio_env = e;
@@ -100,7 +100,7 @@ void AndroidAudio::java_thread_loop(JNIEnv *e, jclass sac) {
 			bridge_buffer, written, bfsiz - written);
 		
 		if(result < 0) {
-			printf("Failure in AndroidAudio::java_thread_loop()\n");
+			printf("Failure in VuknobAndroidAudio::java_thread_loop()\n");
 			fflush(0);
 		} else if(result == 0) {
 			fflush(0);
@@ -118,7 +118,7 @@ extern "C" {
 	static int native_buffer_size = 4410;
 	static int playback_mode = __PLAYBACK_OPENSL_DIRECT;
 	
-	JNIEXPORT void Java_com_holidaystudios_vuknob_SatanAudio_registerNativeAudioConfigurationData
+	JNIEXPORT void Java_com_holidaystudios_vuknobbase_VuknobAndroidAudio_registerNativeAudioConfigurationData
 	(JNIEnv *env, jclass jc, jint freq, jint blen, jint _playback_mode) {
 		native_frequency = freq;
 		native_buffer_size = blen;
@@ -129,10 +129,10 @@ extern "C" {
 		SATAN_DEBUG("  !!!! Playback mode: %d\n", playback_mode);
 	}
 
-	int AndroidAudio__get_native_audio_configuration_data(int *frequency, int *buffersize) {
+	int VuknobAndroidAudio__get_native_audio_configuration_data(int *frequency, int *buffersize) {
 		*frequency = native_frequency;
 		*buffersize = native_buffer_size;
-		AndroidAudio *i = AndroidAudio::instance();
+		VuknobAndroidAudio *i = VuknobAndroidAudio::instance();
 
 		i->enter();
 		i->stop_using_audiotrack = true;
@@ -141,9 +141,9 @@ extern "C" {
 		return playback_mode;
 	}
 
-	JNIEXPORT jboolean Java_com_holidaystudios_vuknob_SatanAudio_javaThread
+	JNIEXPORT jboolean Java_com_holidaystudios_vuknobbase_VuknobAndroidAudio_javaThread
 	(JNIEnv *env, jclass jc) {
-		AndroidAudio *i = AndroidAudio::instance();
+		VuknobAndroidAudio *i = VuknobAndroidAudio::instance();
 
 		// call this kamoflage internal routine to register this thread.. yes, a bit ugly.
 		
@@ -157,22 +157,22 @@ extern "C" {
 		return JNI_TRUE;
 	}
 
-	void AndroidAudio__CLEANUP_STUFF() {
-		AndroidAudio *i = AndroidAudio::instance();
+	void VuknobAndroidAudio__CLEANUP_STUFF() {
+		VuknobAndroidAudio *i = VuknobAndroidAudio::instance();
 		i->enter();
 		i->dynamic_machine_entry = NULL;
 		i->dynamic_machine_data = NULL;
 		i->leave();
 	}
 	
-	void AndroidAudio__SETUP_STUFF(int *period_size, int *rate,
+	void VuknobAndroidAudio__SETUP_STUFF(int *period_size, int *rate,
 				       int (*__entry)(void *data),
 				       void *__data,
 				       int (**android_audio_callback)
 				       (fp8p24_t vol, fp8p24_t *in, int il, int ic),
 				       void (**android_audio_stop_f)(void)
 		) {
-		AndroidAudio *i = AndroidAudio::instance();
+		VuknobAndroidAudio *i = VuknobAndroidAudio::instance();
 
 		i->enter();
 		i->dynamic_machine_entry = __entry;
@@ -187,21 +187,21 @@ extern "C" {
 
 };
 
-AndroidAudio::AndroidAudio() : java_bridge_created(false), stop_using_audiotrack(false) {
+VuknobAndroidAudio::VuknobAndroidAudio() : java_bridge_created(false), stop_using_audiotrack(false) {
 	std::cout << "************** CREATING ANDROID AUDIO MACHINE **************\n";
 
 
 }
 
-AndroidAudio *AndroidAudio::instance() {
-	if(!AndroidAudio::audio_object)
-		AndroidAudio::audio_object = new AndroidAudio();
+VuknobAndroidAudio *VuknobAndroidAudio::instance() {
+	if(!VuknobAndroidAudio::audio_object)
+		VuknobAndroidAudio::audio_object = new VuknobAndroidAudio();
 
-	return AndroidAudio::audio_object;
+	return VuknobAndroidAudio::audio_object;
 }
 
-bool AndroidAudio::setup_audio_bridge() {
-	printf("   AndroidAudio::setup_audio_bridge()\n"); fflush(0);
+bool VuknobAndroidAudio::setup_audio_bridge() {
+	printf("   VuknobAndroidAudio::setup_audio_bridge()\n"); fflush(0);
 	
 	android_audio_thread = pthread_self();
 
@@ -255,13 +255,13 @@ bool AndroidAudio::setup_audio_bridge() {
 	return true;
 }
 
-int AndroidAudio::fill_buffers(fp8p24_t vol, fp8p24_t *in, int il, int ic) {
+int VuknobAndroidAudio::fill_buffers(fp8p24_t vol, fp8p24_t *in, int il, int ic) {
 	if(in == NULL) {
 		// no attached signals, just zero out
 		memset(java_target_buffer, 0, bfsiz * 2);
 	} else {		
 		if(ic != 2) {
-			printf("AndroidAudio expects stereo output"
+			printf("VuknobAndroidAudio expects stereo output"
 			       ", found mono or multi-channel.\n");
 			fflush(0);
 			return -1;
@@ -288,8 +288,8 @@ int AndroidAudio::fill_buffers(fp8p24_t vol, fp8p24_t *in, int il, int ic) {
 	return 0;
 }
 
-void AndroidAudio::stop_audio() {
-	AndroidAudio *i = instance();
+void VuknobAndroidAudio::stop_audio() {
+	VuknobAndroidAudio *i = instance();
 
 	SATAN_DEBUG_("WILL STOP AUDIO PLAYBACK.");
 	if(i != NULL) {

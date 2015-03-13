@@ -210,8 +210,8 @@ extern "C" {
 		
 #ifdef ANDROID
 		// I don't like this hack either...
-		void (*AndroidAudio__CLEANUP_STUFF)();
-		void (*AndroidAudio__SETUP_STUFF)(
+		void (*VuknobAndroidAudio__CLEANUP_STUFF)();
+		void (*VuknobAndroidAudio__SETUP_STUFF)(
 			int *period_size, int *rate,
 			int (*__entry)(void *data),
 			void *__data,
@@ -224,7 +224,7 @@ extern "C" {
 #define __PLAYBACK_OPENSL_BUFFERED 16
 		
 		// return one of the __OPENSL_*_MODE values
-		int (*AndroidAudio__get_native_audio_configuration_data)(int *frequency, int *buffersize);
+		int (*VuknobAndroidAudio__get_native_audio_configuration_data)(int *frequency, int *buffersize);
 #endif
 
 		

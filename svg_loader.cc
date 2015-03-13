@@ -35,6 +35,7 @@
 #endif
 
 #include "svg_loader.hh"
+#include "common.hh"
 
 #include <fstream>
 #include <dirent.h>

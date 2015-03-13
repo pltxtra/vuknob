@@ -65,6 +65,7 @@ using namespace std;
 #endif
 
 #include "satan_project_entry.hh"
+#include "common.hh"
 
 //#define __DO_SATAN_DEBUG
 #include "satan_debug.hh"

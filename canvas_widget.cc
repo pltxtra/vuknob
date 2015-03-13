@@ -47,6 +47,7 @@ using namespace std;
 #include <time.h>
 
 #include "canvas_widget.hh"
+#include "common.hh"
 
 //#define __DO_SATAN_DEBUG
 #include "satan_debug.hh"

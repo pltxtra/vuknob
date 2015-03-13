@@ -32,6 +32,12 @@
 LOCAL_PATH := $(call my-dir)
 
 include $(CLEAR_VARS)
+LOCAL_CPP_EXTENSION := .cc
+LOCAL_MODULE    := pathvariable
+LOCAL_SRC_FILES := pathvariable.cc
+include $(BUILD_SHARED_LIBRARY)
+
+include $(CLEAR_VARS)
 
 LOCAL_CPP_EXTENSION := .cc
 
@@ -47,7 +53,8 @@ else
 
 endif # TARGET_ARCH_ABI == armeabi-v7a
 
-LOCAL_CFLAGS += -DLIBSVG_EXPAT -DCONFIG_DIR=\"/\" -Ijni/libexpat/ -Ijni/libexpat/expat/ -Ijni/libpng/ -Ijni/libjpeg/ -Ijni/libsvg/ -I../../asio-1.10.2/include -DHAVE_CONFIG_H -DHAVE_EXPAT_CONFIG_H -DKAMOFLAGE_ANDROID_ROOT_DIRECTORY=\"/data/data/com.holidaystudios.vuknob\" -Ijni/libkamoflage/ -Wall -I../../libvorbis_new/include/ -DDEFAULT_PROJECT_SAVE_PATH=\"/mnt/sdcard/vuknob/Projects\" -DDEFAULT_SATAN_ROOT=\"/mnt/sdcard/vuknob\" -DDEFAULT_EXPORT_PATH=\"/mnt/sdcard/vuknob/Export\"  #-D__DO_TIME_MEASURE
+#  -DKAMOFLAGE_ANDROID_ROOT_DIRECTORY=\"/data/data/com.holidaystudios.vuknob\"
+LOCAL_CFLAGS += -DLIBSVG_EXPAT -DCONFIG_DIR=\"/\" -Ijni/libexpat/ -Ijni/libexpat/expat/ -Ijni/libpng/ -Ijni/libjpeg/ -Ijni/libsvg/ -I../../asio-1.10.2/include -DHAVE_CONFIG_H -DHAVE_EXPAT_CONFIG_H -Ijni/libkamoflage/ -Wall -I../../libvorbis_new/include/ -DDEFAULT_PROJECT_SAVE_PATH=\"/mnt/sdcard/vuknob/Projects\" -DDEFAULT_SATAN_ROOT=\"/mnt/sdcard/vuknob\" -DDEFAULT_EXPORT_PATH=\"/mnt/sdcard/vuknob/Export\"  #-D__DO_TIME_MEASURE
 LOCAL_CPPFLAGS += -DASIO_STANDALONE -std=c++11 
 
 # libjpeg stuff
@@ -163,7 +170,7 @@ midi_export.cc midi_export.hh \
 midi_export_gui.cc \
 file_request_ui.cc \
 advanced_file_request_ui.cc \
-android_audio.cc android_audio.hh \
+vuknob_android_audio.cc vuknob_android_audio.hh \
 fixedpointmathlib.cc \
 satan_project_entry.cc satan_project_entry.hh \
 graph_project_entry.cc graph_project_entry.hh \
@@ -186,6 +193,8 @@ remote_interface.cc remote_interface.hh \
 corner_button.cc corner_button.hh \
 connection_list.cc connection_list.hh \
 time_measure.cc 
+
+LOCAL_SHARED_LIBRARIES := libpathvariable
 
 include $(BUILD_SHARED_LIBRARY)
 

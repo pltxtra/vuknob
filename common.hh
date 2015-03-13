@@ -27,6 +27,10 @@
 #define FLING_DEACCELERATION 2000.0f
 #define TRANSITION_TIME 0.125
 
+#ifdef ANDROID
+extern const char *KAMOFLAGE_ANDROID_ROOT_DIRECTORY;
+#endif
+
 /**************************
  *
  * Replace missing C++11 functionality

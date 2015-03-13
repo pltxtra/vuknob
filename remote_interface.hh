@@ -461,6 +461,7 @@ public:
 		void create_service_objects();
 		void add_create_object_header(std::shared_ptr<Message> &target, std::shared_ptr<BaseObject> obj);
 		void add_destroy_object_header(std::shared_ptr<Message> &target, std::shared_ptr<BaseObject> obj);
+		void send_protocol_version_to_new_client(std::shared_ptr<MessageHandler> client_agent);
 		void send_all_objects_to_new_client(std::shared_ptr<MessageHandler> client_agent);
 		
 		Server(const asio::ip::tcp::endpoint& endpoint);

@@ -28,3 +28,10 @@ Android/res/raw/nativefiletreearchive
 Android/src/com/holidaystudios/vuknob/AutogenDate.java
 Android/libs/
 Android/obj/
+build_at_seconds_since.h
+dynlib/asan_symbolize.py
+dynlib/katy_sings.wav
+dynlib/testing123.mp3
+dynlib/vocoder.ogg
+dynlib/whistle.wav
+pathvariable.cc~

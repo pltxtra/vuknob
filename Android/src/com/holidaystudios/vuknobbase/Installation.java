@@ -34,7 +34,7 @@
  *
  */
 
-package com.holidaystudios.vuknob;
+package com.holidaystudios.vuknobbase;
 
 import android.content.Context;
 import java.io.*;

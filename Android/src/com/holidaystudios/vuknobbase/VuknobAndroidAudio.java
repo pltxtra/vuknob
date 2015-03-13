@@ -32,7 +32,7 @@
  *
  */
 
-package com.holidaystudios.vuknob;
+package com.holidaystudios.vuknobbase;
 
 import android.media.AudioTrack;
 import android.media.AudioManager;
@@ -43,21 +43,21 @@ import android.util.Log;
 
 import com.toolkits.kamoflage.Kamoflage;
 
-public class SatanAudio {
+public class VuknobAndroidAudio {
 
-	public static native boolean javaThread();
 	public static native void registerNativeAudioConfigurationData(int freq, int blen, int dev_class);
+	public static native boolean javaThread();
 	
 	private static class AudioThread extends Thread {
 
 		AudioThread() {
-			super("SatanAudioThread");
+			super("VuknobAndroidAudioThread");
 		}
 		
 		public void run() {
-			while(SatanAudio.javaThread()) {
+			while(VuknobAndroidAudio.javaThread()) {
 				if(at != null)
-					SatanAudio.at.play();
+					VuknobAndroidAudio.at.play();
 			}
 		}
 	}
@@ -192,7 +192,7 @@ public class SatanAudio {
 
 	public static void prepare(android.media.AudioManager audioManager) {
 		// first we try to scan for the optimal audio configuration
-		SatanAudio.scanNativeAudioConfiguration(audioManager);
-		SatanAudio.createThread();
+		VuknobAndroidAudio.scanNativeAudioConfiguration(audioManager);
+		VuknobAndroidAudio.createThread();
 	}
 }

@@ -32,7 +32,7 @@
  *
  */
 
-package com.holidaystudios.vuknob;
+package com.holidaystudios.vuknobbase;
 
 import android.app.Activity;
 import android.os.Bundle;

@@ -46,6 +46,8 @@
 #include <dirent.h>
 #include <errno.h>
 
+#include "common.hh"
+
 //#define __DO_SATAN_DEBUG
 #include "satan_debug.hh"
 

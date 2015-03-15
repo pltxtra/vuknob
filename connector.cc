@@ -220,6 +220,18 @@ void Connector::ConnectionGraphic::show_all() {
 	}
 }
 
+void Connector::ConnectionGraphic::machine_unregistered(std::shared_ptr<MachineGraphic> machine) {
+	// delete all ConnectionGraphic objects that reference the machine.
+	auto iterator = connection_graphics.begin();
+	for(; iterator != connection_graphics.end(); iterator++) {
+		auto src = (*iterator).second->source.lock();
+		auto dst = (*iterator).second->source.lock();
+		if(src == machine || dst == machine) {
+			connection_graphics.erase(iterator);
+		}
+	}
+}
+
 /***************************
  *
  *  Class Connector::MachineGraphic::Transition
@@ -1110,10 +1122,13 @@ void Connector::ri_machine_unregistered(std::shared_ptr<RemoteInterface::RIMachi
 						zoom_restore();
 					}
 					
+					ConnectionGraphic::machine_unregistered(*iterator);
+
 					iterator = graphics.erase(iterator);
 					break;
 				}
 			}
+
 		}
 		);
 }

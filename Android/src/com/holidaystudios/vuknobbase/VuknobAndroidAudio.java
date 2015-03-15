@@ -85,6 +85,8 @@ public class VuknobAndroidAudio {
 
 		// hammerhead (aka Nexus 5) does not sound good in direct mode, so we set it to buffered mode. 
 		known_devices.put("hammerhead", __PLAYBACK_OPENSL_BUFFERED);
+		// m0 (aka Samsung Galaxy S3) does not sound good in direct mode, so we set it to buffered mode. 
+		known_devices.put("m0", __PLAYBACK_OPENSL_BUFFERED);
 
 		/** GET PREFERRED PLAYBACK MODE OF KNOWN DEVICE  *****/
 		if(known_devices.containsKey(android.os.Build.DEVICE)) {

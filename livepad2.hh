@@ -32,11 +32,13 @@
 #include "machine.hh"
 #include "machine_sequencer.hh"
 #include "listview.hh"
+#include "remote_interface.hh"
 
 #define HZONES PAD_HZONES
 #define VZONES PAD_VZONES
 
-class LivePad2 : public KammoGUI::SVGCanvas::SVGDocument {
+class LivePad2 : public KammoGUI::SVGCanvas::SVGDocument,
+		 public RemoteInterface::RIMachine::RIMachineSetListener {
 private:
 	static LivePad2 *l_pad2;
 
@@ -55,6 +57,9 @@ private:
 	KammoGUI::SVGCanvas::SVGRect graphArea_viewport;
 	MachineSequencer *mseq;
 
+	std::set<std::weak_ptr<RemoteInterface::RIMachine>,
+		 std::owner_less<std::weak_ptr<RemoteInterface::RIMachine> > >msequencers; // all known machine sequencers
+	
 	ListView *listView;
 
 	KammoGUI::SVGCanvas::ElementReference octaveUp_element;
@@ -118,6 +123,9 @@ public:
 	virtual void on_render();
 
 	static void use_new_MachineSequencer(MachineSequencer *mseq);
+
+	virtual void ri_machine_registered(std::shared_ptr<RemoteInterface::RIMachine> ri_machine);
+	virtual void ri_machine_unregistered(std::shared_ptr<RemoteInterface::RIMachine> ri_machine);
 };
 
 #endif

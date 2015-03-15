@@ -97,6 +97,8 @@ private:
 
 		static void hide_all();
 		static void show_all();
+
+		static void machine_unregistered(std::shared_ptr<MachineGraphic> machine);
 	};
 	
 	class MachineGraphic : public KammoGUI::SVGCanvas::ElementReference, public RemoteInterface::RIMachine::RIMachineStateListener, public std::enable_shared_from_this<MachineGraphic>  {

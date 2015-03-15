@@ -40,6 +40,8 @@
 #include <asio.hpp>
 #include <thread>
 
+#define RI_LOOP_NOT_SET -1
+
 class RemoteInterface {
 public:
 	class Server;
@@ -278,7 +280,7 @@ public:
 				  const std::string &source_output_name,
 				  const std::string &destination_input_name);
 
-	public: 	/* client side API */	
+	public: 	/* client side base API */	
 		class RIMachineSetListener {
 		public:
 			virtual void ri_machine_registered(std::shared_ptr<RIMachine> ri_machine) = 0;
@@ -310,6 +312,19 @@ public:
 
 		// if the client side app wants to be notified when things in this machine changes
 		void set_state_change_listener(std::weak_ptr<RIMachineStateListener> state_listener);
+
+	public:        /* client side Machine Sequencer/Pad API */
+		std::vector<std::string> mseq_available_midi_controllers();
+		void pad_export_to_loop(int loop_id = RI_LOOP_NOT_SET);
+		void pad_set_octave(int octave);
+		void pad_set_scale(int scale_index);
+		void pad_set_record(bool record);
+		void pad_set_quantize(bool do_quantize);
+		void pad_assign_midi_controller(int controller);
+		void pad_set_chord_mode(int chord_mode);
+		void pad_set_arpeggio_pattern(int arp_pattern);
+		void pad_clear();
+		void pad_enqueue_event(int finger, int event_type, float ev_x, float ev_y);
 		
 	public:
 		virtual void post_constructor_client(); // called after the constructor has been called

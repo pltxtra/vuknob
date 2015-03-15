@@ -35,7 +35,7 @@
 #include "livepad2.hh"
 #include "svg_loader.hh"
 
-//#define __DO_SATAN_DEBUG
+#define __DO_SATAN_DEBUG
 #include "satan_debug.hh"
 
 #include "common.hh"
@@ -632,6 +632,40 @@ void LivePad2::use_new_MachineSequencer(MachineSequencer *m) {
 	l_pad2->refresh_machine_settings();
 }
 
+void LivePad2::ri_machine_registered(std::shared_ptr<RemoteInterface::RIMachine> ri_machine) {
+	SATAN_DEBUG("LivePad2::ri_machine_registered - type [%s] (%f, %f)\n",
+		    ri_machine->get_machine_type().c_str(), ri_machine->get_x_position(), ri_machine->get_y_position());	
+
+	if(ri_machine->get_machine_type() != "MachineSequencer") return; // we're not interested in anything but the MachineSequencers
+	
+	KammoGUI::run_on_GUI_thread(
+		[this, ri_machine]() {
+			msequencers.insert(ri_machine);
+			mseq = NULL;
+			refresh_machine_settings();
+		}
+		);
+}
+
+void LivePad2::ri_machine_unregistered(std::shared_ptr<RemoteInterface::RIMachine> ri_machine) {
+	if(ri_machine->get_machine_type() != "MachineSequencer") return; // we're not interested in anything but the MachineSequencers
+
+	KammoGUI::run_on_GUI_thread(
+		[this, ri_machine]() {
+			for(auto found_weak = msequencers.begin();
+			    found_weak != msequencers.end();
+			    found_weak++) {
+				auto found = found_weak->lock();
+				if(found == ri_machine) {
+					msequencers.erase(found_weak);
+					break;
+				}
+			}
+			mseq = NULL;
+			refresh_machine_settings();
+		}
+		);
+}
 /***************************
  *
  *  Kamoflage Event Declaration
@@ -642,20 +676,13 @@ LivePad2 *LivePad2::l_pad2 = NULL;
 
 KammoEventHandler_Declare(LivePad2Handler,"livePad2:showLivePad2");
 
-static void machines_list_updated(void *cbdata) {
-	KammoGUI::run_on_GUI_thread(
-		[] (void *ignored) {
-			LivePad2::use_new_MachineSequencer(NULL);
-		},
-		cbdata);
-}
-
 virtual void on_init(KammoGUI::Widget *wid) {
 	if(wid->get_id() == "livePad2") {
 		KammoGUI::SVGCanvas *cnvs = (KammoGUI::SVGCanvas *)wid;		
 		cnvs->set_bg_color(1.0, 1.0, 1.0);
-		(void) new LivePad2(cnvs, std::string(SVGLoader::get_svg_directory() + "/livePad2.svg"));
-		MachineSequencer::register_change_callback(machines_list_updated);
+		
+		static auto lpad = std::make_shared<LivePad2>(cnvs, SVGLoader::get_svg_path("/livePad2.svg"));
+		RemoteInterface::Client::register_ri_machine_set_listener(lpad);		
 	}
 }
 

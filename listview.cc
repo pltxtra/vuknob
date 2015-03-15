@@ -108,6 +108,8 @@ ListView::Row *ListView::Row::create(ListView *parent, int row_index, const std:
 	std::stringstream new_id;
 	new_id << "listViewRow__" << row_index;
 
+	SATAN_DEBUG("ListView::Row::Create(%d, %s) -> %s\n", row_index, text.c_str(), new_id.str().c_str());
+	
 	// inject a clone of the base_element into container
 	container.add_element_clone(new_id.str(), base_element);
 
@@ -256,10 +258,13 @@ void ListView::on_render() {
 
 void ListView::clear() {
 	for(auto row : rows) {
+		SATAN_DEBUG("ListView::clear() - Dropping element.\n");
 		row->drop_element();
 		delete row;
 	}
 	rows.clear();
+	SATAN_DEBUG("ListView::clear() -> dump id table.");
+	KammoGUI::SVGCanvas::ElementReference(this).debug_dump_id_table();
 }
 
 void ListView::add_row(const std::string &new_row_text) {

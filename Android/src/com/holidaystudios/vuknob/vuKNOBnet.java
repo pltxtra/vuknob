@@ -286,4 +286,12 @@ public class vuKNOBnet extends KamoflageActivity
 		android.os.SystemClock.sleep(10 * 1000);
 		java.lang.System.exit(0);
 	}
+
+	static {
+		Log.v("vuknob", "Loading native library for kamoflage.");
+		System.loadLibrary("pathvariable");
+		System.loadLibrary("kamoflage");
+		Log.v("vuknob", "    Native library loaded.");
+	}
+
 }

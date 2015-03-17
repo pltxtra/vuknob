@@ -1,3 +1,9 @@
+--------- Market Version 53 (2.03) --------------
+ * Another bugfix release
+ 
+--------- Market Version 52 (2.02) --------------
+ * Bug fixes (forgot to load libpathvariable.so)
+ 
 --------- Market Version 51 (2.01) --------------
  * New logo
  * Bug fixes

@@ -94,8 +94,9 @@ public class VuknobAndroidAudio {
 		}
 
 		/** THE DEVICE IS UNKNOWN; RETURN DEFAULT SETTING ****/
-		// default to direct mode (the recommended mode by Google - that isn't working on Nexus 5 as of September 2014... go figure...)
-		return __PLAYBACK_OPENSL_DIRECT;
+		// Previousoly we would default to direct mode (the recommended mode by Google - that isn't working on Nexus 5 as of September 2014... go figure...)
+		// But now I default to BUFFERED 
+		return __PLAYBACK_OPENSL_BUFFERED;
 	}
 	
 	public static void scanNativeAudioConfiguration(AudioManager audioManager) {

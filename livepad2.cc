@@ -35,7 +35,7 @@
 #include "livepad2.hh"
 #include "svg_loader.hh"
 
-#define __DO_SATAN_DEBUG
+//#define __DO_SATAN_DEBUG
 #include "satan_debug.hh"
 
 #include "common.hh"

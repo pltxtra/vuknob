@@ -808,10 +808,7 @@ std::string Machine::get_name() {
 	std::string result;
 	machine_operation_enqueue(
 		[&result, this](void */* ignored */) {
-			SATAN_DEBUG("XOXO. %p\n", this);
-			SATAN_DEBUG("get name: %s\n", name.c_str());
 			result = name;
-			SATAN_DEBUG(" done.\n");
 		}
 		,
 		NULL, true);
@@ -854,6 +851,7 @@ class MachineOperationSynchObject : public jThread::Event {
 private:
 	jThread::EventQueue synch_queue;
 public:
+	bool triggered = false;
 	std::string exception_message;
 	jException::Type exception_type;
 
@@ -865,6 +863,7 @@ public:
 	}
 	
 	void trigger() {
+		triggered = true;
 		synch_queue.push_event(this);
 	}
 	
@@ -898,37 +897,29 @@ void Machine::machine_operation_enqueue(std::function<void(void *data)> callback
 		}
 		Machine::unlock_machine_space();
 	} else {
-		// we must release the lock here, currently, because
-		// the playback thread still uses it in some places..
-		Machine::unlock_machine_space();
-
+		// we write to the queue while we hold the machine space lock - to protect the queue from multiple writers
+		// but also to protect from the fact that the sink object might otherwise be deleted between our check for
+		// it and the actual write to the queue.
 		MachineOperation mo;
 		MachineOperationSynchObject synch_object;
 		
 		mo.callback = callback;
 		mo.callback_data = callback_data;
 		mo.synch_object = do_sync ? (&synch_object) : NULL;
-
-		// becasue the operation enqueued might trigger asynchronous actions, which in turn might want
-		// to call machine_operation_enqueue we have to make sure that the MonitorGuard object is		
-		// out of scope when we do the if(do_sync) and sync_object.wait(), otherwise we might deadlock.
-		{
-			/*****************************************************/
-			/* we protect the writing to the queue via a monitor */
-			/*****************************************************/
-			static jThread::Monitor operation_queue_monitor;
-			jThread::Monitor::MonitorGuard mg(&operation_queue_monitor);
-			/*****************************************************/
 						
-			machine_operation_queue.enqueue(mo);
-		}
+		machine_operation_queue.enqueue(mo);
+
+		Machine::unlock_machine_space();
 		
 		if(do_sync) {
+			SATAN_DEBUG("do_sync -- wait for sync_object %p\n", &synch_object);
 			synch_object.wait();
+			SATAN_DEBUG("do_sync -- sync_object %p returned\n", &synch_object);
 
 			// if there was a jException thrown during execution
 			// we throw it here too
 			if(synch_object.exception_type != jException::NO_ERROR) {
+				SATAN_DEBUG("   oops - synch_object.wait() returned an exception. (%s)\n", synch_object.exception_message.c_str());
 				throw jException(synch_object.exception_message,
 						 synch_object.exception_type);
 			}
@@ -947,33 +938,58 @@ void Machine::machine_operation_dequeue() {
 		// if there is a synch object attached we need to trigger it after the callback
 		if(mo.synch_object) {
 			// we can catch jExceptions and pass on the error through the synch_object
+			SATAN_DEBUG(" Calling machine operation callback (with synch - %p)\n", mo.synch_object);
 			try {
 				mo.callback(mo.callback_data);
 			} catch(jException e) {
 				mo.synch_object->exception_message = e.message;
 				mo.synch_object->exception_type = e.type;
+			} catch(std::exception const& e) {
+				SATAN_ERROR("Machine::machine_operation_dequeue() - Unexpected exception caught --> %s\n", e.what());
+				exit(0);
+			} catch(...) {
+				SATAN_ERROR("Machine::machine_operation_dequeue() - Unknown exception caught\n");
+				exit(0);
 			}
 			mo.synch_object->trigger();
+			SATAN_DEBUG(" Machine operation callback returned, and synched\n");
 		} else {
 			// otherwise, just call the callback
 			// if an exception is received here we will quit the application straight away, no mercy.
 			try {
+				SATAN_DEBUG(" Calling machine operation callback (NO synch)\n");
 				mo.callback(mo.callback_data);
+				SATAN_DEBUG(" Machine operation callback returned (NO synch)\n");
 			} catch(const std::bad_function_call& e) {
-				SATAN_DEBUG("bad_function_call exception caught in machine_operation_dequeue.\n");
+				SATAN_ERROR("bad_function_call exception caught in machine_operation_dequeue.\n");
 				exit(0);
 			} catch(...) {
-				SATAN_DEBUG("Unknown exception caught in machine_operation_dequeue.\n");
+				SATAN_ERROR("Unknown exception caught in machine_operation_dequeue.\n");
 				exit(0);
 			}
 		}
 	}
 }
 
+pid_t machine_execution_thread = 0;
+
 // Activates low latency features in SATAN
 void Machine::activate_low_latency_mode() {
 	Machine::lock_machine_space();
+
+	machine_execution_thread = gettid();
 	low_latency_mode = true;
+	
+	Machine::unlock_machine_space();
+}
+
+void Machine::deactivate_low_latency_mode() {
+	Machine::lock_machine_space();
+
+	low_latency_mode = false;
+	machine_operation_dequeue();
+	machine_execution_thread = 0;
+	
 	Machine::unlock_machine_space();
 }
 
@@ -1034,21 +1050,23 @@ int Machine::fill_this_sink(
 	}
 
 	if(low_latency_mode) {
-		// In low latency mode we use the machine operation queue for synchronization
-		/* first we dequeue currently waiting machine_operation tasks */
-		machine_operation_dequeue();
-		
-		/* then we fill the sink */
+		/* first we fill the sink */
 		retval = internal_fill_sink(fill_sink_callback, callback_data);
+
+		// In low latency mode we use the machine operation queue for synchronization
+		/* then we dequeue currently waiting machine_operation tasks */
+		machine_operation_dequeue();		
+		
 	} else {
 		// If not in low latency mode, we use the machine space lock
 		Machine::lock_machine_space();
 		/* then we fill the sink */
 		try {
-			retval = internal_fill_sink(fill_sink_callback, callback_data);
+			retval = internal_fill_sink(fill_sink_callback, callback_data);			
 		} catch(...) {
 			Machine::unlock_machine_space();
 		}
+
 		Machine::unlock_machine_space();
 	}
 	/* or, if not, continue, please! */
@@ -1065,9 +1083,7 @@ void Machine::set_ssignal_defaults(Machine *m,
 		return; // at once!
 	}
 
-	printf("   STEPPU 3\n"); fflush(0);
 	Signal::set_defaults(dim, len, res, frequency);
-	printf("   STEPPU 4\n"); fflush(0);
 }
 
 /* creates signals. registers machine as sink, if requested, and sets
@@ -1077,12 +1093,9 @@ void Machine::set_ssignal_defaults(Machine *m,
 void Machine::setup_machine() {
 	std::map<std::string, Signal::Description>::iterator i;
 
-	std::cout << "  MAAAACHIIINE created with " << output_descriptor.size() << " outputs.\n";
-
 	for(i = output_descriptor.begin();
 	    i != output_descriptor.end();
 	    i++) {
-		std::cout << "   OUTPUT: " << (*i).first << "\n";
 		output[(*i).first] = Signal::SignalFactory::create_signal((*i).second.channels, this, (*i).first, (Dimension)(*i).second.dimension);
 	}
 	
@@ -1095,7 +1108,7 @@ void Machine::setup_machine() {
 	}
 
 	Machine::internal_register_machine(this);       
-	SATAN_DEBUG("  machine name set to ] %s [\n", name.c_str());
+	SATAN_DEBUG("  machine [%p] name set to ] %s [\n", this, name.c_str());
 	
 }
 
@@ -1390,41 +1403,29 @@ void Machine::detach_all_inputs(Machine *m) {
 					s = s->get_next(this);
 				}
 			}
-			printf("d all inputs 5\n"); fflush(0);
 			if(head == NULL) {
 				input.erase(k);
 			} else
 				input[(*k).first] = head;
-			printf("d all inputs 6\n"); fflush(0);
 		}
 	}
 	recalculate_render_chain();
 }
 
 void Machine::detach_all_outputs() {
-	printf("detach all outputs 1\n"); fflush(0);
-
-	printf("detach all outputs 2\n"); fflush(0);
 	std::map<std::string, Signal *>::iterator k;
 
-	printf("detach all outputs 3\n"); fflush(0);
 	for(k = output.begin(); k != output.end(); k++) {
-	printf("detach all outputs 4\n"); fflush(0);
 		std::vector<Machine *> attached =
 			(*k).second->get_attached_machines();
 
-		printf("detach all outputs 5 %d\n", attached.size()); fflush(0);
 		std::vector<Machine *>::iterator l;
 		for(l  = attached.begin();
 		    l != attached.end();
 		    l++) {
-			printf("detach all outputs 6 (%p) %p\n", this, (*l)); fflush(0);
 			(*l)->detach_all_inputs(this);
-	printf("detach all outputs 7\n"); fflush(0);
 		}		
-	printf("detach all outputs 8\n"); fflush(0);
 	}
-	printf("detach all outputs 9\n"); fflush(0);
 	recalculate_render_chain();
 }
 
@@ -1608,7 +1609,7 @@ void Machine::broadcast_detach(Machine *source_machine, Machine *destination_mac
 void Machine::internal_register_sink(Machine *s) {
 	{
 		Machine::lock_machine_space();
-						 
+
 		if(sink) {
 			Machine::unlock_machine_space();
 			throw jException("Multiple sinks not allowed.", jException::sanity_error);
@@ -1629,6 +1630,7 @@ void Machine::internal_unregister_sink(Machine *s) {
 	}
 	
 	sink = NULL;
+	top_render_chain = NULL;
 
 	Machine::unlock_machine_space();
 }
@@ -1678,6 +1680,11 @@ void Machine::internal_deregister_machine(Machine *m) {
 			if((*i) == m) {
 				m->has_been_deregistered = true;
 				machine_set.erase(i);
+
+				if(sink == m) {
+					internal_unregister_sink(m);
+				}
+
 				internal_dereference_machine(m);
 				return;
 			}
@@ -1692,7 +1699,8 @@ void Machine::internal_dereference_machine(Machine *m) {
 	SATAN_DEBUG("Machine reference counter for %p is now %d\n", m, m->reference_counter);
 	if(m->reference_counter <= 0) {
 		SATAN_DEBUG(" Machine %p will be deleted.\n", m);
-		delete m;
+
+		delete m;		
 	}
 }
 
@@ -1842,9 +1850,6 @@ void Machine::internal_disconnect_and_destroy(Machine *m) {
 	if(m->detach_and_destroy()) {
 		m->destroy_tightly_attached_machines();
 		
-		if(sink == m)
-			internal_unregister_sink(m);		
-
 		// deregister machine
 		Machine::internal_deregister_machine(m);
 	}
@@ -2247,7 +2252,7 @@ void Machine::unlock_machine_space() {
 		tupla = -2;
 	if(tupla_p < 0) {
 		while(1) {
-			printf("Complete failure.\n");
+			SATAN_ERROR("Complete failure.\n");
 			usleep(1000);
 		}
 	}

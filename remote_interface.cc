@@ -683,27 +683,46 @@ void RemoteInterface::RIMachine::call_listeners(std::function<void(std::shared_p
 }
 
 void RemoteInterface::RIMachine::serverside_init_from_machine_ptr(Machine *m_ptr) {
+	SATAN_DEBUG("RemoteInterface::RIMachine::serverside_init_from_machine_ptr() BEGIN\n");
 	name = m_ptr->get_name();
 
+	SATAN_DEBUG("RemoteInterface::RIMachine::serverside_init_from_machine_ptr() A\n");
 	// set the machine type
 	type = "unknown"; // default
 
+	SATAN_DEBUG("RemoteInterface::RIMachine::serverside_init_from_machine_ptr() B\n");
 	{ // see if it's a MachineSequencer
 		MachineSequencer *mseq = dynamic_cast<MachineSequencer *>((m_ptr));
 		if(mseq != NULL) type = "MachineSequencer";
 	}
+	SATAN_DEBUG("RemoteInterface::RIMachine::serverside_init_from_machine_ptr() C\n");
 	{ // see if it's a DynamicMachine
 		DynamicMachine *dmch = dynamic_cast<DynamicMachine *>((m_ptr));
 		if(dmch != NULL) type = "DynamicMachine";
 	}
 
+	SATAN_DEBUG("RemoteInterface::RIMachine::serverside_init_from_machine_ptr() D\n");
 	real_machine_ptr = m_ptr;
 
 	xpos = m_ptr->get_x_position();
 	ypos = m_ptr->get_y_position();
 
-	inputs = m_ptr->get_input_names();
-	outputs = m_ptr->get_output_names();
+	SATAN_DEBUG("RemoteInterface::RIMachine::serverside_init_from_machine_ptr() E\n");
+
+	try {
+		inputs = m_ptr->get_input_names();
+	} catch(...) {
+		SATAN_ERROR("RemoteInterface::RIMachine::serverside_init_from_machine_ptr() - failed to get_input_names().\n");
+		throw;
+	}
+	try {
+		outputs = m_ptr->get_output_names();
+	} catch(...) {
+		SATAN_ERROR("RemoteInterface::RIMachine::serverside_init_from_machine_ptr() - failed to get_output_names().\n");
+		throw;
+	}
+	
+	SATAN_DEBUG("RemoteInterface::RIMachine::serverside_init_from_machine_ptr() END\n");
 }
 
 void RemoteInterface::RIMachine::attach_input(std::shared_ptr<RIMachine> source_machine,
@@ -1368,11 +1387,13 @@ void RemoteInterface::Server::project_loaded() {
 
 		[this]()
 		{
+			SATAN_DEBUG("RemoteInterface::Server::project_loaded() BEGIN\n");
 			for(auto m2ri : machine2rimachine) {
 				auto x = m2ri.first->get_x_position();
 				auto y = m2ri.first->get_y_position();
 				m2ri.second->set_position(x, y);
 			}
+			SATAN_DEBUG("RemoteInterface::Server::project_loaded() END\n");
 		}
 		
 		);
@@ -1569,8 +1590,14 @@ void RemoteInterface::Server::start_server() {
 		server = std::shared_ptr<Server>(new Server(endpoint));
 
 		server->t1 = std::thread([]() {
-				server->io_service.run();
-				SATAN_DEBUG("server io_service ended.\n");
+				try {
+					server->io_service.run();
+					SATAN_DEBUG("server io_service ended.\n");
+				} catch(std::exception const& e) {
+					SATAN_ERROR("RemoteInterface::Server::start_server() - std::exception caught %s\n", e.what());
+				} catch(...) {
+					SATAN_ERROR("RemoteInterface::Server::start_server() - unknown exception caught\n");
+				}
 			}
 			);
 	} catch (std::exception& e) {

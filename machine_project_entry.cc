@@ -100,7 +100,6 @@ void Machine::ProjectEntry::parse_xml(int project_interface_level, KXMLDoc &xml_
 				(void)Machine::disconnect_and_destroy(m);
 		}
 		all_machines = Machine::get_machine_set();
-		printf("    AFTER CLEAR MACHINES: %d\n", all_machines.size());
 	}
 	
 	// first then is it time to parse the new project settings
@@ -135,17 +134,13 @@ void Machine::ProjectEntry::parse_xml(int project_interface_level, KXMLDoc &xml_
 	Machine::set_bpm(bpm);
 	Machine::set_lpb(lpb);
 
-	printf(" ************ PARSE MACHINES ***********\n"); fflush(0);
 	parse_machines(project_interface_level, xml_node);
 	
 	// connect machines
-	printf(" ************ CONNECT MACHINES ***********\n"); fflush(0);
 	parse_connections_entries(xml_node);
 
 	// finalize machine sequencers
-	printf(" ************ FINALIZE MACHINE SEQ ***********\n"); fflush(0);
 	MachineSequencer::finalize_xml_initialization();
-	printf(" ************ XML PARSE DONE ***********\n"); fflush(0);
 }
 
 void Machine::ProjectEntry::set_defaults() {

@@ -165,6 +165,7 @@ extern "C" {
 				 void *callback_data);
 
 		void (*enable_low_latency_mode)();
+		void (*disable_low_latency_mode)();
 		
 		void (*set_signal_defaults)(struct _MachineTable *, 
 					    int dim,

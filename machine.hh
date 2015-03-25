@@ -670,8 +670,9 @@ protected:
 	 *
 	 ***************************************/
 
-	// Activate low latency functions
+	// Activate/deactivate low latency functions
 	static void activate_low_latency_mode();
+	static void deactivate_low_latency_mode();
 
 	// Registers this machine instance as the sink of the machine network
 	static void register_this_sink(Machine *m);

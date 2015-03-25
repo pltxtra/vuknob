@@ -264,7 +264,6 @@ void ListView::clear() {
 	}
 	rows.clear();
 	SATAN_DEBUG("ListView::clear() -> dump id table.");
-	KammoGUI::SVGCanvas::ElementReference(this).debug_dump_id_table();
 }
 
 void ListView::add_row(const std::string &new_row_text) {

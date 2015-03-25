@@ -263,11 +263,13 @@ std::map<std::shared_ptr<RemoteInterface::RIMachine>, std::weak_ptr<Connector::M
 std::pair<std::weak_ptr<Connector::MachineGraphic>, std::string>* Connector::MachineGraphic::current_output = NULL;
 
 Connector::MachineGraphic::IOSocket::IOSocket(KammoGUI::SVGCanvas::ElementReference original,
-					      KammoGUI::SVGCanvas::ElementReference &_socket_gfx,
+					      KammoGUI::SVGCanvas::ElementReference _socket_gfx,
 					      MachineGraphic *_owner, const std::string &_name) :
 	KammoGUI::SVGCanvas::ElementReference(&original), socket_gfx(_socket_gfx), owner(_owner), name(_name)
 {
 	SATAN_DEBUG("Creating IOSocket(%p) -> %p (%s)\n", this, owner, name.c_str());
+
+	SATAN_DEBUG("IOSocket(%p) created -> %p (%s)\n", this, owner, name.c_str());
 }
 
 void Connector::MachineGraphic::debug_print() {
@@ -281,8 +283,9 @@ Connector::MachineGraphic::MachineGraphic(Connector *_context, const std::string
 
 	pos_x = machine->get_x_position() * MACHINE_POS_SCALING;
 	pos_y = machine->get_y_position() * MACHINE_POS_SCALING;
-	
-	SATAN_DEBUG("  created MachineGraphic - %p (%f, %f) --> (%f)\n", this, pos_x, pos_y, machine->get_x_position());
+
+	name_copy = _machine->get_name();
+	SATAN_DEBUG("  created MachineGraphic - %p -> (%s)\n", this, name_copy.c_str());
 
 	find_child_by_class("machineName").set_text_content(machine->get_name());
 	auto selind = find_child_by_class("selectedIndicator"); selind.set_display("none");
@@ -314,12 +317,15 @@ Connector::MachineGraphic::MachineGraphic(Connector *_context, const std::string
 }
 
 Connector::MachineGraphic::~MachineGraphic() {
-	SATAN_DEBUG("  Connector::MachineGraphic::~MachineGraphic() -- will delete element %p\n", this);
+	SATAN_DEBUG("  Connector::MachineGraphic::~MachineGraphic() -- will delete element %p (%s)\n", this, name_copy.c_str());
 
 	// make sure we delete the input and output ElementReference objects
 	// otherwise the elements will be left dangling when we delete the element. (memleak)
+	SATAN_DEBUG("   Connector::MachineGraphic::~MachineGraphic() - Deleting input sockets.\n");
 	for(auto inp : inputs) delete inp;
+	SATAN_DEBUG("   Connector::MachineGraphic::~MachineGraphic() - Deleting output sockets.\n");
 	for(auto oup : outputs) delete oup;
+	SATAN_DEBUG("   Connector::MachineGraphic::~MachineGraphic() - Sockets deleted.\n");
 	inputs.clear();
 	outputs.clear();
 
@@ -343,7 +349,6 @@ void Connector::MachineGraphic::on_move() {
 			pos_x = machine->get_x_position() * MACHINE_POS_SCALING;
 			pos_y = machine->get_y_position() * MACHINE_POS_SCALING;
 			refresh_position(0.0, 0.0);
-			SATAN_DEBUG("MachineGraph --- DATA UPDATED - pos (%f, %f)\n", pos_x, pos_y);			
 		}
 		);
 }
@@ -385,6 +390,7 @@ void Connector::MachineGraphic::on_attach(std::shared_ptr<RemoteInterface::RIMac
 					mch2grph.erase(weak_src_gfx);
 				}
 			}
+			SATAN_DEBUG("   end MachineGraphic::attached.\n");
 		}
 		);
 }
@@ -1104,8 +1110,10 @@ void Connector::ri_machine_registered(std::shared_ptr<RemoteInterface::RIMachine
 	
 	KammoGUI::run_on_GUI_thread(
 		[this, ri_machine]() {
+			SATAN_DEBUG("Connector::ri_machine_registered() - Creating machine. (%s)\n", ri_machine->get_name().c_str());
 			graphics.push_back(MachineGraphic::create(this, ri_machine));
 			get_parent()->redraw(); 
+			SATAN_DEBUG("Connector::ri_machine_registered() - Machine created.\n");
 		}
 		);
 }
@@ -1115,6 +1123,8 @@ void Connector::ri_machine_unregistered(std::shared_ptr<RemoteInterface::RIMachi
 
 	KammoGUI::run_on_GUI_thread(
 		[this, ri_machine]() {
+			SATAN_DEBUG("Connector::ri_machine_unregistered() - Deleting machine. (%s)\n", ri_machine->get_name().c_str());
+
 			auto iterator = graphics.begin();
 			for(; iterator != graphics.end(); iterator++) {
 				if((*iterator)->matches_ri_machine(ri_machine)) {
@@ -1128,6 +1138,7 @@ void Connector::ri_machine_unregistered(std::shared_ptr<RemoteInterface::RIMachi
 					break;
 				}
 			}
+			SATAN_DEBUG("Connector::ri_machine_unregistered() - machine deleted.\n");
 
 		}
 		);

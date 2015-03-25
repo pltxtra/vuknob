@@ -71,15 +71,6 @@ public class VuknobAndroidAudio {
 	static final int __PLAYBACK_OPENSL_BUFFERED  = 16; // The device should use buffered OpenSL rendering
 	
 	private static int getPlaybackMode() {
-		/********** DEBUG OUTPUT **************/
-		String s="Debug-infos:";
-		s += "\n OS Version: " + System.getProperty("os.version") + "(" + android.os.Build.VERSION.INCREMENTAL + ")";
-		s += "\n OS API Level: " + android.os.Build.VERSION.SDK;
-		s += "\n Device: " + android.os.Build.DEVICE;
-		s += "\n Model (and Product): " + android.os.Build.MODEL + " ("+ android.os.Build.PRODUCT + ")";
-		Log.v("VuKNOB", s);
-
-
 		/********** CREATE HASHMAP OF KNOWN DEVICES / PLAYBACK TYPE **********/
 		HashMap<String, Integer> known_devices = new HashMap<String, Integer>();
 
@@ -87,16 +78,32 @@ public class VuknobAndroidAudio {
 		known_devices.put("hammerhead", __PLAYBACK_OPENSL_BUFFERED);
 		// m0 (aka Samsung Galaxy S3) does not sound good in direct mode, so we set it to buffered mode. 
 		known_devices.put("m0", __PLAYBACK_OPENSL_BUFFERED);
+		// m7 (aka HTC One (M7)) does not sound good in direct mode, so we set it to buffered mode. 
+		known_devices.put("m7", __PLAYBACK_OPENSL_DIRECT);
 
-		/** GET PREFERRED PLAYBACK MODE OF KNOWN DEVICE  *****/
-		if(known_devices.containsKey(android.os.Build.DEVICE)) {
-			return known_devices.get(android.os.Build.DEVICE);
-		}
-
-		/** THE DEVICE IS UNKNOWN; RETURN DEFAULT SETTING ****/
+		/** IF THE DEVICE IS UNKNOWN; RETURN DEFAULT SETTING ****/
 		// Previousoly we would default to direct mode (the recommended mode by Google - that isn't working on Nexus 5 as of September 2014... go figure...)
 		// But now I default to BUFFERED 
-		return __PLAYBACK_OPENSL_BUFFERED;
+		int return_value = __PLAYBACK_OPENSL_BUFFERED;
+		
+		/** GET PREFERRED PLAYBACK MODE OF KNOWN DEVICE, IF IT IS KNOWN  *****/
+		if(known_devices.containsKey(android.os.Build.DEVICE)) {
+			return_value = known_devices.get(android.os.Build.DEVICE);
+		}
+
+		/********** DEBUG OUTPUT **************/
+		String s="Debug-infos:";
+		s += "\n OS Version: " + System.getProperty("os.version") + "(" + android.os.Build.VERSION.INCREMENTAL + ")";
+		s += "\n OS API Level: " + android.os.Build.VERSION.SDK;
+		s += "\n Device: " + android.os.Build.DEVICE;
+		s += "\n Model (and Product): " + android.os.Build.MODEL + " ("+ android.os.Build.PRODUCT + ")";
+		if(return_value == __PLAYBACK_OPENSL_DIRECT)
+			s += "\n   OpenSL Mode: Direct.";
+		else if(return_value == __PLAYBACK_OPENSL_BUFFERED)
+			s += "\n   OpenSL Mode: Buffered.";		
+		Log.v("VuKNOB", s);
+
+		return return_value;
 	}
 	
 	public static void scanNativeAudioConfiguration(AudioManager audioManager) {

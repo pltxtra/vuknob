@@ -787,10 +787,6 @@ std::string DynamicMachine::Handle::get_handle_hint(std::string name) {
  *****************************/
 
 DynamicMachine::~DynamicMachine() {
-	SATAN_DEBUG("Deleting dynamic machine data\n"); fflush(0);
-	(*(((Handle *)dh)->delt))(dynamic_data);
-	SATAN_DEBUG("Dynamic machine data DELETED\n"); fflush(0);
-
 	/*******************
 	 *
 	 *
@@ -920,6 +916,7 @@ void DynamicMachine::setup_dynamic_machine() {
 	dt.fill_sink = &(DynamicMachine::fill_sink);
 
 	dt.enable_low_latency_mode = &(DynamicMachine::enable_low_latency_mode);
+	dt.disable_low_latency_mode = &(DynamicMachine::disable_low_latency_mode);
 
 	dt.set_signal_defaults = &(DynamicMachine::set_signal_defaults);
 	
@@ -984,6 +981,11 @@ void DynamicMachine::reset() {
 bool DynamicMachine::detach_and_destroy() {
 	detach_all_inputs();
 	detach_all_outputs();
+
+	SATAN_DEBUG("Deleting dynamic machine data\n"); fflush(0);
+	(*(((Handle *)dh)->delt))(dynamic_data);
+	SATAN_DEBUG("Dynamic machine data DELETED\n"); fflush(0);
+
 	return true;
 }
 
@@ -1063,6 +1065,10 @@ int DynamicMachine::fill_sink(MachineTable *mt,
 
 void DynamicMachine::enable_low_latency_mode() {
 	activate_low_latency_mode();
+}
+
+void DynamicMachine::disable_low_latency_mode() {
+	deactivate_low_latency_mode();
 }
 
 void DynamicMachine::set_signal_defaults(MachineTable *mt,

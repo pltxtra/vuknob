@@ -1672,12 +1672,7 @@ OpenSLInstance *init_OpenSL(MachineTable *mt) {
 		     period_size * __opensl_buffer_queue_size * __opensl_buffer_factor,
 		     __opensl_buffer_factor,
 		     __opensl_buffer_queue_size);
-	
-	if((period_size_f / rate_f) < LOW_LATENCY_THRESHOLD) {
-		DYNLIB_DEBUG("  -- Enabling low latency mode.\n");
-		mt->enable_low_latency_mode();
-	}
-	
+		
 	OpenSLInstance *inst = (OpenSLInstance *)malloc(sizeof(OpenSLInstance));
 	short *buffers = (short *)malloc(sizeof(short) * 2 * __opensl_buffer_factor * __opensl_buffer_queue_size * period_size); // 2 channels, __opensl_buffer_factor, __opensl_buffer_queue_size times the period size
 	FTYPE *_empty_buffer = (FTYPE *)malloc(sizeof(FTYPE) * 2 * __opensl_buffer_factor * period_size); // 2 channels, __opensl_buffer_factor, period size
@@ -1834,8 +1829,14 @@ void openSL_thread_callback_standard(void *data) {
 void openSL_thread_callback_minimum_latency(void *data) {
 	OpenSLInstance *inst = (OpenSLInstance *)data;	
 	MachineTable *mt = inst->mt;
+	static MachineTable *last_mt = NULL;
 
 	if(mt != NULL) {
+		if(last_mt != mt) {
+			DYNLIB_DEBUG("    calling enable_low_latency_mode() (%d)\n", gettid());
+			mt->enable_low_latency_mode();
+		}
+		last_mt = mt;
 		(void) mt->fill_sink(mt, fill_sink_callback, inst);
 	}
 	
@@ -1851,14 +1852,25 @@ void openSL_thread_callback_minimum_latency(void *data) {
 void *openSL_feeder_thread(void *data) {
 	OpenSLInstance *inst = (OpenSLInstance *)data;	
 	MachineTable *mt = NULL;
+	MachineTable *last_mt = NULL;
 
 	DYNLIB_DEBUG("setting thread name, returned: %d\n", prctl(PR_SET_NAME, "openSL_feeder_thread"));
 	while(1) {
 		mt = inst->mt;
 
-		DYNLIB_DEBUG("openSL_feeder_thread loop...\n");
 		if(mt != NULL) {
+			if(last_mt != mt) {
+				DYNLIB_DEBUG("    calling enable_low_latency_mode() (%d)\n", gettid());
+				mt->enable_low_latency_mode();
+				DYNLIB_DEBUG("    enable_low_latency_mode() called (%d)\n", gettid());
+			}
 			(void) mt->fill_sink(mt, fill_sink_callback, inst);
+
+			if(last_mt != mt) {
+				DYNLIB_DEBUG("    first call to fill_sink() succeeded (%d)\n", gettid());
+			}
+
+			last_mt = mt;
 		}
 		
 		if(mt == NULL || inst->isPlaying == 0) {
@@ -1877,7 +1889,6 @@ void *openSL_feeder_thread(void *data) {
 		}
 
 		inst->temp_buffer = inst->playback_buffer[inst->buffer_to_render].data;
-
 	}
 
 	// never reached
@@ -1951,6 +1962,9 @@ failure:
 void delete(void *data) {
 	OpenSLInstance *inst = (OpenSLInstance *)data;
 
+	DYNLIB_DEBUG("    calling disable_low_latency_mode() (%d)\n", gettid());
+	inst->mt->disable_low_latency_mode();
+	
 	// invalidate machine table
 	inst->mt = NULL;
 }

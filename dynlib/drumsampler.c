@@ -190,12 +190,11 @@ void execute(MachineTable *mt, void *void_sampler) {
 
 	for(n_k = 0; n_k < POLYPHONY; n_k++) {
 		if(sampler->note[n_k].active) {
-			sampler->note[n_k].data =
-				mt->get_signal_buffer(
-					mt->get_static_signal(
-						sampler->sample_index[sampler->note[n_k].i]
-						)
-					);
+			SignalPointer *sp = mt->get_static_signal(
+				sampler->sample_index[sampler->note[n_k].i]
+				);
+
+			sampler->note[n_k].data = (sp == NULL) ? NULL : mt->get_signal_buffer(sp);
 		}
 	}
 

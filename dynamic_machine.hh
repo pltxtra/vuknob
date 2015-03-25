@@ -263,6 +263,7 @@ private:
 			     void *callback_data);
 
 	static void enable_low_latency_mode();
+	static void disable_low_latency_mode();
 	
 	static void set_signal_defaults(MachineTable *mt,
 					int dim,

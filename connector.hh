@@ -69,7 +69,7 @@ private:
 
 		double x1, y1, x2, y2, center_x, center_y;
 		bool hidden = false;
-		
+
 		void recalculate_position();
 
 		void debug_print();
@@ -140,7 +140,7 @@ private:
 		class IOSocket : public KammoGUI::SVGCanvas::ElementReference {
 		public:
 			IOSocket(KammoGUI::SVGCanvas::ElementReference original,
-				 KammoGUI::SVGCanvas::ElementReference &socket_gfx,
+				 KammoGUI::SVGCanvas::ElementReference socket_gfx,
 				 MachineGraphic *_owner, const std::string &_name);
 			ElementReference socket_gfx;
 			MachineGraphic *owner;
@@ -197,6 +197,8 @@ private:
 		static void on_input_socket_event(KammoGUI::SVGCanvas::SVGDocument *source,
 						  KammoGUI::SVGCanvas::ElementReference *e_ref,
 						  const KammoGUI::SVGCanvas::MotionEvent &event);
+		
+		std::string name_copy;
 		
 	public:
 		MachineGraphic(Connector *context, const std::string &svg_id, std::shared_ptr<RemoteInterface::RIMachine> machine);

@@ -1,3 +1,6 @@
+--------- Market Version 55 (2.05) --------------
+ * Fixed race condition error
+ 
 --------- Market Version 54 (2.04) --------------
  * Fixed bugs related to project loading
 

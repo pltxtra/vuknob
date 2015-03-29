@@ -1137,7 +1137,6 @@ void RemoteInterface::Client::start_client(const std::string &server_host,
 		client = std::shared_ptr<Client>(new Client(server_host, disconnect_callback, failure_response_callback));
 		
 		client->t1 = std::thread([]() {
-				SATAN_ERROR("RemoteInterface::Client::start_client() client thread id: %d\n", gettid());
 				client->io_service.run();
 				}
 			);

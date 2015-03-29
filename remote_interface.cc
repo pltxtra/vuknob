@@ -97,8 +97,6 @@ bool RemoteInterface::Message::decode_header() {
 	is >> header;
 	sscanf(header.c_str(), "%08x", &body_length);
 
-	SATAN_DEBUG("in sbuf received header: ]%s[ --> %08x\n", header.c_str(), body_length);
-
 	return true;
 }
 
@@ -136,9 +134,6 @@ static std::string decode_string(const std::string &encoded) {
 	if(*tok != '\0')
 		output = output + tok;
 
-//	SATAN_DEBUG("  encoded string: %s\n", encoded.c_str());
-//	SATAN_DEBUG("   -> decoded   : %s\n", output.c_str());
-	
 	return output;
 }
 
@@ -148,8 +143,7 @@ static std::string encode_string(const std::string &uncoded) {
 
 	char *tok = inp;	
 	std::string output = "";
-//	SATAN_DEBUG("  uncoded string: %s\n", uncoded.c_str());
-//	SATAN_DEBUG("            temp: %s\n", inp);
+
 	for(int k = 0; inp[k] != '\0'; k++) {
 		switch(inp[k]) {
 		case '%':
@@ -176,29 +170,23 @@ static std::string encode_string(const std::string &uncoded) {
 	if(*tok != '\0')
 		output = output + tok;
 
-//	SATAN_DEBUG("   -> encoded   : %s\n", output.c_str());
-
 	return output;
 }
 
 bool RemoteInterface::Message::decode_body() {
 	std::istream is(&sbuf);
-	SATAN_DEBUG("Will decode sbuf message, oh yeah...\n");
 
 	std::string key, val;
 
 	std::getline(is, key, '=');
 	while(!is.eof() && key != "") {
 		std::getline(is, val, ';');
-		SATAN_DEBUG("Message decode %s = %s\n", key.c_str(), val.c_str());
 		if(key != "" && val != "") {
 			key2val[decode_string(key)] = decode_string(val);
 		}
 		std::getline(is, key, '=');
 	}
 	
-	SATAN_DEBUG("Message decoded...\n");
-
 	return true;
 }
 
@@ -210,8 +198,6 @@ void RemoteInterface::Message::encode() const {
 	char header[9];
 	snprintf(header, 9, "%08x", data2send);
 	ostrm << header;
-
-	SATAN_DEBUG("  header to send: ]%s[\n", header);
 	
 	// add body
 	for(auto k2v : key2val) {
@@ -257,7 +243,6 @@ std::shared_ptr<RemoteInterface::Message> RemoteInterface::Context::acquire_mess
 }
 
 void RemoteInterface::Context::recycle_message(RemoteInterface::Message* used_message) {
-	SATAN_DEBUG("Returning used message to MessageStore.");
 	available_messages.push_back(used_message);
 }
 
@@ -290,22 +275,18 @@ void RemoteInterface::MessageHandler::do_read_body() {
 		my_socket,
 		read_msg.sbuf.prepare(read_msg.body_length),
 		[this, self](std::error_code ec, std::size_t length) {
-			SATAN_DEBUG("  maybe will call on_message_received....(%s)\n", ec.message().c_str());
 			if(!ec) read_msg.sbuf.commit(length);
 			
 			if(!ec && read_msg.decode_body()) {
-				SATAN_DEBUG(" will call on_message_received()\n");
 
 				try {
 					on_message_received(read_msg);
 				} catch (std::exception& e) {
-					SATAN_DEBUG("exception caught: %s\n", e.what());
 					on_connection_dropped();
 				}
 
 				do_read_header();
 			} else {
-				SATAN_DEBUG("   ooops - error code!\n");
 				on_connection_dropped();
 			}
 		}
@@ -318,7 +299,6 @@ void RemoteInterface::MessageHandler::do_write() {
 		my_socket,
 		write_msgs.front()->sbuf.data(),
 		[this, self](std::error_code ec, std::size_t length) {
-			SATAN_DEBUG("Wrote %d bytes of data.\n", length);
 			if (!ec) {
 				write_msgs.pop_front();
 				if (!write_msgs.empty()) {
@@ -429,7 +409,6 @@ std::shared_ptr<RemoteInterface::BaseObject> RemoteInterface::BaseObject::create
 
 	std::shared_ptr<RemoteInterface::BaseObject> o = factory_iterator->second->create(msg);
 
-	SATAN_DEBUG("BaseObject -- calling post_constructor_client.\n");
 	o->post_constructor_client();
 	
 	return o;
@@ -470,10 +449,6 @@ std::shared_ptr<RemoteInterface::BaseObject> RemoteInterface::HandleList::Handle
  ***************************/
 
 RemoteInterface::HandleList::HandleList(const Factory *factory, const Message &serialized) : BaseObject(factory, serialized) {
-	SATAN_DEBUG("Handle list created - client side.\n");
-
-	SATAN_DEBUG("Will decode handles...\n");
-
 	std::stringstream handles(serialized.get_value("handles"));
 	std::string handle;
 
@@ -483,32 +458,23 @@ RemoteInterface::HandleList::HandleList(const Factory *factory, const Message &s
 		hint_key << "hint_" << handle;
 		std::string hint = serialized.get_value(hint_key.str());
 		
-		SATAN_DEBUG("Handle decode %s = %s\n", handle.c_str(), hint.c_str());
-
 		handle2hint[handle] = hint;
 
 		std::getline(handles, handle, ':');
 	}
-	
-	SATAN_DEBUG("Handles decoded...\n");
 }
 
-RemoteInterface::HandleList::HandleList(int32_t new_obj_id, const Factory *factory) : BaseObject(new_obj_id, factory) {
-	SATAN_DEBUG("Handle list created - server side.\n");
-}
+RemoteInterface::HandleList::HandleList(int32_t new_obj_id, const Factory *factory) : BaseObject(new_obj_id, factory) {}
 
 void RemoteInterface::HandleList::post_constructor_client() {}
 
 void RemoteInterface::HandleList::process_message(Server *context, const Message &msg) {
 	std::string command = msg.get_value("command");
-	
-	SATAN_DEBUG("HandleList - server - command [%s]\n", command.c_str());
 
 	if(command == "instance") {
 		std::string new_m_handle = msg.get_value("handle");
 		double xpos = atof(msg.get_value("xpos").c_str());
 		double ypos = atof(msg.get_value("ypos").c_str());
-		SATAN_DEBUG("   create instance with handle [%s]\n", new_m_handle.c_str());
 		Machine *new_machine = DynamicMachine::instance(new_m_handle, (float)xpos, (float)ypos);
 		if(new_machine) {
 			try {
@@ -565,8 +531,6 @@ void RemoteInterface::HandleList::create_instance(const std::string &handle, dou
 				msg2send->set_value("handle", handle);
 				msg2send->set_value("xpos", std::to_string(xpos));
 				msg2send->set_value("ypos", std::to_string(ypos));
-				
-				SATAN_DEBUG("Sent instance command to server HandleList object.");
 			}
 			);
 	} else {
@@ -621,8 +585,6 @@ RemoteInterface::RIMachine::RIMachine(const Factory *factory, const Message &ser
 	xpos = atof(serialized.get_value("xpos").c_str());
 	ypos = atof(serialized.get_value("ypos").c_str());
 
-	SATAN_DEBUG("RIMachine created - client side. (%f, %f) -- [%s]\n", xpos, ypos, serialized.get_value("xpos").c_str());
-
 	parse_serialized_connections_data(serialized.get_value("connections"));
 	try {
 		parse_io(inputs, serialized.get_value("inputs"));
@@ -632,14 +594,11 @@ RemoteInterface::RIMachine::RIMachine(const Factory *factory, const Message &ser
 	} catch(Message::NoSuchKey &e) { /* ignore empty inputs */ }
 }
 
-RemoteInterface::RIMachine::RIMachine(int32_t new_obj_id, const Factory *factory) : BaseObject(new_obj_id, factory) {
-	SATAN_DEBUG("RIMachine created - server side.\n");
-}
+RemoteInterface::RIMachine::RIMachine(int32_t new_obj_id, const Factory *factory) : BaseObject(new_obj_id, factory) {}
 
 
 void RemoteInterface::RIMachine::parse_serialized_connections_data(std::string serialized) {
 	std::stringstream is(serialized);
-	SATAN_DEBUG("Will decode serialized connection data...\n");
 
 	std::string srcid, src_name, dst_name;
 
@@ -653,7 +612,6 @@ void RemoteInterface::RIMachine::parse_serialized_connections_data(std::string s
 		std::getline(is, dst_name, '}');
 
 		// store connection
-		SATAN_DEBUG("Connection decode [%s]:%s => %s\n", srcid.c_str(), src_name.c_str(), dst_name.c_str());
 		if(srcid != "" && src_name != "" && dst_name != "") {
 			connection_data.insert({(int32_t)std::stol(srcid), {src_name, dst_name}});
 		}
@@ -662,13 +620,9 @@ void RemoteInterface::RIMachine::parse_serialized_connections_data(std::string s
 		std::getline(is, srcid, '@');
 	}
 	
-	SATAN_DEBUG("Serialized connections decoded...\n");
-	
 }
 
 void RemoteInterface::RIMachine::call_listeners(std::function<void(std::shared_ptr<RIMachineStateListener> listener)> callback) {
-
-	SATAN_DEBUG("RIMachine -- registered state listeners for %p : %d\n", this, state_listeners.size());
 	auto weak_listener = state_listeners.begin();
 	while(weak_listener != state_listeners.end()) {
 		if(auto listener = (*weak_listener).lock()) {
@@ -683,46 +637,35 @@ void RemoteInterface::RIMachine::call_listeners(std::function<void(std::shared_p
 }
 
 void RemoteInterface::RIMachine::serverside_init_from_machine_ptr(Machine *m_ptr) {
-	SATAN_DEBUG("RemoteInterface::RIMachine::serverside_init_from_machine_ptr() BEGIN\n");
 	name = m_ptr->get_name();
 
-	SATAN_DEBUG("RemoteInterface::RIMachine::serverside_init_from_machine_ptr() A\n");
 	// set the machine type
 	type = "unknown"; // default
 
-	SATAN_DEBUG("RemoteInterface::RIMachine::serverside_init_from_machine_ptr() B\n");
 	{ // see if it's a MachineSequencer
 		MachineSequencer *mseq = dynamic_cast<MachineSequencer *>((m_ptr));
 		if(mseq != NULL) type = "MachineSequencer";
 	}
-	SATAN_DEBUG("RemoteInterface::RIMachine::serverside_init_from_machine_ptr() C\n");
 	{ // see if it's a DynamicMachine
 		DynamicMachine *dmch = dynamic_cast<DynamicMachine *>((m_ptr));
 		if(dmch != NULL) type = "DynamicMachine";
 	}
 
-	SATAN_DEBUG("RemoteInterface::RIMachine::serverside_init_from_machine_ptr() D\n");
 	real_machine_ptr = m_ptr;
 
 	xpos = m_ptr->get_x_position();
 	ypos = m_ptr->get_y_position();
 
-	SATAN_DEBUG("RemoteInterface::RIMachine::serverside_init_from_machine_ptr() E\n");
-
 	try {
 		inputs = m_ptr->get_input_names();
 	} catch(...) {
-		SATAN_ERROR("RemoteInterface::RIMachine::serverside_init_from_machine_ptr() - failed to get_input_names().\n");
 		throw;
 	}
 	try {
 		outputs = m_ptr->get_output_names();
 	} catch(...) {
-		SATAN_ERROR("RemoteInterface::RIMachine::serverside_init_from_machine_ptr() - failed to get_output_names().\n");
 		throw;
 	}
-	
-	SATAN_DEBUG("RemoteInterface::RIMachine::serverside_init_from_machine_ptr() END\n");
 }
 
 void RemoteInterface::RIMachine::attach_input(std::shared_ptr<RIMachine> source_machine,
@@ -844,8 +787,6 @@ void RemoteInterface::RIMachine::set_position(double xp, double yp) {
 			}
 			);		
 	} else {
-		SATAN_DEBUG("RIMachine - client - sending new coords to server... (%f, %f)\n", xp, yp);
-		
 		auto thiz = std::dynamic_pointer_cast<RIMachine>(shared_from_this());
 		send_object_message(
 			[this, xp, yp, thiz](std::shared_ptr<Message> &msg2send) {
@@ -884,24 +825,26 @@ void RemoteInterface::RIMachine::set_state_change_listener(std::weak_ptr<RIMachi
 	{
 		std::lock_guard<std::mutex> lock_guard(ri_machine_mutex);
 		state_listeners.insert(state_listener);
-		SATAN_DEBUG("    ********** INSERT STATE LISTENER for %p - size is: %d\n",
-			    this, state_listeners.size());
 	}
-	// call all state listener callbacks
-	if(auto listener = state_listener.lock()) {
-		listener->on_move();
 
-		ri_machine_mutex.lock();		
-		for(auto connection : connection_data) {
-			auto mch = std::dynamic_pointer_cast<RIMachine>(context->get_object(connection.first));
-
-			ri_machine_mutex.unlock();
-			listener->on_attach(mch, connection.second.first, connection.second.second);
-			ri_machine_mutex.lock();
+	context->post_action(
+		[this, state_listener]() {
+			// call all state listener callbacks
+			if(auto listener = state_listener.lock()) {
+				listener->on_move();
+				
+				ri_machine_mutex.lock();		
+				for(auto connection : connection_data) {
+					auto mch = std::dynamic_pointer_cast<RIMachine>(context->get_object(connection.first));
+					
+					ri_machine_mutex.unlock();
+					listener->on_attach(mch, connection.second.first, connection.second.second);
+					ri_machine_mutex.lock();
+				}
+				ri_machine_mutex.unlock();
+			}
 		}
-		ri_machine_mutex.unlock();
-	}
-	SATAN_DEBUG("    ********** STATE LISTENER INSERTED.\n");
+		);
 }
 
 void RemoteInterface::RIMachine::post_constructor_client() {
@@ -916,10 +859,7 @@ void RemoteInterface::RIMachine::post_constructor_client() {
 void RemoteInterface::RIMachine::process_message(Server *context, const Message &msg) {
 	std::string command = msg.get_value("command");
 	
-	SATAN_DEBUG("RIMachine - server - command [%s]\n", command.c_str());
-
 	if(command == "deleteme") {
-		SATAN_DEBUG("   --> calling Machine::disconnect_and_destroy(%p)\n", real_machine_ptr);
 		Machine::disconnect_and_destroy(real_machine_ptr);
 	} else if(command == "setpos") {
 		xpos = atof(msg.get_value("xpos").c_str());
@@ -949,7 +889,6 @@ void RemoteInterface::RIMachine::process_attach_message(Context *context, const 
 	std::string dst_input = msg.get_value("destination");
 
 	if(is_server_side()) {
-		SATAN_DEBUG(" process attach, server side...\n");
 		try {
 			auto mch = std::dynamic_pointer_cast<RIMachine>(context->get_object(identifier));
 			real_machine_ptr->attach_input(mch->real_machine_ptr, src_output, dst_input);
@@ -960,16 +899,11 @@ void RemoteInterface::RIMachine::process_attach_message(Context *context, const 
 		}
 		
 	} else {
-		SATAN_DEBUG(" process attach, client side...\n");
-		
 		try {
 			auto mch = std::dynamic_pointer_cast<RIMachine>(context->get_object(identifier));
 			
-			SATAN_DEBUG(" process attach -- call listeners \n");
-			
 			call_listeners(
 				[this, &mch, &src_output, &dst_input](std::shared_ptr<RIMachineStateListener> listener) {
-					SATAN_DEBUG(" process attach -- call listener->on_attach() \n");
 					listener->on_attach(mch, src_output, dst_input);
 				}
 				);			
@@ -986,7 +920,6 @@ void RemoteInterface::RIMachine::process_detach_message(Context *context, const 
 	std::string dst_input = msg.get_value("destination");
 	
 	if(is_server_side()) {
-		SATAN_DEBUG(" process detach, server side...\n");
 		try {
 			auto mch = std::dynamic_pointer_cast<RIMachine>(context->get_object(identifier));
 			real_machine_ptr->detach_input(mch->real_machine_ptr, src_output, dst_input);
@@ -996,7 +929,6 @@ void RemoteInterface::RIMachine::process_detach_message(Context *context, const 
 			throw Context::FailureResponse(exp.message);
 		}
 	} else {
-		SATAN_DEBUG(" process detach, client side...\n");
 		try {
 			auto mch = std::dynamic_pointer_cast<RIMachine>(context->get_object(identifier));
 			
@@ -1026,12 +958,9 @@ void RemoteInterface::RIMachine::process_message(Client *context, const Message 
 	std::lock_guard<std::mutex> lock_guard(ri_machine_mutex);
 	std::string command = msg.get_value("command");
 	
-	SATAN_DEBUG("RIMachine - client - command [%s]\n", command.c_str());
-	
 	if(command == "setpos") {
 		xpos = atof(msg.get_value("xpos").c_str());
 		ypos = atof(msg.get_value("ypos").c_str());
-		SATAN_DEBUG("RIMachine - client - position updated (%f, %f)\n", xpos, ypos);
 		
 		call_listeners(
 			[](std::shared_ptr<RIMachineStateListener> listener) {
@@ -1116,14 +1045,11 @@ RemoteInterface::Client::Client(const std::string &server_host,
 	failure_response_callback = _failure_response_callback;
 	auto endpoint_iterator = resolver.resolve({server_host, VUKNOB_SERVER_PORT_STRING });
 
-	SATAN_DEBUG("RemoteInterface::Client::Client() trying to connect...\n");
 	asio::async_connect(my_socket, endpoint_iterator,
 			    [this](std::error_code ec, asio::ip::tcp::resolver::iterator)
 			    {
-				    SATAN_DEBUG("RemoteInterface::Client::Client() connected!\n");
 				    if (!ec)
 				    {
-					    SATAN_DEBUG("RemoteInterface::Client::Client() start to receive...!\n");
 					    start_receive();
 				    }
 			    }
@@ -1139,7 +1065,6 @@ void RemoteInterface::Client::flush_all_objects() {
 }
 
 void RemoteInterface::Client::on_message_received(const Message &msg) {
-	SATAN_DEBUG(" on_message_received, client\n");
 	int identifier = std::stol(msg.get_value("id"));
 
 	switch(identifier) {
@@ -1199,7 +1124,6 @@ void RemoteInterface::Client::on_message_received(const Message &msg) {
 }
 
 void RemoteInterface::Client::on_connection_dropped() {
-	SATAN_DEBUG("RemoteInterface::Client::on_connection_dropped()\n");
 	flush_all_objects();
 	disconnect_callback();
 }
@@ -1213,12 +1137,12 @@ void RemoteInterface::Client::start_client(const std::string &server_host,
 		client = std::shared_ptr<Client>(new Client(server_host, disconnect_callback, failure_response_callback));
 		
 		client->t1 = std::thread([]() {
+				SATAN_ERROR("RemoteInterface::Client::start_client() client thread id: %d\n", gettid());
 				client->io_service.run();
-				SATAN_DEBUG("client io_service finished.\n");
 				}
 			);
 	} catch (std::exception& e) {
-		SATAN_DEBUG("exception caught: %s\n", e.what());
+		SATAN_ERROR("exception caught: %s\n", e.what());
 	}
 }
 
@@ -1228,11 +1152,9 @@ void RemoteInterface::Client::disconnect() {
 		client->io_service.dispatch(
 		[]()
 		{			
-			SATAN_DEBUG("RemoteInterface::Client will disconnect from server...\n");
 			try {
 				client->my_socket.close();
 			} catch(std::exception &exp) {
-				SATAN_DEBUG("exception caught when calling create_service_objects(%s).\n", exp.what());
 			}
 		});
 
@@ -1240,7 +1162,6 @@ void RemoteInterface::Client::disconnect() {
 		client->t1.join();
 
 		client.reset();
-		SATAN_DEBUG("client shared_ptr was reset.\n");
 	}
 }
 
@@ -1387,25 +1308,23 @@ void RemoteInterface::Server::project_loaded() {
 
 		[this]()
 		{
-			SATAN_DEBUG("RemoteInterface::Server::project_loaded() BEGIN\n");
 			for(auto m2ri : machine2rimachine) {
 				auto x = m2ri.first->get_x_position();
 				auto y = m2ri.first->get_y_position();
 				m2ri.second->set_position(x, y);
 			}
-			SATAN_DEBUG("RemoteInterface::Server::project_loaded() END\n");
 		}
 		
 		);
 }
 
 void RemoteInterface::Server::machine_registered(Machine *m_ptr) {
-	SATAN_DEBUG("Machine %p was registered\n", m_ptr);
-
 	io_service.post(
 
 		[this, m_ptr]()
 		{
+			SATAN_DEBUG("!!! Machine %s was registered\n", m_ptr->get_name().c_str());
+
 			create_object_from_factory(__FCT_RIMACHINE,
 						   [this, m_ptr](std::shared_ptr<BaseObject> nuobj) {
 							   auto mch = std::dynamic_pointer_cast<RIMachine>(nuobj);
@@ -1420,8 +1339,6 @@ void RemoteInterface::Server::machine_registered(Machine *m_ptr) {
 }
 
 void RemoteInterface::Server::machine_unregistered(Machine *m_ptr) {
-	SATAN_DEBUG("Machine %p was unregistered\n", m_ptr);
-
 	io_service.post(
 
 		[this, m_ptr]()
@@ -1440,13 +1357,13 @@ void RemoteInterface::Server::machine_unregistered(Machine *m_ptr) {
 void RemoteInterface::Server::machine_input_attached(Machine *source, Machine *destination,
 						     const std::string &output_name,
 						     const std::string &input_name) {
-	SATAN_DEBUG("Signal attached [%s:%s] -> [%s:%s]\n",
-		    source->get_name().c_str(), output_name.c_str(),
-		    destination->get_name().c_str(), input_name.c_str());
-
 	io_service.post(
 		[this, source, destination, output_name, input_name]()
 		{
+			SATAN_DEBUG("!!! Signal attached [%s:%s] -> [%s:%s]\n",
+				    source->get_name().c_str(), output_name.c_str(),
+				    destination->get_name().c_str(), input_name.c_str());
+
 			auto src_mch = machine2rimachine.find(source);
 			auto dst_mch = machine2rimachine.find(destination);
 			if(src_mch != machine2rimachine.end() && dst_mch != machine2rimachine.end()) {
@@ -1460,13 +1377,13 @@ void RemoteInterface::Server::machine_input_attached(Machine *source, Machine *d
 void RemoteInterface::Server::machine_input_detached(Machine *source, Machine *destination,
 						     const std::string &output_name,
 						     const std::string &input_name) {
-	SATAN_DEBUG("Signal detached [%s:%s] -> [%s:%s]\n",
-		    source->get_name().c_str(), output_name.c_str(),
-		    destination->get_name().c_str(), input_name.c_str());
-
 	io_service.post(
 		[this, source, destination, output_name, input_name]()
 		{
+			SATAN_DEBUG("!!! Signal detached [%s:%s] -> [%s:%s]\n",
+				    source->get_name().c_str(), output_name.c_str(),
+				    destination->get_name().c_str(), input_name.c_str());
+
 			auto src_mch = machine2rimachine.find(source);
 			auto dst_mch = machine2rimachine.find(destination);
 			if(src_mch != machine2rimachine.end() && dst_mch != machine2rimachine.end()) {
@@ -1479,16 +1396,12 @@ void RemoteInterface::Server::machine_input_detached(Machine *source, Machine *d
 
 RemoteInterface::Server::Server(const asio::ip::tcp::endpoint& endpoint) : last_obj_id(-1), acceptor(io_service, endpoint),
 									   acceptor_socket(io_service) {
-	SATAN_DEBUG("RemoteInterface::Server::Server() accepting connections. (%p)\n", this);
-
 	io_service.post(
 		[this]()
 		{			
-			SATAN_DEBUG("RemoteInterface::Server::Server() will create service objects. (%p)\n", this);
 			try {
 				this->create_service_objects();
 			} catch(std::exception &exp) {
-				SATAN_DEBUG("exception caught when calling create_service_objects(%s).\n", exp.what());
 				throw;
 			}
 		});
@@ -1500,7 +1413,6 @@ void RemoteInterface::Server::do_accept() {
 	acceptor.async_accept(
 		acceptor_socket,
 		[this](std::error_code ec) {
-			SATAN_DEBUG("RemoteInterface::Server::do_accept() received a connection.\n");
 			
 			if (!ec) {
 				std::shared_ptr<ClientAgent> new_client_agent = std::make_shared<ClientAgent>(std::move(acceptor_socket), this);
@@ -1508,8 +1420,6 @@ void RemoteInterface::Server::do_accept() {
 				send_protocol_version_to_new_client(new_client_agent);
 				send_all_objects_to_new_client(new_client_agent);
 				new_client_agent->start();
-			} else {
-				SATAN_DEBUG("error in do_accept()\n");
 			}
 			
 			do_accept();
@@ -1580,7 +1490,6 @@ void RemoteInterface::Server::start_server() {
 	static bool server_created = false;
 	
 	if(server_created) {
-		SATAN_DEBUG("Bug detected - server thread created twice.\n");
 		return;
 	}
 	server_created = true;
@@ -1592,7 +1501,6 @@ void RemoteInterface::Server::start_server() {
 		server->t1 = std::thread([]() {
 				try {
 					server->io_service.run();
-					SATAN_DEBUG("server io_service ended.\n");
 				} catch(std::exception const& e) {
 					SATAN_ERROR("RemoteInterface::Server::start_server() - std::exception caught %s\n", e.what());
 				} catch(...) {
@@ -1601,7 +1509,7 @@ void RemoteInterface::Server::start_server() {
 			}
 			);
 	} catch (std::exception& e) {
-		SATAN_DEBUG("Exception caught: %s\n", e.what());
+		SATAN_ERROR("Exception caught: %s\n", e.what());
 	}
 }
 
@@ -1610,18 +1518,15 @@ void RemoteInterface::Server::stop_server() {
 		server->io_service.dispatch(
 		[]()
 		{			
-			SATAN_DEBUG("RemoteInterface::Server::Server() will disconnect clients.\n");
 			try {
 				server->disconnect_clients();
 			} catch(std::exception &exp) {
-				SATAN_DEBUG("exception caught when calling create_service_objects(%s).\n", exp.what());
 				throw;
 			}
 		});
 
 		server->io_service.stop();
 		server->t1.join();
-		SATAN_DEBUG(" server thread was joined.\n");
 	}
 }
 

@@ -31,7 +31,7 @@
 #include "machine_sequencer.hh"
 #include "common.hh"
 
-#define __DO_SATAN_DEBUG
+//#define __DO_SATAN_DEBUG
 #include "satan_debug.hh"
 
 /***************************
@@ -203,6 +203,8 @@ void Connector::ConnectionGraphic::detach(std::shared_ptr<MachineGraphic> source
 	} else {
 		SATAN_DEBUG("  ConnectionGraphic::detach() - connection NOT found!\n");
 	}
+
+	if(connection_graphics.size() == 0) SATAN_DEBUG("ConnectionGraphic::detach() --------- !!!! NO MORE CONNECTIONS.\n");
 }
 
 void Connector::ConnectionGraphic::hide_all() {
@@ -230,6 +232,8 @@ void Connector::ConnectionGraphic::machine_unregistered(std::shared_ptr<MachineG
 			connection_graphics.erase(iterator);
 		}
 	}
+
+	if(connection_graphics.size() == 0) SATAN_DEBUG("ConnectionGraphic::machine_unregistered() --------- !!!! NO MORE CONNECTIONS.\n");
 }
 
 /***************************
@@ -266,11 +270,7 @@ Connector::MachineGraphic::IOSocket::IOSocket(KammoGUI::SVGCanvas::ElementRefere
 					      KammoGUI::SVGCanvas::ElementReference _socket_gfx,
 					      MachineGraphic *_owner, const std::string &_name) :
 	KammoGUI::SVGCanvas::ElementReference(&original), socket_gfx(_socket_gfx), owner(_owner), name(_name)
-{
-	SATAN_DEBUG("Creating IOSocket(%p) -> %p (%s)\n", this, owner, name.c_str());
-
-	SATAN_DEBUG("IOSocket(%p) created -> %p (%s)\n", this, owner, name.c_str());
-}
+{}
 
 void Connector::MachineGraphic::debug_print() {
 	SATAN_DEBUG("Graphic: %s -> (%f, %f)\n",
@@ -285,7 +285,6 @@ Connector::MachineGraphic::MachineGraphic(Connector *_context, const std::string
 	pos_y = machine->get_y_position() * MACHINE_POS_SCALING;
 
 	name_copy = _machine->get_name();
-	SATAN_DEBUG("  created MachineGraphic - %p -> (%s)\n", this, name_copy.c_str());
 
 	find_child_by_class("machineName").set_text_content(machine->get_name());
 	auto selind = find_child_by_class("selectedIndicator"); selind.set_display("none");
@@ -299,11 +298,8 @@ Connector::MachineGraphic::MachineGraphic(Connector *_context, const std::string
 		KammoGUI::SVGCanvas::ElementReference input_template = KammoGUI::SVGCanvas::ElementReference(context, "inputIndicatorTemplate");
 		KammoGUI::SVGCanvas::ElementReference output_template = KammoGUI::SVGCanvas::ElementReference(context, "outputIndicatorTemplate");
 
-		SATAN_DEBUG("   create input sockets.\n");
 		create_sockets(inputs, machine->get_input_names(), input_template, on_input_socket_event);
-		SATAN_DEBUG("   create output sockets.\n");
 		create_sockets(outputs, machine->get_output_names(), output_template, on_output_socket_event);
-		SATAN_DEBUG("   sockets created.\n");
 	}
 	{ // move the graphic into position
 		
@@ -317,15 +313,10 @@ Connector::MachineGraphic::MachineGraphic(Connector *_context, const std::string
 }
 
 Connector::MachineGraphic::~MachineGraphic() {
-	SATAN_DEBUG("  Connector::MachineGraphic::~MachineGraphic() -- will delete element %p (%s)\n", this, name_copy.c_str());
-
 	// make sure we delete the input and output ElementReference objects
 	// otherwise the elements will be left dangling when we delete the element. (memleak)
-	SATAN_DEBUG("   Connector::MachineGraphic::~MachineGraphic() - Deleting input sockets.\n");
 	for(auto inp : inputs) delete inp;
-	SATAN_DEBUG("   Connector::MachineGraphic::~MachineGraphic() - Deleting output sockets.\n");
 	for(auto oup : outputs) delete oup;
-	SATAN_DEBUG("   Connector::MachineGraphic::~MachineGraphic() - Sockets deleted.\n");
 	inputs.clear();
 	outputs.clear();
 
@@ -339,8 +330,6 @@ Connector::MachineGraphic::~MachineGraphic() {
 	if(found != mch2grph.end()) {
 		mch2grph.erase(found);
 	}
-
-	SATAN_DEBUG("  Connector::MachineGraphic::~MachineGraphic() -- element deleted %p\n", this);
 }
 
 void Connector::MachineGraphic::on_move() {
@@ -356,11 +345,20 @@ void Connector::MachineGraphic::on_move() {
 void Connector::MachineGraphic::on_attach(std::shared_ptr<RemoteInterface::RIMachine> src_machine,
 					  const std::string src_output,
 					  const std::string dst_input) {
+	if(src_machine->get_machine_type() == "MachineSequencer") return; // we can skip this case right away
+
+	SATAN_DEBUG("---->     (%d) MachineGraphic() -- attached [%s] @ %s ---> [%s] @ %s\n",
+		    gettid(),
+		    src_machine->get_name().c_str(), src_output.c_str(),
+		    machine->get_name().c_str(), dst_input.c_str());
+	
 	auto thiz = shared_from_this();
 	KammoGUI::run_on_GUI_thread(
 		[this, thiz,src_machine, src_output, dst_input]() {
-			SATAN_DEBUG("MachineGraphic -- attached [%s] @ %s : %s\n", src_machine->get_name().c_str(),
-				    src_output.c_str(), dst_input.c_str());
+			SATAN_DEBUG("(%d) MachineGraphic() -- attached [%s] @ %s ---> [%s] @ %s\n",
+				    gettid(),
+				    src_machine->get_name().c_str(), src_output.c_str(),
+				    machine->get_name().c_str(), dst_input.c_str());
 			
 			auto weak_src_gfx = mch2grph.find(src_machine);
 			
@@ -374,7 +372,7 @@ void Connector::MachineGraphic::on_attach(std::shared_ptr<RemoteInterface::RIMac
 						auto found_here = connections.find(congfx);
 						if(found_here == connections.end()) {
 							// we don't have this on file, insert it
-					connections.insert(congfx);
+							connections.insert(congfx);
 						}
 					}
 					{
@@ -388,9 +386,15 @@ void Connector::MachineGraphic::on_attach(std::shared_ptr<RemoteInterface::RIMac
 				} else {
 					// the object pointed to by the weak_src_gfx pointer is gone - remove this entry
 					mch2grph.erase(weak_src_gfx);
+					SATAN_DEBUG("     **** MachineGraphic for %s has been removed - can't create ConnectionGraphic.\n",
+						    src_machine->get_name().c_str());
 				}
+			} else {
+				SATAN_DEBUG("     **** %s has no source graphic - can't create ConnectionGraphic.\n",
+					    src_machine->get_name().c_str());
 			}
 			SATAN_DEBUG("   end MachineGraphic::attached.\n");
+			SATAN_DEBUG("   \n");
 		}
 		);
 }
@@ -401,24 +405,20 @@ void Connector::MachineGraphic::on_detach(std::shared_ptr<RemoteInterface::RIMac
 	auto thiz = shared_from_this();
 	KammoGUI::run_on_GUI_thread(
 		[this, thiz,src_machine, src_output, dst_input]() {
-			SATAN_DEBUG("MachineGraphic -- detached [%s] @ %s : %s\n", src_machine->get_name().c_str(),
-				    src_output.c_str(), dst_input.c_str());
+			SATAN_DEBUG("MachineGraphic() -- detached [%s] @ %s ---> [%s] @ %s\n",
+				    src_machine->get_name().c_str(), src_output.c_str(),
+				    machine->get_name().c_str(), dst_input.c_str());
 			
 			auto weak_src_gfx = thiz->mch2grph.find(src_machine);
 			
 			// only detach if we have a MachineGraphic object for the source as well (in some cases we don't, like for MachineSequencer objects.)
 			if(weak_src_gfx != mch2grph.end()) {
-				SATAN_DEBUG("   --- weak_src_gfx exists - lock it.\n");
 				if(auto src_gfx = (*weak_src_gfx).second.lock()) {
-					SATAN_DEBUG("   --- lock acquired, proceed\n");
 					ConnectionGraphic::detach(src_gfx, shared_from_this(), src_output, dst_input);
 				} else {
-					SATAN_DEBUG("   --- Object has been removed already, cannot proceed.\n");
 					// the object pointed to by the weak_src_gfx pointer is gone - remove this entry
 					mch2grph.erase(weak_src_gfx);
 				}
-			} else {
-				SATAN_DEBUG("   --- weak_src_gfx non existing.\n");
 			}
 		}
 		);
@@ -457,21 +457,15 @@ void Connector::MachineGraphic::create_sockets(std::vector<IOSocket *> &vctr, st
 		std::stringstream id_stream;
 		id_stream << "socket_" << ((void *)&vctr) << "_" << name;
 
-		SATAN_DEBUG("  creating socket with id: %s\n", id_stream.str().c_str());
-
 		try {
 			KammoGUI::SVGCanvas::ElementReference socket =
 				socket_container.add_element_clone(id_stream.str(), template_socket);
 
-			SATAN_DEBUG("     ---- A\n");
-			
 			socket.find_child_by_class("nameTemplate").set_text_content(name);
 			
 			KammoGUI::SVGCanvas::SVGMatrix rotate_t;
 			socket.get_transform(rotate_t);
-			
-			SATAN_DEBUG("     ---- B\n");
-			
+						
 			rotate_t.translate(-250.0, -250.0);
 			rotate_t.rotate(angle * M_PI / 180.0);
 			rotate_t.translate(250.0, 250.0);
@@ -481,8 +475,6 @@ void Connector::MachineGraphic::create_sockets(std::vector<IOSocket *> &vctr, st
 
 			vctr.push_back(new IOSocket(socket.find_child_by_class("selectButton"), socket, this, name));
 			vctr[vctr.size() - 1]->set_event_handler(this_on_event);
-			
-			SATAN_DEBUG("     ---- C (this_on_event: %p)\n", this_on_event);
 			
 			angle += angle_step;
 		} catch(KammoGUI::SVGCanvas::OperationFailedException &e) {
@@ -641,10 +633,6 @@ void Connector::MachineGraphic::on_output_socket_event(KammoGUI::SVGCanvas::SVGD
 	if(event.get_action() == KammoGUI::SVGCanvas::MotionEvent::ACTION_UP) {
 		IOSocket *io_sock = (IOSocket *)e_ref;
 		
-		SATAN_DEBUG("on_output_socket_event() - io_sock %p\n", io_sock);
-		SATAN_DEBUG("                         - owner %p\n", io_sock->owner);
-		SATAN_DEBUG("                         - name %s\n", io_sock->name.c_str());
-		
 		if(current_output) {
 			auto crnt = current_output->first.lock();
 			crnt->deselect();
@@ -661,10 +649,6 @@ void Connector::MachineGraphic::on_input_socket_event(KammoGUI::SVGCanvas::SVGDo
 	if(event.get_action() == KammoGUI::SVGCanvas::MotionEvent::ACTION_UP) {
 		IOSocket *io_sock = (IOSocket *)e_ref;
 		
-		SATAN_DEBUG("on_input_socket_event() - io_sock %p\n", io_sock);
-		SATAN_DEBUG("                         - owner %p\n", io_sock->owner);
-		SATAN_DEBUG("                         - name %s\n", io_sock->name.c_str());
-
 		if(current_output) {
 			auto crnt = current_output->first.lock();
 
@@ -686,8 +670,6 @@ std::shared_ptr<Connector::MachineGraphic> Connector::MachineGraphic::create(Con
 	std::stringstream id_stream;
 	id_stream << "graphic_" << (void *)machine.get();
 
-	SATAN_DEBUG("Create MachineGraphic - Connector context: %p\n", context);
-	
 	KammoGUI::SVGCanvas::ElementReference graphic_template = KammoGUI::SVGCanvas::ElementReference(context, "machineGraphicTemplate");
 	KammoGUI::SVGCanvas::ElementReference connector_layer = KammoGUI::SVGCanvas::ElementReference(context, "connectorContainer");
 
@@ -856,8 +838,6 @@ void Connector::zoom_callback(Connector *ctx, double zoom, double x, double y) {
 bool Connector::on_scale(KammoGUI::ScaleGestureDetector *detector) {
 	pan_zoom_scale *= (double)detector->get_scale_factor();
 
-	SATAN_DEBUG("pan_zoom_scale: %f\n", pan_zoom_scale);
-	
 	return true;
 }
 
@@ -1103,17 +1083,16 @@ void Connector::zoom_restore() {
 }
 
 void Connector::ri_machine_registered(std::shared_ptr<RemoteInterface::RIMachine> ri_machine) {
-	SATAN_DEBUG("Connector::ri_machine_registered - type [%s] (%f, %f)\n",
-		    ri_machine->get_machine_type().c_str(), ri_machine->get_x_position(), ri_machine->get_y_position());	
-
 	if(ri_machine->get_machine_type() == "MachineSequencer") return; // we don't want to show the MachineSequencers in the connector view..
-	
+
+	SATAN_DEBUG("---->     --- (%d) will create MachineGraphic for %s\n", gettid(), ri_machine->get_name().c_str());
+	  
 	KammoGUI::run_on_GUI_thread(
 		[this, ri_machine]() {
-			SATAN_DEBUG("Connector::ri_machine_registered() - Creating machine. (%s)\n", ri_machine->get_name().c_str());
 			graphics.push_back(MachineGraphic::create(this, ri_machine));
-			get_parent()->redraw(); 
-			SATAN_DEBUG("Connector::ri_machine_registered() - Machine created.\n");
+			get_parent()->redraw();
+			SATAN_DEBUG("  --- (%d) CREATED MachineGraphic for %s\n", gettid(), ri_machine->get_name().c_str());
+			SATAN_DEBUG("  \n");
 		}
 		);
 }
@@ -1123,8 +1102,6 @@ void Connector::ri_machine_unregistered(std::shared_ptr<RemoteInterface::RIMachi
 
 	KammoGUI::run_on_GUI_thread(
 		[this, ri_machine]() {
-			SATAN_DEBUG("Connector::ri_machine_unregistered() - Deleting machine. (%s)\n", ri_machine->get_name().c_str());
-
 			auto iterator = graphics.begin();
 			for(; iterator != graphics.end(); iterator++) {
 				if((*iterator)->matches_ri_machine(ri_machine)) {
@@ -1138,8 +1115,6 @@ void Connector::ri_machine_unregistered(std::shared_ptr<RemoteInterface::RIMachi
 					break;
 				}
 			}
-			SATAN_DEBUG("Connector::ri_machine_unregistered() - machine deleted.\n");
-
 		}
 		);
 }
@@ -1153,8 +1128,6 @@ void Connector::ri_machine_unregistered(std::shared_ptr<RemoteInterface::RIMachi
 KammoEventHandler_Declare(ConnectorHandler,"connector");
 
 virtual void on_init(KammoGUI::Widget *wid) {
-	SATAN_DEBUG("connector ON INIT\n");
-
 	KammoGUI::SVGCanvas *cnvs = (KammoGUI::SVGCanvas *)wid;		
 	cnvs->set_bg_color(1.0, 1.0, 1.0);
 

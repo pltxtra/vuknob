@@ -1117,7 +1117,7 @@ Machine::Machine() {
 }
 
 Machine::Machine(std::string name_base, bool _base_name_is_name, float _xpos, float _ypos) :
-	signals_ready(false), base_name(name_base), base_name_is_name(_base_name_is_name), x_position(_xpos), y_position(_ypos) {
+	base_name(name_base), base_name_is_name(_base_name_is_name), x_position(_xpos), y_position(_ypos) {
 	CREATE_TIME_MEASURE_OBJECT(tmes_A, base_name.c_str(), 1000);
 	CREATE_TIME_MEASURE_OBJECT(tmes_B, base_name.c_str(), 1000);
 	CREATE_TIME_MEASURE_OBJECT(tmes_C, base_name.c_str(), 1000);
@@ -1317,21 +1317,7 @@ void Machine::execute() {
 		jInformer::inform(std::string("Caught an exception when trying to execute dynlib machine [") + name + "]");
 		throw;
 	}
-	STOP_TIME_MEASURE((*tmes_C), "fill_buffers");
-	
-	// OK, we are ready, tick the signals_ready marker
-	signals_ready = true; // this mainly prevents this machine from rendering again during the same frame.
-
-}
-
-void Machine::clear_signals_ready() {
-	if(signals_ready) {
-		std::map<Machine *, int>::iterator i;
-		for(i = dependant.begin(); i != dependant.end(); i++) {
-			(*i).first->clear_signals_ready();
-		}
-		signals_ready = false;
-	}
+	STOP_TIME_MEASURE((*tmes_C), "fill_buffers");	
 }
 
 Machine::Controller *Machine::create_controller(
@@ -1823,8 +1809,6 @@ int Machine::internal_fill_sink(int (*fill_sink_callback)(int status, void *cbd)
 	
 	if(sink) {
 		try {
-			sink->clear_signals_ready();
-
 			calculate_samples_per_tick();
 
 			START_TIME_MEASURE(filler_sinker);

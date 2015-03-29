@@ -464,7 +464,6 @@ private:
 	int reference_counter = 0;
 	std::set<Machine *> tightly_connected; // these are machines that should be destroyed when we are destroyed. (Tightly connected machines should be considered "one")
 	std::map<Machine *, int> dependant; // machines which have output that we depend on.
-	bool signals_ready; // true when all signals are generated
 	std::string name;
 	std::string base_name; /* used to create the default value of name */
 	bool base_name_is_name; // indicates that base_name should be use as is
@@ -475,7 +474,6 @@ private:
 	
 	void destroy_tightly_attached_machines();
 	void execute();
-	void clear_signals_ready(); // resets signals_ready to false, recursive
 	void premix(Signal *result, Signal *head);
 	bool find_machine_in_graph(Machine *machine); // this function is used to detect loops
 	Signal *get_output(const std::string &name);

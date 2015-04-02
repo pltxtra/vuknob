@@ -73,12 +73,22 @@ protected:
 			MessageTooLarge() : runtime_error("Encoded message too large.") {}
 			virtual ~MessageTooLarge() {}
 		};
+
+		class CannotReceiveReply : public std::runtime_error {
+		public:
+			CannotReceiveReply() : runtime_error("A reply could not be received.") {}
+			virtual ~CannotReceiveReply() {}
+		};
 		
 		friend class MessageHandler;
 		friend class Context;
 		
 		Message();
 		Message(Context *context);
+
+		void set_reply_handler(std::function<void(const Message *reply_msg)> reply_received_callback);
+		void reply_to(const Message *reply_msg);
+		bool is_awaiting_reply();
 		
 		void set_value(const std::string &key, const std::string &value);
 		std::string get_value(const std::string &key) const;		
@@ -99,6 +109,9 @@ protected:
 		mutable std::ostream ostrm;
 		mutable int data2send;
 		
+		std::function<void(const Message *reply_msg)> reply_received_callback;
+		bool awaiting_reply = false;
+		
 		std::map<std::string, std::string> key2val;
 
 	};
@@ -114,7 +127,7 @@ protected:
 			FailureResponse(const std::string &_response_message) : runtime_error("Remote interface command execution failed - response to sender generated."), response_message(_response_message) {}
 			virtual ~FailureResponse() {}
 		};
-
+		
 		~Context();
 		virtual void distribute_message(std::shared_ptr<Message> &msg) = 0;
 		virtual void post_action(std::function<void()> f) = 0;
@@ -122,6 +135,7 @@ protected:
 		virtual std::shared_ptr<BaseObject> get_object(int32_t objid) = 0;
 
 		std::shared_ptr<Message> acquire_message();
+		std::shared_ptr<Message> acquire_reply(const Message &originator);
 		void recycle_message(Message *used_message);
 	};
 	
@@ -179,7 +193,9 @@ protected:
 
 		Context *context;
 
-		void send_object_message(std::function<void(std::shared_ptr<Message> &msg_to_send)>);
+		void send_object_message(std::function<void(std::shared_ptr<Message> &msg_to_send)> create_msg_callback);
+		void send_object_message(std::function<void(std::shared_ptr<Message> &msg_to_send)> create_msg_callback,
+					 std::function<void(const Message *reply_message)> reply_received_callback);
 
 		inline bool is_server_side() { return __is_server_side; }
 		
@@ -216,7 +232,7 @@ protected:
 		void set_context(Context *context);
 
 		virtual void post_constructor_client() = 0; // called after the constructor has been called
-		virtual void process_message(Server *context, const Message &msg) = 0; // server side processing
+		virtual void process_message(Server *context, MessageHandler *src, const Message &msg) = 0; // server side processing
 		virtual void process_message(Client *context, const Message &msg) = 0; // client side processing
 		virtual void serialize(std::shared_ptr<Message> &target) = 0;
 		virtual void on_delete(Client *context) = 0; // called on client side when it's about to be deleted
@@ -250,7 +266,7 @@ public:
 		static HandleListFactory handlelist_factory;
 
 		virtual void post_constructor_client(); // called after the constructor has been called
-		virtual void process_message(Server *context, const Message &msg); // server side processing
+		virtual void process_message(Server *context, MessageHandler *src, const Message &msg); // server side processing
 		virtual void process_message(Client *context, const Message &msg); // client side processing
 		virtual void serialize(std::shared_ptr<Message> &target);
 		virtual void on_delete(Client *context); // called on client side when it's about to be deleted
@@ -265,6 +281,22 @@ public:
 	
 	class RIMachine : public BaseObject {
 	public:
+		enum PadEvent_t {
+			ms_pad_press = 0,
+			ms_pad_slide = 1,
+			ms_pad_release = 2,
+			ms_pad_no_event = 3
+		};
+		enum PadMode_t {
+			pad_normal = 0,
+			pad_arpeggiator = 1
+		};
+
+		enum ChordMode_t {
+			chord_off = 0,
+			chord_triad = 1
+		};
+		
 		/* server side API */
 		RIMachine(const Factory *factory, const Message &serialized);
 		RIMachine(int32_t new_obj_id, const Factory *factory);
@@ -299,6 +331,7 @@ public:
 		};
 		
 		std::string get_name();
+		std::string get_sibling_name();
 		std::string get_machine_type();
 
 		double get_x_position();
@@ -314,21 +347,22 @@ public:
 		void set_state_change_listener(std::weak_ptr<RIMachineStateListener> state_listener);
 
 	public:        /* client side Machine Sequencer/Pad API */
-		std::vector<std::string> mseq_available_midi_controllers();
+		std::set<std::string> available_midi_controllers();
+		int get_nr_of_loops();
 		void pad_export_to_loop(int loop_id = RI_LOOP_NOT_SET);
 		void pad_set_octave(int octave);
 		void pad_set_scale(int scale_index);
 		void pad_set_record(bool record);
 		void pad_set_quantize(bool do_quantize);
-		void pad_assign_midi_controller(int controller);
-		void pad_set_chord_mode(int chord_mode);
-		void pad_set_arpeggio_pattern(int arp_pattern);
+		void pad_assign_midi_controller(const std::string &controller);
+		void pad_set_chord_mode(ChordMode_t chord_mode);
+		void pad_set_arpeggio_pattern(const std::string &arp_pattern);
 		void pad_clear();
-		void pad_enqueue_event(int finger, int event_type, float ev_x, float ev_y);
+		void pad_enqueue_event(int finger, PadEvent_t event_type, float ev_x, float ev_y);
 		
 	public:
 		virtual void post_constructor_client(); // called after the constructor has been called
-		virtual void process_message(Server *context, const Message &msg); // server side processing
+		virtual void process_message(Server *context, MessageHandler *src, const Message &msg); // server side processing
 		virtual void process_message(Client *context, const Message &msg); // client side processing
 		virtual void serialize(std::shared_ptr<Message> &target);
 		virtual void on_delete(Client *context); // called on client side when it's about to be deleted
@@ -352,14 +386,16 @@ public:
 		std::vector<std::string> outputs;
 		
 		std::mutex ri_machine_mutex;
-		std::string name;
+		std::string name, sibling;
 		std::string type;
 		Machine *real_machine_ptr = nullptr;
 		double xpos, ypos;
+		std::set<std::string> midi_controllers;		
 
 		void process_attach_message(Context *context, const Message &msg);
 		void process_detach_message(Context *context, const Message &msg);
 		
+		void parse_serialized_midi_ctrl_list(std::string serialized);
 		void parse_serialized_connections_data(std::string serialized);
 		void call_listeners(std::function<void(std::shared_ptr<RIMachineStateListener> listener)> callback);
 		
@@ -373,8 +409,12 @@ public:
 
 	class Client : public MessageHandler, public Context {
 	private:
-		std::map<int32_t, std::shared_ptr<BaseObject> > all_objects;		
+		std::map<int32_t, std::shared_ptr<BaseObject> > all_objects;
 
+		// code for handling messages waiting for a reply
+		int32_t next_reply_id = 0;
+		std::map<int32_t, std::shared_ptr<Message> > msg_waiting_for_reply;
+		
 		std::map<std::string, std::string> handle2hint;
 	       		
 		std::thread t1;
@@ -481,7 +521,7 @@ public:
 		
 		Server(const asio::ip::tcp::endpoint& endpoint);
 
-		void route_incomming_message(const Message &msg);
+		void route_incomming_message(ClientAgent *src, const Message &msg);
 		
 		static std::shared_ptr<Server> server;
 		static std::mutex server_mutex;

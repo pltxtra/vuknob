@@ -56,11 +56,12 @@
 #define __MSG_DELETE_OBJECT -3
 #define __MSG_FAILURE_RESPONSE -4
 #define __MSG_PROTOCOL_VERSION -5
+#define __MSG_REPLY -6
 
 #define __FCT_HANDLELIST     "HandleList"
 #define __FCT_RIMACHINE      "RIMachine"
 
-#define __VUKNOB_PROTOCOL_VERSION__ 1
+#define __VUKNOB_PROTOCOL_VERSION__ 2
 
 /***************************
  *
@@ -71,6 +72,19 @@
 RemoteInterface::Message::Message() : context(), ostrm(&sbuf), data2send(0) {}
 
 RemoteInterface::Message::Message(RemoteInterface::Context *_context) : context(_context), ostrm(&sbuf), data2send(0) {}
+
+void RemoteInterface::Message::set_reply_handler(std::function<void(const Message *reply_msg)> __reply_received_callback) {
+	reply_received_callback = __reply_received_callback;
+	awaiting_reply = true;
+}
+
+void RemoteInterface::Message::reply_to(const Message *reply_msg) {
+	reply_received_callback(reply_msg);
+}
+
+bool RemoteInterface::Message::is_awaiting_reply() {
+	return awaiting_reply;
+}
 
 void RemoteInterface::Message::set_value(const std::string &key, const std::string &value) {
 	if(key.find(';') != std::string::npos) throw IllegalChar();
@@ -211,6 +225,8 @@ void RemoteInterface::Message::recycle(Message *msg) {
 	if(msg->context) {
 		msg->sbuf.consume(msg->data2send);
 		msg->data2send = 0;
+		msg->awaiting_reply = false;
+		msg->reply_received_callback = [](const Message *reply_msg){};
 		msg->key2val.clear();
 		msg->context->recycle_message(msg);
 	} else {
@@ -240,6 +256,12 @@ std::shared_ptr<RemoteInterface::Message> RemoteInterface::Context::acquire_mess
 	}
 	
 	return std::shared_ptr<Message>(m_ptr, Message::recycle);
+}
+
+std::shared_ptr<RemoteInterface::Message> RemoteInterface::Context::acquire_reply(const Message &originator) {
+	std::shared_ptr<Message> reply = acquire_message();
+	reply->set_value("id", std::to_string(__MSG_REPLY));
+	return reply;
 }
 
 void RemoteInterface::Context::recycle_message(RemoteInterface::Message* used_message) {
@@ -389,6 +411,42 @@ void RemoteInterface::BaseObject::send_object_message(std::function<void(std::sh
 		);
 }
 
+void RemoteInterface::BaseObject::send_object_message(std::function<void(std::shared_ptr<Message> &msg_to_send)> complete_message,
+						      std::function<void(const Message *reply_msg)> reply_received_callback) {
+	std::mutex mtx;
+	std::condition_variable cv;
+	bool ready = false;
+	
+	context->post_action(
+		[this, complete_message, reply_received_callback, &ready, &mtx, &cv]() {
+			std::shared_ptr<Message> msg2send = context->acquire_message();
+
+			{
+				// fill in object id header
+				msg2send->set_value("id", std::to_string(obj_id));
+				msg2send->set_reply_handler(
+					[reply_received_callback, &ready, &mtx, &cv](const Message *reply_msg) {
+						reply_received_callback(reply_msg);
+						
+						std::unique_lock<std::mutex> lck(mtx);
+						ready = true;
+						cv.notify_all();
+					}
+					);
+			}
+			{
+				// call complete message
+				complete_message(msg2send);
+			}			
+
+			context->distribute_message(msg2send);
+		}
+		);
+
+	std::unique_lock<std::mutex> lck(mtx);
+	while (!ready) cv.wait(lck);
+}
+
 int32_t RemoteInterface::BaseObject::get_obj_id() {
 	return obj_id;
 }
@@ -468,7 +526,7 @@ RemoteInterface::HandleList::HandleList(int32_t new_obj_id, const Factory *facto
 
 void RemoteInterface::HandleList::post_constructor_client() {}
 
-void RemoteInterface::HandleList::process_message(Server *context, const Message &msg) {
+void RemoteInterface::HandleList::process_message(Server *context, MessageHandler *src, const Message &msg) {
 	std::string command = msg.get_value("command");
 
 	if(command == "instance") {
@@ -585,7 +643,12 @@ RemoteInterface::RIMachine::RIMachine(const Factory *factory, const Message &ser
 	xpos = atof(serialized.get_value("xpos").c_str());
 	ypos = atof(serialized.get_value("ypos").c_str());
 
+	if(type == "MachineSequencer") {
+		sibling = serialized.get_value("sibling");
+	}
+	
 	parse_serialized_connections_data(serialized.get_value("connections"));
+	parse_serialized_midi_ctrl_list(serialized.get_value("mctrls"));
 	try {
 		parse_io(inputs, serialized.get_value("inputs"));
 	} catch(Message::NoSuchKey &e) { /* ignore empty inputs */ }
@@ -596,6 +659,21 @@ RemoteInterface::RIMachine::RIMachine(const Factory *factory, const Message &ser
 
 RemoteInterface::RIMachine::RIMachine(int32_t new_obj_id, const Factory *factory) : BaseObject(new_obj_id, factory) {}
 
+
+void RemoteInterface::RIMachine::parse_serialized_midi_ctrl_list(std::string serialized) {
+	std::stringstream is(serialized);
+
+	std::string ctrl;
+
+	// get first midi controller
+	std::getline(is, ctrl, '$');
+	while(!is.eof() && ctrl != "") {
+		midi_controllers.insert(ctrl);
+		
+		// find next
+		std::getline(is, ctrl, '$');
+	}
+}
 
 void RemoteInterface::RIMachine::parse_serialized_connections_data(std::string serialized) {
 	std::stringstream is(serialized);
@@ -618,8 +696,7 @@ void RemoteInterface::RIMachine::parse_serialized_connections_data(std::string s
 		
 		// find start of next
 		std::getline(is, srcid, '@');
-	}
-	
+	}	
 }
 
 void RemoteInterface::RIMachine::call_listeners(std::function<void(std::shared_ptr<RIMachineStateListener> listener)> callback) {
@@ -644,11 +721,20 @@ void RemoteInterface::RIMachine::serverside_init_from_machine_ptr(Machine *m_ptr
 
 	{ // see if it's a MachineSequencer
 		MachineSequencer *mseq = dynamic_cast<MachineSequencer *>((m_ptr));
-		if(mseq != NULL) type = "MachineSequencer";
+		if(mseq != NULL) {
+			type = "MachineSequencer";
+			midi_controllers = mseq->available_midi_controllers();
+
+			// set pad defaults
+			mseq->get_pad()->set_pad_resolution(1024, 1024);
+			mseq->set_pad_arpeggio_pattern("no arpeggio");
+		}
 	}
 	{ // see if it's a DynamicMachine
 		DynamicMachine *dmch = dynamic_cast<DynamicMachine *>((m_ptr));
-		if(dmch != NULL) type = "DynamicMachine";
+		if(dmch != NULL) {
+			type = "DynamicMachine";		
+		}
 	}
 
 	real_machine_ptr = m_ptr;
@@ -666,6 +752,7 @@ void RemoteInterface::RIMachine::serverside_init_from_machine_ptr(Machine *m_ptr
 	} catch(...) {
 		throw;
 	}
+
 }
 
 void RemoteInterface::RIMachine::attach_input(std::shared_ptr<RIMachine> source_machine,
@@ -759,6 +846,11 @@ std::string RemoteInterface::RIMachine::get_name() {
 	return name;
 }
 
+std::string RemoteInterface::RIMachine::get_sibling_name() {
+	std::lock_guard<std::mutex> lock_guard(ri_machine_mutex);
+	return sibling;
+}
+
 std::string RemoteInterface::RIMachine::get_machine_type() {
 	std::lock_guard<std::mutex> lock_guard(ri_machine_mutex);
 	return type;
@@ -847,6 +939,81 @@ void RemoteInterface::RIMachine::set_state_change_listener(std::weak_ptr<RIMachi
 		);
 }
 
+std::set<std::string> RemoteInterface::RIMachine::available_midi_controllers() {
+	std::lock_guard<std::mutex> lock_guard(ri_machine_mutex);
+	return midi_controllers;
+}
+
+int RemoteInterface::RIMachine::get_nr_of_loops() {
+	auto thiz = std::dynamic_pointer_cast<RIMachine>(shared_from_this());
+	int reply;
+	bool failed = false;
+	
+	send_object_message(
+		[this, thiz](std::shared_ptr<Message> &msg2send) {
+			msg2send->set_value("command", "getnrloops");
+			msg2send->set_value("ignored", thiz->name); // make sure thiz is not optimized away
+		},
+		[this, thiz, &reply, &failed](const Message *reply_message) {
+			if(reply_message)
+				reply = std::stol(reply_message->get_value("nrloops"));
+			else
+				failed = true;
+		}
+		);
+
+	if(failed) throw Message::CannotReceiveReply();
+	
+	return reply;
+}
+
+void RemoteInterface::RIMachine::pad_export_to_loop(int loop_id) {
+}
+
+void RemoteInterface::RIMachine::pad_set_octave(int octave) {
+}
+
+void RemoteInterface::RIMachine::pad_set_scale(int scale_index) {
+}
+
+void RemoteInterface::RIMachine::pad_set_record(bool record) {
+}
+
+void RemoteInterface::RIMachine::pad_set_quantize(bool do_quantize) {
+}
+
+void RemoteInterface::RIMachine::pad_assign_midi_controller(const std::string &controller) {
+}
+
+void RemoteInterface::RIMachine::pad_set_chord_mode(ChordMode_t chord_mode) {
+}
+
+void RemoteInterface::RIMachine::pad_set_arpeggio_pattern(const std::string &arp_pattern) {
+}
+
+void RemoteInterface::RIMachine::pad_clear() {
+}
+
+void RemoteInterface::RIMachine::pad_enqueue_event(int finger, PadEvent_t event_type, float ev_x, float ev_y) {
+	ev_x *= 1024.0f;
+	ev_y *= 1024.0f;
+	int xp = ev_x;
+	int yp = ev_y;
+	
+	auto thiz = std::dynamic_pointer_cast<RIMachine>(shared_from_this());
+	send_object_message(
+		[this, xp, yp, finger, event_type, thiz](std::shared_ptr<Message> &msg2send) {
+			msg2send->set_value("command", "padevt");
+			msg2send->set_value("ignored", thiz->name); // make sure thiz is not optimized away
+
+			msg2send->set_value("evt", std::to_string(((int)event_type)));
+			msg2send->set_value("fgr", std::to_string(finger));
+			msg2send->set_value("xp", std::to_string(xp));
+			msg2send->set_value("yp", std::to_string(yp));
+		}
+		);
+}
+
 void RemoteInterface::RIMachine::post_constructor_client() {
 	for(auto weak_listener : listeners) {
 		if(auto listener = weak_listener.lock()) {
@@ -856,10 +1023,36 @@ void RemoteInterface::RIMachine::post_constructor_client() {
 	}
 }
 
-void RemoteInterface::RIMachine::process_message(Server *context, const Message &msg) {
+void RemoteInterface::RIMachine::process_message(Server *context, MessageHandler *src, const Message &msg) {
 	std::string command = msg.get_value("command");
-	
-	if(command == "deleteme") {
+
+	if(command == "padevt") {
+		PadEvent_t event_type = (PadEvent_t)(std::stol(msg.get_value("evt")));
+		int finger = std::stol(msg.get_value("fgr"));
+		int xp = std::stol(msg.get_value("xp"));
+		int yp = std::stol(msg.get_value("yp"));
+
+		MachineSequencer *mseq = dynamic_cast<MachineSequencer *>((real_machine_ptr));
+		if(mseq != NULL) {
+			MachineSequencer::PadEvent_t pevt = MachineSequencer::ms_pad_no_event;
+			switch(event_type) {
+			case RIMachine::ms_pad_press:
+				pevt = MachineSequencer::ms_pad_press;
+				break;
+			case RIMachine::ms_pad_slide:
+				pevt = MachineSequencer::ms_pad_slide;
+				break;
+			case RIMachine::ms_pad_release:
+				pevt = MachineSequencer::ms_pad_release;
+				break;
+			case RIMachine::ms_pad_no_event:
+				pevt = MachineSequencer::ms_pad_no_event;
+				break;
+			}
+			mseq->get_pad()->enqueue_event(finger, pevt, xp, yp);
+		}
+		
+	} else if(command == "deleteme") {
 		Machine::disconnect_and_destroy(real_machine_ptr);
 	} else if(command == "setpos") {
 		xpos = atof(msg.get_value("xpos").c_str());
@@ -880,6 +1073,17 @@ void RemoteInterface::RIMachine::process_message(Server *context, const Message 
 		process_attach_message(context, msg);
 	} else if(command == "r_detach") {
 		process_detach_message(context, msg);
+	} else if(command == "getnrloops") {
+		MachineSequencer *mseq = dynamic_cast<MachineSequencer *>((real_machine_ptr));
+
+		if(mseq != NULL) { // see if it's a MachineSequencer			
+			std::shared_ptr<Message> reply = context->acquire_reply(msg);
+			reply->set_value("nrloops", std::to_string(mseq->get_nr_of_loops()));
+			src->deliver_message(reply);
+		} else {
+			// not a MachineSequencer
+			throw Context::FailureResponse("Not a MachineSequencer object.");
+		}
 	}
 }
 
@@ -995,6 +1199,25 @@ void RemoteInterface::RIMachine::serialize(std::shared_ptr<Message> &target) {
 	}
 
 	{
+		std::stringstream mctrl_string;
+		for(auto mctrl : midi_controllers) {
+			mctrl_string << mctrl << "$";
+		}
+		if(mctrl_string.str() == "") {
+			target->set_value("mctrls", "$"); // no connections
+		} else {
+			target->set_value("mctrls", mctrl_string.str());
+		}
+	}
+
+	{
+		MachineSequencer *mseq = dynamic_cast<MachineSequencer *>((real_machine_ptr));
+		if(mseq != NULL) {
+			target->set_value("sibling", mseq->get_machine()->get_name());
+		}
+	}
+
+	{
 		std::stringstream inputs_string;
 		for(auto input : inputs) {
 			inputs_string << input << ":";
@@ -1096,6 +1319,17 @@ void RemoteInterface::Client::on_message_received(const Message &msg) {
 	}
 	break;
 
+	case __MSG_REPLY:
+	{
+		int32_t reply_identifier = std::stol(msg.get_value("repid"));
+		auto repmsg = msg_waiting_for_reply.find(reply_identifier);
+		if(repmsg != msg_waiting_for_reply.end()) {
+			repmsg->second->reply_to(&msg);
+			msg_waiting_for_reply.erase(repmsg);
+		}
+	}
+	break;
+
 	case __MSG_DELETE_OBJECT:
 	{
 		auto obj_iterator = all_objects.find(std::stol(msg.get_value("objid")));
@@ -1124,8 +1358,15 @@ void RemoteInterface::Client::on_message_received(const Message &msg) {
 }
 
 void RemoteInterface::Client::on_connection_dropped() {
+	// inform all waiting messages that their action failed
+	for(auto msg : msg_waiting_for_reply) {
+		msg.second->reply_to(NULL);
+	}
+	msg_waiting_for_reply.clear();
+
 	flush_all_objects();
 	disconnect_callback();
+
 }
 
 void RemoteInterface::Client::start_client(const std::string &server_host,
@@ -1180,7 +1421,21 @@ void RemoteInterface::Client::register_ri_machine_set_listener(std::weak_ptr<RIM
 }
 
 void RemoteInterface::Client::distribute_message(std::shared_ptr<Message> &msg) {
-	deliver_message(msg);
+	if(msg->is_awaiting_reply()) {
+		if(msg_waiting_for_reply.find(next_reply_id) != msg_waiting_for_reply.end()) {
+			// no available reply id - reply with empty message to signal failure
+			msg->reply_to(NULL);
+		} else {
+			// fill in object reply id header
+			msg->set_value("repid", std::to_string(next_reply_id));
+			// add the msg to our set of messages waiting for a reply
+			msg_waiting_for_reply[next_reply_id++] = msg;
+			// deliver it
+			deliver_message(msg);
+		}
+	} else {	
+		deliver_message(msg);
+	}
 }
 
 void RemoteInterface::Client::post_action(std::function<void()> f) {
@@ -1235,8 +1490,9 @@ void RemoteInterface::Server::ClientAgent::disconnect() {
 
 void RemoteInterface::Server::ClientAgent::on_message_received(const Message &msg) {
 	std::string resp_msg;
+	
 	try {
-		server->route_incomming_message(msg);
+		server->route_incomming_message(this, msg);
 	} catch(Context::FailureResponse &fresp) {
 		resp_msg = fresp.response_message;
 	}
@@ -1460,13 +1716,13 @@ void RemoteInterface::Server::send_all_objects_to_new_client(std::shared_ptr<Mes
 	}
 }
 
-void RemoteInterface::Server::route_incomming_message(const Message &msg) {
+void RemoteInterface::Server::route_incomming_message(ClientAgent *src, const Message &msg) {
 	int identifier = std::stol(msg.get_value("id"));
 		
 	auto obj_iterator = all_objects.find(identifier);
 	if(obj_iterator == all_objects.end()) throw BaseObject::NoSuchObject();
 	
-	obj_iterator->second->process_message(this, msg);
+	obj_iterator->second->process_message(this, src, msg);
 }
 
 void RemoteInterface::Server::disconnect_clients() {

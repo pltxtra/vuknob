@@ -55,7 +55,7 @@ private:
 
 	KammoGUI::SVGCanvas::ElementReference graphArea_element;
 	KammoGUI::SVGCanvas::SVGRect graphArea_viewport;
-	MachineSequencer *mseq;
+	std::shared_ptr<RemoteInterface::RIMachine> mseq;
 
 	std::set<std::weak_ptr<RemoteInterface::RIMachine>,
 		 std::owner_less<std::weak_ptr<RemoteInterface::RIMachine> > >msequencers; // all known machine sequencers
@@ -122,7 +122,7 @@ public:
 	virtual void on_resize();
 	virtual void on_render();
 
-	static void use_new_MachineSequencer(MachineSequencer *mseq);
+	static void use_new_MachineSequencer(std::shared_ptr<RemoteInterface::RIMachine> mseq);
 
 	virtual void ri_machine_registered(std::shared_ptr<RemoteInterface::RIMachine> ri_machine);
 	virtual void ri_machine_unregistered(std::shared_ptr<RemoteInterface::RIMachine> ri_machine);

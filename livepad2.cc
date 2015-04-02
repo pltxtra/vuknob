@@ -87,11 +87,7 @@ void LivePad2::on_render() {
 	}
 
 	{ /* get graphArea size */
-		graphArea_element.get_viewport(graphArea_viewport);
-		
-		if(mseq) {
-			mseq->get_pad()->set_pad_resolution(doc_x2 - doc_x1 + 1, doc_y2 - doc_y1 + 1); // +1 to disable overflow
-		}
+		graphArea_element.get_viewport(graphArea_viewport);		
 	}
 }
 
@@ -150,10 +146,12 @@ void LivePad2::listview_callback(void *context, bool row_selected, int row_index
 }
 
 void LivePad2::machine_selected(const std::string &machine_name) {
-	for(auto k : MachineSequencer::get_sequencers()) {
-		if(machine_name == k.first) {
-			SATAN_DEBUG("Machine selected: %s\n", k.second->get_name().c_str());
-			LivePad2::use_new_MachineSequencer(k.second);
+	for(auto k_weak : msequencers) {
+		if(auto k = k_weak.lock()) {
+			if(machine_name == k->get_sibling_name()) {
+				SATAN_DEBUG("Machine selected: %s\n", k->get_sibling_name().c_str());
+				LivePad2::use_new_MachineSequencer(k);
+			}
 		}
 	}
 }
@@ -161,9 +159,11 @@ void LivePad2::machine_selected(const std::string &machine_name) {
 void LivePad2::select_machine() {
 	current_selector = selecting_machine;
 	
-	for(auto k : MachineSequencer::get_sequencers()) {
-		SATAN_DEBUG("Adding machine %s to selection.\n", k.first.c_str());
-		listView->add_row(k.first);
+	for(auto k_weak : msequencers) {
+		if(auto k = k_weak.lock()) {
+			SATAN_DEBUG("Adding machine %s to selection.\n", k->get_sibling_name().c_str());
+			listView->add_row(k->get_sibling_name());
+		}
 	}
 }
 
@@ -244,7 +244,7 @@ void LivePad2::select_scale() {
 void LivePad2::controller_selected(const std::string &controller_name) {
 	std::string new_ctrl = "Velocity"; // default to Velocity
 
-	if(mseq != NULL) {
+	if(mseq) {
 		for(auto ctrl : mseq->available_midi_controllers()) {
 			if(ctrl == controller_name) {
 				new_ctrl = ctrl; // we found a match, keep this name
@@ -260,18 +260,19 @@ void LivePad2::select_controller() {
 
 	listView->add_row("Velocity");
 
-	if(mseq == NULL) return;
-	for(auto ctrl : mseq->available_midi_controllers()) {
-		listView->add_row(ctrl);
+	if(mseq) {
+		for(auto ctrl : mseq->available_midi_controllers()) {
+			listView->add_row(ctrl);
+		}
 	}
 }
 
 void LivePad2::menu_selected(int row_index) {
-	if(mseq != NULL) {
+	if(mseq) {
 		if(row_index == 0) {
-			mseq->export_pad_to_loop();
+			mseq->pad_export_to_loop();
 		} else {
-			mseq->export_pad_to_loop(row_index - 1);
+			mseq->pad_export_to_loop(row_index - 1);
 		}
 	}
 }
@@ -279,15 +280,15 @@ void LivePad2::menu_selected(int row_index) {
 void LivePad2::select_menu() {
 	current_selector = selecting_menu;
 
-	if(mseq == NULL) return;
-
-	listView->add_row("New loop");
-
-	int max_loop = mseq->get_nr_of_loops();	
-	for(int k = 0; k < max_loop; k++) {
-		std::ostringstream loop_id;
-		loop_id << "Loop #" << k;
-		listView->add_row(loop_id.str());
+	if(mseq) { 
+		listView->add_row("New loop");
+		
+		int max_loop = mseq->get_nr_of_loops();	
+		for(int k = 0; k < max_loop; k++) {
+			std::ostringstream loop_id;
+			loop_id << "Loop #" << k;
+			listView->add_row(loop_id.str());
+		}
 	}
 }
 
@@ -319,7 +320,7 @@ void LivePad2::refresh_scale_indicator() {
 void LivePad2::refresh_controller_indicator() {
 	std::string ctrl_name = "Velocity"; // default to Velocity
 
-	if(mseq != NULL) {
+	if(mseq) {
 		for(auto ctrl : mseq->available_midi_controllers()) {
 			if(ctrl == controller) {
 				ctrl_name = ctrl; // we found a match, keep this name
@@ -334,25 +335,24 @@ void LivePad2::refresh_machine_settings() {
 	refresh_scale_key_names();
 
 	std::string name = "mchn";
-	SATAN_DEBUG("Refresh machine settings, mseq: %p\n", mseq);
+	SATAN_DEBUG("Refresh machine settings, mseq\n");
 	if(mseq) {
-		mseq->get_pad()->set_pad_resolution(graphArea_viewport.width, graphArea_viewport.height);
-		mseq->get_pad()->set_octave(octave);
-		mseq->get_pad()->set_scale(scale_index);
-		mseq->get_pad()->set_record(record);
-		mseq->get_pad()->set_quantize(quantize);
+		mseq->pad_set_octave(octave);
+		mseq->pad_set_scale(scale_index);
+		mseq->pad_set_record(record);
+		mseq->pad_set_quantize(quantize);
 
-		mseq->assign_pad_to_midi_controller(controller);
+		mseq->pad_assign_midi_controller(controller);
 
 		if(chord_mode == "chord triad") {
-			mseq->set_pad_chord_mode(MachineSequencer::PadConfiguration::chord_triad);
+			mseq->pad_set_chord_mode(RemoteInterface::RIMachine::chord_triad);
 		} else { // default
-			mseq->set_pad_chord_mode(MachineSequencer::PadConfiguration::chord_off);
+			mseq->pad_set_chord_mode(RemoteInterface::RIMachine::chord_off);
 		}
 				
-		mseq->set_pad_arpeggio_pattern(mode);
+		mseq->pad_set_arpeggio_pattern(mode);
 
-		name = mseq->get_machine()->get_name();
+		name = mseq->get_sibling_name();
 	}
 
 	refresh_record_indicator();
@@ -396,8 +396,8 @@ void LivePad2::toggle_quantize() {
 void LivePad2::yes(void *void_ctx) {
 	LivePad2 *ctx = (LivePad2 *)void_ctx;
 	
-	if(ctx != NULL && ctx->mseq != NULL)
-		ctx->mseq->get_pad()->clear_pad();
+	if(ctx != NULL && ctx->mseq)
+		ctx->mseq->pad_clear();
 }
 
 void LivePad2::no(void *ctx) {
@@ -405,13 +405,13 @@ void LivePad2::no(void *ctx) {
 }
 
 void LivePad2::ask_clear_pad() {
-	if(mseq == NULL) {
+	if(!mseq) {
 		jInformer::inform("Select a machine in the drop down menu down to the left, otherwise there's nothing to clear.");
 		return;
 	}
 	std::ostringstream question;
 
-	question << "Do you want to clear: " << mseq->get_name();
+	question << "Do you want to clear: " << mseq->get_sibling_name();
 	
 	KammoGUI::ask_yes_no("Clear jammin?",
 			     question.str(),
@@ -493,7 +493,7 @@ void LivePad2::graphArea_on_event(KammoGUI::SVGCanvas::SVGDocument *source, Kamm
 				  const KammoGUI::SVGCanvas::MotionEvent &event) {
 	LivePad2 *ctx = (LivePad2 *)source;
 
-	if(ctx->mseq == NULL) {
+	if(!(ctx->mseq)) {
 		jInformer::inform("Select a machine in the drop down menu down to the left, otherwise you will not get any sound.");
 		return;
 	}
@@ -514,20 +514,23 @@ void LivePad2::graphArea_on_event(KammoGUI::SVGCanvas::SVGDocument *source, Kamm
 	y = (y - ctx->doc_y1);
 	
 	int finger = event.get_pointer_id(event.get_action_index());
-	MachineSequencer::PadEvent_t pevt = MachineSequencer::ms_pad_no_event;
+	RemoteInterface::RIMachine::PadEvent_t pevt = RemoteInterface::RIMachine::ms_pad_no_event;
 
+	float width  = ctx->doc_x2 - ctx->doc_x1 + 1;
+	float height = ctx->doc_y2 - ctx->doc_y1 + 1; // +1 to disable overflow
+	
 	switch(event.get_action()) {
 	case KammoGUI::SVGCanvas::MotionEvent::ACTION_CANCEL:
 	case KammoGUI::SVGCanvas::MotionEvent::ACTION_OUTSIDE:
 		break;
 	case KammoGUI::SVGCanvas::MotionEvent::ACTION_POINTER_DOWN:
-		pevt = MachineSequencer::ms_pad_press;
+		pevt = RemoteInterface::RIMachine::ms_pad_press;
 		break;
 	case KammoGUI::SVGCanvas::MotionEvent::ACTION_POINTER_UP:
-		pevt = MachineSequencer::ms_pad_release;
+		pevt = RemoteInterface::RIMachine::ms_pad_release;
 		break;
 	case KammoGUI::SVGCanvas::MotionEvent::ACTION_DOWN:
-		pevt = MachineSequencer::ms_pad_press;
+		pevt = RemoteInterface::RIMachine::ms_pad_press;
 		break;
 	case KammoGUI::SVGCanvas::MotionEvent::ACTION_MOVE:
 		if(ctx->mseq) {
@@ -543,22 +546,25 @@ void LivePad2::graphArea_on_event(KammoGUI::SVGCanvas::SVGDocument *source, Kamm
 				ev_x = (ev_x - ctx->doc_x1);
 				ev_y = (ev_y - ctx->doc_y1);
 
-				ctx->mseq->get_pad()->enqueue_event(f, MachineSequencer::ms_pad_slide, ev_x, ev_y);
+				ev_x /= width;
+				ev_y /= height;
+				
+				ctx->mseq->pad_enqueue_event(f, RemoteInterface::RIMachine::ms_pad_slide, ev_x, ev_y);
 			}
 		}
 		break;
 	case KammoGUI::SVGCanvas::MotionEvent::ACTION_UP:
-		pevt = MachineSequencer::ms_pad_release;
+		pevt = RemoteInterface::RIMachine::ms_pad_release;
 		break;
 	}
 	
-	if(pevt != MachineSequencer::ms_pad_no_event && ctx->mseq) {
-		ctx->mseq->get_pad()->enqueue_event(finger, pevt, x, y);
+	if(pevt != RemoteInterface::RIMachine::ms_pad_no_event && ctx->mseq) {
+		ctx->mseq->pad_enqueue_event(finger, pevt, x / width, y / height);
 	}
 }
 
 LivePad2::LivePad2(KammoGUI::SVGCanvas *cnv, std::string file_name) : SVGDocument(file_name, cnv), octave(3), scale_index(0), scale_name("C- "), record(false), quantize(false),
-	chord_mode("chord off"), mode("No Arpeggio"), controller("velocity"), mseq(NULL), listView(NULL), current_selector(not_selecting)
+	chord_mode("chord off"), mode("No Arpeggio"), controller("velocity"), listView(NULL), current_selector(not_selecting)
 {
 	l_pad2 = this;
 	
@@ -627,7 +633,7 @@ LivePad2::~LivePad2() {
  *
  ***************************/
 
-void LivePad2::use_new_MachineSequencer(MachineSequencer *m) {
+void LivePad2::use_new_MachineSequencer(std::shared_ptr<RemoteInterface::RIMachine> m) {
 	l_pad2->mseq = m;
 	l_pad2->refresh_machine_settings();
 }
@@ -641,7 +647,7 @@ void LivePad2::ri_machine_registered(std::shared_ptr<RemoteInterface::RIMachine>
 	KammoGUI::run_on_GUI_thread(
 		[this, ri_machine]() {
 			msequencers.insert(ri_machine);
-			mseq = NULL;
+			mseq.reset();
 			refresh_machine_settings();
 		}
 		);
@@ -661,7 +667,7 @@ void LivePad2::ri_machine_unregistered(std::shared_ptr<RemoteInterface::RIMachin
 					break;
 				}
 			}
-			mseq = NULL;
+			mseq.reset();
 			refresh_machine_settings();
 		}
 		);

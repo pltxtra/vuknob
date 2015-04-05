@@ -45,6 +45,10 @@ using namespace std;
 #include "svg_loader.hh"
 #include "remote_interface.hh"
 
+#ifdef ANDROID
+#include "android_java_interface.hh"
+#endif
+
 //#define __DO_SATAN_DEBUG
 #include "satan_debug.hh"
 
@@ -174,6 +178,13 @@ void LogoScreen::element_on_event(KammoGUI::SVGCanvas::SVGDocument *source,
 			Machine::prepare_baseline();
 			SatanProjectEntry::clear_satan_project();
 
+#ifdef ANDROID
+			SATAN_ERROR("Available services:\n");
+			for(auto srv : AndroidJavaInterface::list_services()) {
+				SATAN_ERROR("   SRVC ---> %s\n", srv.first.c_str());
+			}
+#endif
+			
 			// connect to localhost 
 			RemoteInterface::Client::start_client("localhost", remote_interface_disconnected, failure_response);
 			
@@ -238,6 +249,10 @@ virtual void on_init(KammoGUI::Widget *wid) {
 
 		// start up local VuKNOB server here
 		RemoteInterface::Server::start_server();
+#ifdef ANDROID
+		AndroidJavaInterface::announce_service(6543);
+		AndroidJavaInterface::discover_services();
+#endif
 	}
 }
 

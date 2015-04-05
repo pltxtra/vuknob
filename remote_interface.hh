@@ -80,9 +80,6 @@ protected:
 			virtual ~CannotReceiveReply() {}
 		};
 		
-		friend class MessageHandler;
-		friend class Context;
-		
 		Message();
 		Message(Context *context);
 
@@ -92,19 +89,17 @@ protected:
 		
 		void set_value(const std::string &key, const std::string &value);
 		std::string get_value(const std::string &key) const;		
+
+		asio::streambuf::mutable_buffers_type prepare_buffer(std::size_t length);
+		void commit_data(std::size_t length);
+		asio::streambuf::const_buffers_type get_data();
 		
 	private:
-		static void recycle(Message *msg);
-
-		bool decode_header();
-		bool decode_body();
-
-		void encode() const;
-
 		Context *context;
 		
 		mutable bool encoded;		
-		mutable uint32_t body_length;
+		mutable uint32_t body_length;	
+		mutable int32_t client_id;
 		mutable asio::streambuf sbuf;
 		mutable std::ostream ostrm;
 		mutable int data2send;
@@ -113,6 +108,18 @@ protected:
 		bool awaiting_reply = false;
 		
 		std::map<std::string, std::string> key2val;
+
+	public:
+		static void recycle(Message *msg);
+
+		inline uint32_t get_body_length() { return body_length; }
+		inline int32_t get_client_id() { return client_id; }
+		
+		bool decode_client_id(); // only for messages arriving via UDP
+		bool decode_header();
+		bool decode_body();
+
+		void encode() const;
 
 	};
 
@@ -129,7 +136,7 @@ protected:
 		};
 		
 		~Context();
-		virtual void distribute_message(std::shared_ptr<Message> &msg) = 0;
+		virtual void distribute_message(std::shared_ptr<Message> &msg, bool via_udp) = 0;
 		virtual void post_action(std::function<void()> f) = 0;
 		virtual void dispatch_action(std::function<void()> f) = 0;
 		virtual std::shared_ptr<BaseObject> get_object(int32_t objid) = 0;
@@ -147,16 +154,20 @@ protected:
 		void do_read_header();
 		void do_read_body();
 		void do_write();
+		void do_write_udp(std::shared_ptr<Message> &msg);
 		
 	protected:
 		asio::ip::tcp::socket my_socket;
-		
+
+		std::shared_ptr<asio::ip::udp::socket> my_udp_socket;
+		asio::ip::udp::endpoint udp_target_endpoint;
+
 	public:
 		MessageHandler(asio::io_service &io_service);
 		MessageHandler(asio::ip::tcp::socket _socket);
 
 		void start_receive();
-		void deliver_message(std::shared_ptr<Message> &msg); // will encode() msg before transfer
+		void deliver_message(std::shared_ptr<Message> &msg, bool via_udp = false); // will encode() msg before transfer
 
 		virtual void on_message_received(const Message &msg) = 0;
 		virtual void on_connection_dropped() = 0;
@@ -193,7 +204,7 @@ protected:
 
 		Context *context;
 
-		void send_object_message(std::function<void(std::shared_ptr<Message> &msg_to_send)> create_msg_callback);
+		void send_object_message(std::function<void(std::shared_ptr<Message> &msg_to_send)> create_msg_callback, bool via_udp = false);
 		void send_object_message(std::function<void(std::shared_ptr<Message> &msg_to_send)> create_msg_callback,
 					 std::function<void(const Message *reply_message)> reply_received_callback);
 
@@ -411,6 +422,8 @@ public:
 	private:
 		std::map<int32_t, std::shared_ptr<BaseObject> > all_objects;
 
+		int32_t client_id = -1;
+		
 		// code for handling messages waiting for a reply
 		int32_t next_reply_id = 0;
 		std::map<int32_t, std::shared_ptr<Message> > msg_waiting_for_reply;
@@ -419,6 +432,7 @@ public:
 	       		
 		std::thread t1;
 		asio::ip::tcp::resolver resolver;
+		asio::ip::udp::resolver udp_resolver;
 		std::function<void()> disconnect_callback;
 		std::function<void(const std::string &fresp)> failure_response_callback;
 		
@@ -444,7 +458,7 @@ public:
 		virtual void on_message_received(const Message &msg) override;
 		virtual void on_connection_dropped() override;
 
-		virtual void distribute_message(std::shared_ptr<Message> &msg) override;
+		virtual void distribute_message(std::shared_ptr<Message> &msg, bool via_udp) override;
 		virtual void post_action(std::function<void()> f) override;
 		virtual void dispatch_action(std::function<void()> f) override;
 		virtual std::shared_ptr<BaseObject> get_object(int32_t objid) override;
@@ -487,14 +501,17 @@ public:
 		
 		class ClientAgent : public MessageHandler {
 		private:
+			int32_t id;
 			Server *server;
 			
 			void send_handler_message();
 		public:
-			ClientAgent(asio::ip::tcp::socket _socket, Server *server);
+			ClientAgent(int32_t id, asio::ip::tcp::socket _socket, Server *server);
 			void start();
 
 			void disconnect();
+
+			int32_t get_id() { return id; }
 			
 			virtual void on_message_received(const Message &msg) override;
 			virtual void on_connection_dropped() override;
@@ -502,21 +519,29 @@ public:
 		friend class ClientAgent;
 
 		typedef std::shared_ptr<ClientAgent> ClientAgent_ptr;
-		std::set<ClientAgent_ptr> client_agents;		
+		std::map<int32_t, ClientAgent_ptr> client_agents;		
+		int32_t next_client_agent_id = 0;
 		
 		std::thread t1;
 		asio::io_service io_service;
-		asio::ip::tcp::acceptor acceptor;
-		asio::ip::tcp::socket acceptor_socket;		
 
+		asio::ip::tcp::acceptor acceptor;
+		asio::ip::tcp::socket acceptor_socket;
+		
+		asio::ip::udp::socket udp_socket;		
+		Message udp_read_msg;
+		asio::ip::udp::endpoint udp_endpoint;
+		
 		void do_accept();
 		void drop_client(std::shared_ptr<ClientAgent> client_agent);
-
+		void do_udp_receive();
+		
 		void disconnect_clients();
 		void create_service_objects();
 		void add_create_object_header(std::shared_ptr<Message> &target, std::shared_ptr<BaseObject> obj);
 		void add_destroy_object_header(std::shared_ptr<Message> &target, std::shared_ptr<BaseObject> obj);
 		void send_protocol_version_to_new_client(std::shared_ptr<MessageHandler> client_agent);
+		void send_client_id_to_new_client(std::shared_ptr<ClientAgent> client_agent);
 		void send_all_objects_to_new_client(std::shared_ptr<MessageHandler> client_agent);
 		
 		Server(const asio::ip::tcp::endpoint& endpoint);
@@ -530,7 +555,7 @@ public:
 		static void start_server();
 		static void stop_server();
 		
-		virtual void distribute_message(std::shared_ptr<Message> &msg) override;
+		virtual void distribute_message(std::shared_ptr<Message> &msg, bool via_udp) override;
 		virtual void post_action(std::function<void()> f) override;
 		virtual void dispatch_action(std::function<void()> f) override;		
 		virtual std::shared_ptr<BaseObject> get_object(int32_t objid) override;

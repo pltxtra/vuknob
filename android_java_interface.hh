@@ -33,6 +33,8 @@
 #include <stdint.h>
 
 #include <iostream>
+#include <string>
+#include <set>
 
 #include <jngldrum/jthread.hh>
 #include <kamogui.hh>
@@ -42,7 +44,11 @@ private:
 	static jclass JavaInterfaceClass;
 	static jmethodID call_tar_function;
 	static jmethodID sharemusicfile;
-	
+
+	static jmethodID announceservice;
+	static jmethodID discoverservices;
+	static jmethodID listservices;
+
 	static jmethodID preview16bitwav_start;
 	static jmethodID preview16bitwav_next_buffer;
 	static jmethodID preview16bitwav_stop;
@@ -54,6 +60,10 @@ public:
 	static void call_tar(std::vector<std::string > &args);
 	static bool share_musicfile(const std::string &path_to_file);
 
+	static void announce_service(int port);
+	static void discover_services();
+	static std::map<std::string, std::pair<std::string, int> > list_services();
+	
 	static void preview_16bit_wav_start(int channels, int samples, int frequency, int16_t *data);
 	static bool preview_16bit_wav_next_buffer();
 	static void preview_16bit_wav_stop();

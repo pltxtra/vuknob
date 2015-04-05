@@ -51,12 +51,15 @@
 #define VUKNOB_SERVER_PORT 6543
 #define VUKNOB_SERVER_PORT_STRING "6543"
 
+#define VUKNOB_MAX_UDP_SIZE 512
+
 #define __MSG_CREATE_OBJECT -1
 #define __MSG_FLUSH_ALL_OBJECTS -2
 #define __MSG_DELETE_OBJECT -3
 #define __MSG_FAILURE_RESPONSE -4
 #define __MSG_PROTOCOL_VERSION -5
 #define __MSG_REPLY -6
+#define __MSG_CLIENT_ID -7
 
 #define __FCT_HANDLELIST     "HandleList"
 #define __FCT_RIMACHINE      "RIMachine"
@@ -103,6 +106,27 @@ std::string RemoteInterface::Message::get_value(const std::string &key) const {
 	auto result = key2val.find(key);
 	if(result == key2val.end()) throw NoSuchKey();
 	return result->second;
+}
+
+asio::streambuf::mutable_buffers_type RemoteInterface::Message::prepare_buffer(std::size_t length) {
+	return sbuf.prepare(length);
+}
+
+void RemoteInterface::Message::commit_data(std::size_t length) {
+	sbuf.commit(length);
+}
+
+asio::streambuf::const_buffers_type RemoteInterface::Message::get_data() {
+	return sbuf.data();
+}
+
+bool RemoteInterface::Message::decode_client_id() {
+	std::istream is(&sbuf);
+	std::string header;
+	is >> header;
+	sscanf(header.c_str(), "%08x", &client_id);
+
+	return true;
 }
 
 bool RemoteInterface::Message::decode_header() {
@@ -278,9 +302,9 @@ void RemoteInterface::MessageHandler::do_read_header() {
 	auto self(shared_from_this());
 	asio::async_read(
 		my_socket,
-		read_msg.sbuf.prepare(Message::header_length),
+		read_msg.prepare_buffer(Message::header_length),
 		[this, self](std::error_code ec, std::size_t length) {
-			if(!ec) read_msg.sbuf.commit(length);
+			if(!ec) read_msg.commit_data(length);
 			
 			if(!ec && read_msg.decode_header()) {				
 				do_read_body();
@@ -295,9 +319,9 @@ void RemoteInterface::MessageHandler::do_read_body() {
 	auto self(shared_from_this());
 	asio::async_read(
 		my_socket,
-		read_msg.sbuf.prepare(read_msg.body_length),
+		read_msg.prepare_buffer(read_msg.get_body_length()),
 		[this, self](std::error_code ec, std::size_t length) {
-			if(!ec) read_msg.sbuf.commit(length);
+			if(!ec) read_msg.commit_data(length);
 			
 			if(!ec && read_msg.decode_body()) {
 
@@ -319,7 +343,7 @@ void RemoteInterface::MessageHandler::do_write() {
 	auto self(shared_from_this());
 	asio::async_write(
 		my_socket,
-		write_msgs.front()->sbuf.data(),
+		write_msgs.front()->get_data(),
 		[this, self](std::error_code ec, std::size_t length) {
 			if (!ec) {
 				write_msgs.pop_front();
@@ -333,7 +357,17 @@ void RemoteInterface::MessageHandler::do_write() {
 		);
 }
 
+void RemoteInterface::MessageHandler::do_write_udp(std::shared_ptr<Message> &msg) {
+	try {
+		my_udp_socket->send_to(msg->get_data(), udp_target_endpoint);
+	} catch(std::exception &exp) {
+		SATAN_ERROR("RemoteInterface::MessageHandler::do_write_udp() failed to deliver message: %s\n",
+			    exp.what());
+	}
+}
+
 RemoteInterface::MessageHandler::MessageHandler(asio::io_service &io_service) : my_socket(io_service) {
+	my_udp_socket = std::make_shared<asio::ip::udp::socket>(io_service, asio::ip::udp::endpoint(asio::ip::udp::v4(), 0));
 }
 
 RemoteInterface::MessageHandler::MessageHandler(asio::ip::tcp::socket _socket) :
@@ -344,13 +378,18 @@ void RemoteInterface::MessageHandler::start_receive() {
 	do_read_header();
 }
 
-void RemoteInterface::MessageHandler::deliver_message(std::shared_ptr<Message> &msg) {
+void RemoteInterface::MessageHandler::deliver_message(std::shared_ptr<Message> &msg, bool via_udp) {
 	msg->encode();
-	
-	bool write_in_progress = !write_msgs.empty();
-	write_msgs.push_back(msg);
-	if (!write_in_progress){
-		do_write();
+
+	if(via_udp && my_udp_socket &&
+	   (msg->get_body_length() <= VUKNOB_MAX_UDP_SIZE)) {
+		do_write_udp(msg);
+	} else {
+		bool write_in_progress = !write_msgs.empty();
+		write_msgs.push_back(msg);
+		if (!write_in_progress){
+			do_write();
+		}
 	}
 }
 
@@ -392,9 +431,9 @@ RemoteInterface::BaseObject::BaseObject(int32_t new_obj_id, const Factory *_fact
 	// this constructor should only be used server side
 }
 
-void RemoteInterface::BaseObject::send_object_message(std::function<void(std::shared_ptr<Message> &msg_to_send)> complete_message) {
+void RemoteInterface::BaseObject::send_object_message(std::function<void(std::shared_ptr<Message> &msg_to_send)> complete_message, bool via_udp) {
 	context->dispatch_action(
-		[this, complete_message]() {
+		[this, via_udp, complete_message]() {
 			std::shared_ptr<Message> msg2send = context->acquire_message();
 
 			{
@@ -406,7 +445,15 @@ void RemoteInterface::BaseObject::send_object_message(std::function<void(std::sh
 				complete_message(msg2send);
 			}
 
-			context->distribute_message(msg2send);
+			try {
+				context->distribute_message(msg2send, via_udp);
+			} catch(std::exception& e) {
+				SATAN_ERROR("RemoteInterface::BaseObject::send_object_message() caught an exception: %s\n", e.what());
+				throw;
+			} catch(...) {
+				SATAN_ERROR("RemoteInterface::BaseObject::send_object_message() caught an unknown exception.\n");
+				throw;
+			}
 		}
 		);
 }
@@ -439,7 +486,7 @@ void RemoteInterface::BaseObject::send_object_message(std::function<void(std::sh
 				complete_message(msg2send);
 			}			
 
-			context->distribute_message(msg2send);
+			context->distribute_message(msg2send, false);
 		}
 		);
 
@@ -1010,7 +1057,8 @@ void RemoteInterface::RIMachine::pad_enqueue_event(int finger, PadEvent_t event_
 			msg2send->set_value("fgr", std::to_string(finger));
 			msg2send->set_value("xp", std::to_string(xp));
 			msg2send->set_value("yp", std::to_string(yp));
-		}
+		},
+		false // send via UDP or not
 		);
 }
 
@@ -1263,11 +1311,11 @@ asio::io_service RemoteInterface::Client::io_service;
 RemoteInterface::Client::Client(const std::string &server_host,
 				std::function<void()> _disconnect_callback,
 				std::function<void(const std::string &failure_response)> _failure_response_callback) :
-	MessageHandler(io_service), resolver(io_service), disconnect_callback(_disconnect_callback)
+	MessageHandler(io_service), resolver(io_service), udp_resolver(io_service), disconnect_callback(_disconnect_callback)
 {
 	failure_response_callback = _failure_response_callback;
 	auto endpoint_iterator = resolver.resolve({server_host, VUKNOB_SERVER_PORT_STRING });
-
+	
 	asio::async_connect(my_socket, endpoint_iterator,
 			    [this](std::error_code ec, asio::ip::tcp::resolver::iterator)
 			    {
@@ -1277,6 +1325,8 @@ RemoteInterface::Client::Client(const std::string &server_host,
 				    }
 			    }
 		);
+
+	udp_target_endpoint = *udp_resolver.resolve({asio::ip::udp::v4(), server_host, VUKNOB_SERVER_PORT_STRING });
 }
 
 void RemoteInterface::Client::flush_all_objects() {
@@ -1299,6 +1349,14 @@ void RemoteInterface::Client::on_message_received(const Message &msg) {
 			disconnect();
 		}
 	}
+	break;
+	
+	case __MSG_CLIENT_ID:
+	{
+		client_id = std::stol(msg.get_value("clid"));
+	}
+	break;
+	
 	case __MSG_CREATE_OBJECT:
 	{
 		std::shared_ptr<BaseObject> new_obj = BaseObject::create_object_from_message(msg);
@@ -1373,7 +1431,7 @@ void RemoteInterface::Client::start_client(const std::string &server_host,
 					   std::function<void()> disconnect_callback,
 					   std::function<void(const std::string &fresp)> failure_response_callback) {
 	std::lock_guard<std::mutex> lock_guard(client_mutex);
-	
+
 	try {
 		client = std::shared_ptr<Client>(new Client(server_host, disconnect_callback, failure_response_callback));
 		
@@ -1420,7 +1478,7 @@ void RemoteInterface::Client::register_ri_machine_set_listener(std::weak_ptr<RIM
 		
 }
 
-void RemoteInterface::Client::distribute_message(std::shared_ptr<Message> &msg) {
+void RemoteInterface::Client::distribute_message(std::shared_ptr<Message> &msg, bool via_udp) {
 	if(msg->is_awaiting_reply()) {
 		if(msg_waiting_for_reply.find(next_reply_id) != msg_waiting_for_reply.end()) {
 			// no available reply id - reply with empty message to signal failure
@@ -1431,10 +1489,10 @@ void RemoteInterface::Client::distribute_message(std::shared_ptr<Message> &msg) 
 			// add the msg to our set of messages waiting for a reply
 			msg_waiting_for_reply[next_reply_id++] = msg;
 			// deliver it
-			deliver_message(msg);
+			deliver_message(msg, via_udp);
 		}
 	} else {	
-		deliver_message(msg);
+		deliver_message(msg, via_udp);
 	}
 }
 
@@ -1475,8 +1533,8 @@ auto RemoteInterface::Client::get_object(int32_t objid) -> std::shared_ptr<BaseO
 void RemoteInterface::Server::ClientAgent::send_handler_message() {
 }
 
-RemoteInterface::Server::ClientAgent::ClientAgent(asio::ip::tcp::socket _socket, Server *_server) :
-	MessageHandler(std::move(_socket)), server(_server) {
+RemoteInterface::Server::ClientAgent::ClientAgent(int32_t _id, asio::ip::tcp::socket _socket, Server *_server) :
+	MessageHandler(std::move(_socket)), id(_id), server(_server) {
 }
 
 void RemoteInterface::Server::ClientAgent::start() {
@@ -1539,7 +1597,7 @@ void RemoteInterface::Server::create_object_from_factory(const std::string &fact
 	std::shared_ptr<Message> create_object_message = acquire_message();
 	add_create_object_header(create_object_message, new_obj);
 	new_obj->serialize(create_object_message);
-	distribute_message(create_object_message);
+	distribute_message(create_object_message, false);
 }
 
 void RemoteInterface::Server::delete_object(std::shared_ptr<BaseObject> obj2delete) {
@@ -1550,7 +1608,7 @@ void RemoteInterface::Server::delete_object(std::shared_ptr<BaseObject> obj2dele
 			
 			std::shared_ptr<Message> destroy_object_message = acquire_message();
 			add_destroy_object_header(destroy_object_message, obj2delete);
-			distribute_message(destroy_object_message);
+			distribute_message(destroy_object_message, false);
 			
 			all_objects.erase(obj);
 			return;
@@ -1650,7 +1708,10 @@ void RemoteInterface::Server::machine_input_detached(Machine *source, Machine *d
 }
 
 RemoteInterface::Server::Server(const asio::ip::tcp::endpoint& endpoint) : last_obj_id(-1), acceptor(io_service, endpoint),
-									   acceptor_socket(io_service) {
+									   acceptor_socket(io_service),
+									   udp_socket(io_service,
+										      asio::ip::udp::endpoint(asio::ip::udp::v4(), VUKNOB_SERVER_PORT))
+{
 	io_service.post(
 		[this]()
 		{			
@@ -1662,6 +1723,7 @@ RemoteInterface::Server::Server(const asio::ip::tcp::endpoint& endpoint) : last_
 		});
 	
 	do_accept();
+	do_udp_receive();
 }
 
 void RemoteInterface::Server::do_accept() {
@@ -1670,10 +1732,17 @@ void RemoteInterface::Server::do_accept() {
 		[this](std::error_code ec) {
 			
 			if (!ec) {
-				std::shared_ptr<ClientAgent> new_client_agent = std::make_shared<ClientAgent>(std::move(acceptor_socket), this);
-				client_agents.insert(new_client_agent);
+				auto new_id = next_client_agent_id++;
+
+				std::shared_ptr<ClientAgent> new_client_agent = std::make_shared<ClientAgent>(new_id,
+													      std::move(acceptor_socket), this);
+				
+				client_agents[new_id] = new_client_agent;
+
 				send_protocol_version_to_new_client(new_client_agent);
+				send_client_id_to_new_client(new_client_agent);
 				send_all_objects_to_new_client(new_client_agent);
+				
 				new_client_agent->start();
 			}
 			
@@ -1682,8 +1751,64 @@ void RemoteInterface::Server::do_accept() {
 		);
 }
 
+void RemoteInterface::Server::do_udp_receive() {
+	udp_socket.async_receive_from(
+		//asio::buffer(udp_buffer),
+		udp_read_msg.prepare_buffer(VUKNOB_MAX_UDP_SIZE),
+		udp_endpoint,
+		[this](std::error_code ec,
+		       std::size_t bytes_transferred) {
+			SATAN_ERROR("Udp message received - %d bytes\n", bytes_transferred);
+			if(!ec) udp_read_msg.commit_data(bytes_transferred);
+
+			if((!ec) && udp_read_msg.decode_client_id()) {
+				if(udp_read_msg.decode_header()) {
+					if(udp_read_msg.decode_body()) {
+						// make sure body length matches what we received
+						if(bytes_transferred == 16 + udp_read_msg.get_body_length()) {
+							try {
+								auto udp_client_agent = client_agents.find(udp_read_msg.get_client_id());
+								if(udp_client_agent != client_agents.end()) {
+									udp_client_agent->second->on_message_received(udp_read_msg);
+								} else {
+									SATAN_ERROR("RemoteInterface::Server::do_udp_receive()"
+										    " received an udp message from %s with an"
+										    " unkown client id %d.\n",
+										    udp_endpoint.address().to_string().c_str(),
+										    udp_read_msg.get_client_id());
+								}
+							} catch (std::exception& e) {
+								SATAN_ERROR("RemoteInterface::Server::do_udp_receive() caught an exception (%s)"
+									    " when processing an incomming message.\n",
+									    e.what());
+							}
+						} else {
+							SATAN_ERROR("RemoteInterface::Server::do_udp_receive() received an"
+								    " udp message from %s of the wrong size.\n",
+								    udp_endpoint.address().to_string().c_str());
+						}
+					} else {
+						SATAN_ERROR("RemoteInterface::Server::do_udp_receive() received an"
+							    " udp message from %s with a malformed body.\n",
+							    udp_endpoint.address().to_string().c_str());
+					}
+				} else {
+					SATAN_ERROR("RemoteInterface::Server::do_udp_receive() received an"
+						    " udp message from %s with a malformed header.\n",
+						    udp_endpoint.address().to_string().c_str());
+				}
+			} else {
+				SATAN_ERROR("RemoteInterface::Server::do_udp_receive() received a malformed udp message from %s.\n",
+					    udp_endpoint.address().to_string().c_str());
+			}
+
+			do_udp_receive();
+		}
+		);
+}
+
 void RemoteInterface::Server::drop_client(std::shared_ptr<ClientAgent> client_agent) {
-	auto client_iterator = client_agents.find(client_agent);
+	auto client_iterator = client_agents.find(client_agent->get_id());
 	if(client_iterator != client_agents.end()) {
 		client_agents.erase(client_iterator);
 	}
@@ -1707,6 +1832,13 @@ void RemoteInterface::Server::send_protocol_version_to_new_client(std::shared_pt
 	client_agent->deliver_message(pv_message);
 }
 
+void RemoteInterface::Server::send_client_id_to_new_client(std::shared_ptr<ClientAgent> client_agent) {
+	std::shared_ptr<Message> pv_message = acquire_message();
+	pv_message->set_value("id", std::to_string(__MSG_CLIENT_ID));
+	pv_message->set_value("clid", std::to_string(client_agent->get_id()));
+	client_agent->deliver_message(pv_message);
+}
+
 void RemoteInterface::Server::send_all_objects_to_new_client(std::shared_ptr<MessageHandler> client_agent) {
 	for(auto obj : all_objects) {
 		std::shared_ptr<Message> create_object_message = acquire_message();
@@ -1727,7 +1859,7 @@ void RemoteInterface::Server::route_incomming_message(ClientAgent *src, const Me
 
 void RemoteInterface::Server::disconnect_clients() {
 	for(auto client_agent : client_agents) {
-		client_agent->disconnect();		
+		client_agent.second->disconnect();		
 	}
 }
 
@@ -1785,9 +1917,9 @@ void RemoteInterface::Server::stop_server() {
 	}
 }
 
-void RemoteInterface::Server::distribute_message(std::shared_ptr<Message> &msg) {
+void RemoteInterface::Server::distribute_message(std::shared_ptr<Message> &msg, bool via_udp) {
 	for(auto client_agent : client_agents) {
-		client_agent->deliver_message(msg);
+		client_agent.second->deliver_message(msg, via_udp);
 	}
 }
 

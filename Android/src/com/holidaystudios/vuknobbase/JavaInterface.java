@@ -232,12 +232,22 @@ public class JavaInterface {
 	}
 	
 	private static Activity creator;
-	
+	private static NsdHelper nsd_helper;	
+
 	public static native void SetupInterface(String installation_identifier);
+	public static native void AddService(String service_name, String host, int port);
 	
 	public static void SetupNativeJavaInterface(Activity _creator) {
 		creator = _creator;
+
+		nsd_helper = new NsdHelper(creator);
+		nsd_helper.initializeNsd();
+
 		SetupInterface(Installation.id(_creator));
+	}
+
+	public static void tearDown() {
+		nsd_helper.tearDown();
 	}
 
 	public static String CallTarFunction(Vector<String> argvec) {
@@ -267,6 +277,21 @@ public class JavaInterface {
 		creator.startActivity(Intent.createChooser(intent, "Share to"));
 
 		return true;
+	}
+
+	public static void AnnounceService(int port) {
+		nsd_helper.registerService(port);
+	}
+
+	public static void DiscoverServices() {
+		nsd_helper.discoverServices();
+	}
+
+	public static void ListServices() {
+		for(android.net.nsd.NsdServiceInfo service : nsd_helper.get_discovery_set()) {
+			Log.v("SATAN", "JAVA - calling AddService(" + service.getServiceName() + ", " + service.getHost().getHostAddress() + ", " + String.valueOf(service.getPort()) + ") ...\n");
+			AddService(service.getServiceName(), service.getHost().getHostAddress(), service.getPort());
+		}
 	}
 
 	private static short[] empty_preview_data;

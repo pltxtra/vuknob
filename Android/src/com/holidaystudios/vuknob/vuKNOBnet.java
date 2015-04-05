@@ -57,6 +57,7 @@ import com.toolkits.kamoflage.KamoflageActivity;
 
 import com.holidaystudios.vuknobbase.VuknobAndroidAudio;
 import com.holidaystudios.vuknobbase.JavaInterface;
+import com.holidaystudios.vuknobbase.WifiControl;
 
 public class vuKNOBnet extends KamoflageActivity
 	implements 
@@ -111,8 +112,9 @@ public class vuKNOBnet extends KamoflageActivity
 	private static TextView exceptionMessage;
 	private static TextView exceptionStack;
 	private static ProgressBar mProgress;
+	private WifiControl wfctrl;
 	private int mProgressStatus = 0;
-	
+
 	static Kamoflage k = null;
 	static View result = null;
 	static InputStream istream = null;
@@ -138,6 +140,9 @@ public class vuKNOBnet extends KamoflageActivity
 		k = new Kamoflage(this, R.layout.listrow, R.id.listlayout);
 		Log.v("VuKNOB", "Bringing up VuKNOB - setContent");
 
+		wfctrl = new WifiControl(this);
+		wfctrl.acquire();
+		
 		setContentView(R.layout.main);
 		Log.v("VuKNOB", "Bringing up VuKNOB - content set!");
 		mProgress = (ProgressBar) findViewById(R.id.progress_bar);
@@ -283,6 +288,8 @@ public class vuKNOBnet extends KamoflageActivity
 		super.onDestroy();
 		// The activity is about to be destroyed.
 //		k.quit();
+		JavaInterface.tearDown();
+		wfctrl.release();
 		android.os.SystemClock.sleep(10 * 1000);
 		java.lang.System.exit(0);
 	}

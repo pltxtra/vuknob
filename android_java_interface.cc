@@ -44,6 +44,10 @@ jclass AndroidJavaInterface::JavaInterfaceClass = NULL;
 jmethodID AndroidJavaInterface::call_tar_function = NULL;
 jmethodID AndroidJavaInterface::sharemusicfile = NULL;
 
+jmethodID AndroidJavaInterface::announceservice = NULL;
+jmethodID AndroidJavaInterface::discoverservices = NULL;
+jmethodID AndroidJavaInterface::listservices = NULL;
+
 jmethodID AndroidJavaInterface::preview16bitwav_start = NULL;
 jmethodID AndroidJavaInterface::preview16bitwav_next_buffer = NULL;
 jmethodID AndroidJavaInterface::preview16bitwav_stop = NULL;
@@ -52,6 +56,7 @@ jmethodID AndroidJavaInterface::start_record = NULL;
 jmethodID AndroidJavaInterface::stop_record = NULL;
 
 std::string __ANDROID_installation_id = "not set";
+std::map<std::string, std::pair<std::string, int> > current_services;
 
 extern "C" {
 	JNIEXPORT void Java_com_holidaystudios_vuknobbase_JavaInterface_SetupInterface
@@ -64,11 +69,22 @@ extern "C" {
 		
 		AndroidJavaInterface::setup_interface(jc);
 	}	
+
+	JNIEXPORT void Java_com_holidaystudios_vuknobbase_JavaInterface_AddService
+	(JNIEnv *env, jclass jc, jstring service_name, jstring service_host, jint service_port) {
+		__setup_env_for_thread(env);
+
+		const char *sname = (*env).GetStringUTFChars(service_name, NULL);
+		const char *shost = (*env).GetStringUTFChars(service_host, NULL);
+		current_services[std::string(sname)] = std::pair<std::string, int>({shost, service_port});
+		(*env).ReleaseStringUTFChars(service_name, sname); 
+		(*env).ReleaseStringUTFChars(service_host, shost); 
+		
+		AndroidJavaInterface::setup_interface(jc);
+	}	
 };
 
 void AndroidJavaInterface::setup_interface(jclass jc) {
-	printf("   AndroidJavaInterface::setup_interface()\n"); fflush(0);
-
 	JNIEnv *env = get_env_for_thread();
 
 	JavaInterfaceClass = (jclass)(env->NewGlobalRef((jobject)jc));
@@ -79,6 +95,16 @@ void AndroidJavaInterface::setup_interface(jclass jc) {
 	sharemusicfile = env->GetStaticMethodID(
 		JavaInterfaceClass, "ShareMusicFile",
 		"(Ljava/lang/String;)Z");
+
+	announceservice = env->GetStaticMethodID(
+		JavaInterfaceClass, "AnnounceService",
+		"(I)V");
+	discoverservices = env->GetStaticMethodID(
+		JavaInterfaceClass, "DiscoverServices",
+		"()V");
+	listservices = env->GetStaticMethodID(
+		JavaInterfaceClass, "ListServices",
+		"()V");
 
 	preview16bitwav_start = env->GetStaticMethodID(
 		JavaInterfaceClass, "Preview16BitWavStart",
@@ -169,6 +195,39 @@ bool AndroidJavaInterface::share_musicfile(const std::string &path_to_file) {
 		path_js);
 
 	return rval == JNI_TRUE ? true : false;
+}
+
+void AndroidJavaInterface::announce_service(int port) {
+	JNIEnv *env = get_env_for_thread();
+
+	env->CallStaticVoidMethod(
+		JavaInterfaceClass,
+		announceservice,
+		port);
+	
+}
+
+void AndroidJavaInterface::discover_services() {
+	JNIEnv *env = get_env_for_thread();
+
+	env->CallStaticVoidMethod(
+		JavaInterfaceClass,
+		discoverservices
+		);
+	
+}
+
+std::map<std::string, std::pair<std::string, int> > AndroidJavaInterface::list_services() {
+	JNIEnv *env = get_env_for_thread();
+
+	current_services.clear();
+	
+	env->CallStaticVoidMethod(
+		JavaInterfaceClass,
+		listservices
+		);
+
+	return current_services;
 }
 
 void AndroidJavaInterface::preview_16bit_wav_start(int channels, int samples, int frequency, int16_t *data) {

@@ -437,6 +437,7 @@ public:
 		std::function<void(const std::string &fresp)> failure_response_callback;
 		
 		Client(const std::string &server_host,
+		       int server_port,
 		       std::function<void()> disconnect_callback,
 		       std::function<void(const std::string &failure_response)> failure_response_callback);
 
@@ -447,7 +448,7 @@ public:
 		static std::mutex client_mutex;
 	       
 	public: // public singleton interface
-		static void start_client(const std::string &server_host,
+		static void start_client(const std::string &server_host, int server_port,
 					 std::function<void()> disconnect_callback,
 					 std::function<void(const std::string &failure_response)> failure_response_callback);
 		static void disconnect();
@@ -527,8 +528,9 @@ public:
 
 		asio::ip::tcp::acceptor acceptor;
 		asio::ip::tcp::socket acceptor_socket;
+		int current_port;
 		
-		asio::ip::udp::socket udp_socket;		
+		std::shared_ptr<asio::ip::udp::socket> udp_socket;		
 		Message udp_read_msg;
 		asio::ip::udp::endpoint udp_endpoint;
 		
@@ -543,6 +545,8 @@ public:
 		void send_protocol_version_to_new_client(std::shared_ptr<MessageHandler> client_agent);
 		void send_client_id_to_new_client(std::shared_ptr<ClientAgent> client_agent);
 		void send_all_objects_to_new_client(std::shared_ptr<MessageHandler> client_agent);
+
+		int get_port();
 		
 		Server(const asio::ip::tcp::endpoint& endpoint);
 
@@ -552,7 +556,7 @@ public:
 		static std::mutex server_mutex;
 		
 	public:
-		static void start_server();
+		static int start_server(); // will start a server and return the port number. If the server is already started, it will just return the port number.
 		static void stop_server();
 		
 		virtual void distribute_message(std::shared_ptr<Message> &msg, bool via_udp) override;

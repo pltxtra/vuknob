@@ -62,7 +62,6 @@ public class NsdHelper {
 	Context mContext;
 
 	NsdManager mNsdManager;
-	NsdManager.ResolveListener mResolveListener;
 	NsdManager.DiscoveryListener mDiscoveryListener;
 	NsdManager.RegistrationListener mRegistrationListener;
 
@@ -82,7 +81,6 @@ public class NsdHelper {
 	}
 
 	public void initializeNsd() {
-		initializeResolveListener();
 		initializeDiscoveryListener();
 		initializeRegistrationListener();
 	}
@@ -101,25 +99,47 @@ public class NsdHelper {
 
 				@Override
 				public void onServiceFound(NsdServiceInfo service) {
-					Log.d(TAG, "Service discovery success: " + service.getServiceName());
 					if (!service.getServiceType().equals(SERVICE_TYPE)) {
 						Log.d(TAG, "Unknown Service Type: " + service.getServiceType());
 					} else if (service.getServiceName().equals(mServiceName)) {
 						Log.d(TAG, "Same machine: ]" + mServiceName + "[ == ]" + service.getServiceName() + "[");
 					} else if (service.getServiceName().contains(mServiceName)){
-						mNsdManager.resolveService(service, mResolveListener);
+						mNsdManager.resolveService(service,
+									   new NsdManager.ResolveListener() {
+										   
+										   @Override
+										   public void onResolveFailed(NsdServiceInfo serviceInfo, int errorCode) {
+											   Log.e(TAG, "Resolve failed" + errorCode);
+										   }
+										   
+										   @Override
+										   public void onServiceResolved(NsdServiceInfo serviceInfo) {
+											   
+											   if (serviceInfo.getServiceName().equals(mServiceName)) {
+												   Log.d(TAG, "Same IP.");
+												   return;
+											   }
+											   mService = serviceInfo;
+											   
+											   if(!discovery_set.contains(serviceInfo)) {
+												   discovery_set.add(serviceInfo);
+												   Log.e(TAG, " Added server to set: " + serviceInfo.getHost() + ":" + String.valueOf(serviceInfo.getPort()));
+											   }
+										   }
+									   }
+							);
 					}
 				}
 
 				@Override
 				public void onServiceLost(NsdServiceInfo service) {
-					Log.e(TAG, "service lost" + service);
+//					Log.e(TAG, "service lost -- " + service);
 					if (mService == service) {
 						mService = null;
 					}
-					if(discovery_set.contains(service)) {
-						discovery_set.remove(service);
-					}
+//					if(discovery_set.contains(service)) {
+//						discovery_set.remove(service);
+//					}
 				}
             
 				@Override
@@ -137,32 +157,6 @@ public class NsdHelper {
 				public void onStopDiscoveryFailed(String serviceType, int errorCode) {
 					Log.e(TAG, "Discovery failed: Error code:" + errorCode);
 					mNsdManager.stopServiceDiscovery(this);
-				}
-			};
-	}
-
-	public void initializeResolveListener() {
-		mResolveListener = new NsdManager.ResolveListener() {
-
-				@Override
-				public void onResolveFailed(NsdServiceInfo serviceInfo, int errorCode) {
-					Log.e(TAG, "Resolve failed" + errorCode);
-				}
-
-				@Override
-				public void onServiceResolved(NsdServiceInfo serviceInfo) {
-					Log.e(TAG, "Resolve Succeeded: " + serviceInfo.getHost() + ":" + String.valueOf(serviceInfo.getPort()));
-
-					if (serviceInfo.getServiceName().equals(mServiceName)) {
-						Log.d(TAG, "Same IP.");
-						return;
-					}
-					mService = serviceInfo;
-
-					if(!discovery_set.contains(serviceInfo)) {
-						discovery_set.add(serviceInfo);
-						Log.d(TAG, "   added service to set.\n");
-					}
 				}
 			};
 	}

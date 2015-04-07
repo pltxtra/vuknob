@@ -78,7 +78,7 @@ public:
 	void select_from_list(
 		const std::string &title,
 		void *callback_context,
-		std::function<void(void *context, bool, int row_number, const std::string &)> listview_callback);
+		std::function<void(void *context, bool selected, int row_number, const std::string &)> listview_callback);
 };
 
 #endif

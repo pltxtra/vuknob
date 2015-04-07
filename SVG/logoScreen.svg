@@ -39,9 +39,9 @@
      inkscape:window-height="1056"
      id="namedview3471"
      showgrid="false"
-     inkscape:zoom="0.62366818"
-     inkscape:cx="40.513478"
-     inkscape:cy="677.78716"
+     inkscape:zoom="1.2473364"
+     inkscape:cx="402.51338"
+     inkscape:cy="106.55707"
      inkscape:window-x="65"
      inkscape:window-y="24"
      inkscape:window-maximized="1"
@@ -204,6 +204,104 @@
          transform="translate(-5.4252957,-924.87762)"
          d="m 1004.0938,1270.1562 16.1874,33.625 -87.49995,0 0,14.4376 87.71875,0 -16.75,33.625 70.1562,-39.6563 -69.8124,-42.0313 z"
          style="fill:#ffffff;fill-opacity:1;fill-rule:evenodd;stroke:none" />
+    </g>
+    <g
+       id="network"
+       inkscape:label="#g3141">
+      <path
+         transform="matrix(0.99172556,0,0,0.99172556,1404.9694,31.587125)"
+         d="m -580.49888,369.38776 a 82.766441,82.766441 0 1 1 -165.53288,0 82.766441,82.766441 0 1 1 165.53288,0 z"
+         sodipodi:ry="82.766441"
+         sodipodi:rx="82.766441"
+         sodipodi:cy="369.38776"
+         sodipodi:cx="-663.26532"
+         id="path3923-5-5-7"
+         style="fill:#000000;fill-opacity:0.32941176;stroke:none"
+         sodipodi:type="arc" />
+      <path
+         transform="matrix(0.99172556,0,0,0.99172556,1404.9694,19.7911)"
+         d="m -580.49888,369.38776 a 82.766441,82.766441 0 1 1 -165.53288,0 82.766441,82.766441 0 1 1 165.53288,0 z"
+         sodipodi:ry="82.766441"
+         sodipodi:rx="82.766441"
+         sodipodi:cy="369.38776"
+         sodipodi:cx="-663.26532"
+         id="path3923-52-1"
+         style="fill:#33ccff;fill-opacity:1;stroke:none"
+         sodipodi:type="arc" />
+      <g
+         id="g3100"
+         transform="matrix(0.57329762,0,0,0.57329762,875.43497,668.37662)">
+        <rect
+           ry="10.029695"
+           rx="10.029696"
+           transform="translate(254.92676,-919.92841)"
+           y="309.67661"
+           x="-500.26602"
+           height="73.757172"
+           width="43.292252"
+           id="rect3044"
+           style="fill:#ffffff;fill-opacity:1;stroke:none" />
+        <rect
+           ry="10.029695"
+           rx="10.029696"
+           y="309.67661"
+           x="-500.26602"
+           height="73.757172"
+           width="43.292252"
+           id="rect3044-7"
+           style="fill:#ffffff;fill-opacity:1;stroke:none"
+           transform="translate(186.01938,-780.22577)" />
+        <rect
+           ry="10.029695"
+           rx="10.029696"
+           y="309.67661"
+           x="-500.26602"
+           height="73.757172"
+           width="43.292252"
+           id="rect3044-8"
+           style="fill:#ffffff;fill-opacity:1;stroke:none"
+           transform="translate(323.83413,-780.22577)" />
+        <rect
+           ry="10.029695"
+           rx="10.029696"
+           transform="translate(250.9182,-923.83426)"
+           y="412.29529"
+           x="-567.6095"
+           height="16.034168"
+           width="185.99634"
+           id="rect3071"
+           style="fill:#ffffff;fill-opacity:1;stroke:none" />
+        <rect
+           ry="10.029695"
+           rx="10.029696"
+           transform="translate(249.71565,-925.61196)"
+           y="397.86453"
+           x="-479.4216"
+           height="20.042709"
+           width="12.025625"
+           id="rect3073"
+           style="fill:#ffffff;fill-opacity:1;stroke:none" />
+        <rect
+           ry="10.029695"
+           rx="10.029696"
+           y="397.86453"
+           x="-479.4216"
+           height="20.042709"
+           width="12.025625"
+           id="rect3073-0"
+           style="fill:#ffffff;fill-opacity:1;stroke:none"
+           transform="translate(180.80827,-897.15131)" />
+        <rect
+           ry="10.029695"
+           rx="10.029696"
+           y="397.86453"
+           x="-479.4216"
+           height="20.042709"
+           width="12.025625"
+           id="rect3073-9"
+           style="fill:#ffffff;fill-opacity:1;stroke:none"
+           transform="translate(318.62302,-897.15131)" />
+      </g>
     </g>
   </g>
 </svg>

@@ -49,10 +49,10 @@ import java.util.Enumeration;
 
 public class WifiControl {
 	private android.net.wifi.WifiManager.WifiLock wifi_lock;
-	private final Context context;
 
-	private Enumeration<InetAddress> getWifiInetAddresses(final Context _context) {
-		final WifiManager wifiManager = (WifiManager) context.getSystemService(Context.WIFI_SERVICE);
+	private final android.net.wifi.WifiManager wifiManager;
+
+	private Enumeration<InetAddress> getWifiInetAddresses() {
 		final WifiInfo wifiInfo = wifiManager.getConnectionInfo();
 		final String macAddress = wifiInfo.getMacAddress();
 		final String[] macParts = macAddress.split(":");
@@ -87,8 +87,8 @@ public class WifiControl {
 	}
 
 	@SuppressWarnings("unchecked")
-	private <T extends InetAddress> T getWifiInetAddress(final Context context, final Class<T> inetClass) {
-		final Enumeration<InetAddress> e = getWifiInetAddresses(context);
+	private <T extends InetAddress> T getWifiInetAddress(final Class<T> inetClass) {
+		final Enumeration<InetAddress> e = getWifiInetAddresses();
 		if(e == null) return null;
 	
 		while (e.hasMoreElements()) {
@@ -100,11 +100,10 @@ public class WifiControl {
 		return null;
 	}
 
-	public WifiControl(Context _context) {
-		context = _context;
-		android.net.wifi.WifiManager wifi = (android.net.wifi.WifiManager)
-			context.getSystemService(android.content.Context.WIFI_SERVICE);
-		wifi_lock = wifi.createWifiLock(android.net.wifi.WifiManager.WIFI_MODE_FULL_HIGH_PERF, "mywifilockthereturn");
+	public WifiControl(Context context) {
+		wifiManager = (android.net.wifi.WifiManager)context.getSystemService(android.content.Context.WIFI_SERVICE);
+
+		wifi_lock = wifiManager.createWifiLock(android.net.wifi.WifiManager.WIFI_MODE_FULL_HIGH_PERF, "mywifilockthereturn");
 		wifi_lock.setReferenceCounted(true);
 	}
 
@@ -117,8 +116,8 @@ public class WifiControl {
 	}
 
 	public String getIp() throws SocketException {
-		final Inet4Address inet4Address = getWifiInetAddress(context, Inet4Address.class);
-		final Inet6Address inet6Address = getWifiInetAddress(context, Inet6Address.class);
+		final Inet4Address inet4Address = getWifiInetAddress(Inet4Address.class);
+		final Inet6Address inet6Address = getWifiInetAddress(Inet6Address.class);
 
 		if(inet6Address != null) return inet6Address.getHostAddress();
 		if(inet4Address != null) return inet4Address.getHostAddress();

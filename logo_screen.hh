@@ -32,6 +32,8 @@
 
 #include <kamogui.hh>
 
+#include "listview.hh"
+
 class LogoScreen : public KammoGUI::SVGCanvas::SVGDocument {
 private:
 	class ThumpAnimation : public KammoGUI::Animation {
@@ -61,11 +63,17 @@ private:
 	KammoGUI::SVGCanvas::ElementReference *knobBody_element;
 	KammoGUI::SVGCanvas::ElementReference *google_element;
 	KammoGUI::SVGCanvas::ElementReference *start_element;
+	KammoGUI::SVGCanvas::ElementReference *network_element;
 
+	std::string selected_server = "localhost";
+	int selected_port = -1;
+	
+	ListView server_list;
+	
 	static void element_on_event(KammoGUI::SVGCanvas::SVGDocument *source, KammoGUI::SVGCanvas::ElementReference *e_ref,
 				     const KammoGUI::SVGCanvas::MotionEvent &event);
 public:
-	LogoScreen(KammoGUI::SVGCanvas *cnv, std::string file_name);
+	LogoScreen(bool hide_network_element, KammoGUI::SVGCanvas *cnv, std::string file_name);
 
 	virtual void on_resize();
 	virtual void on_render();

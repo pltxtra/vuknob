@@ -49,7 +49,7 @@ using namespace std;
 #include "android_java_interface.hh"
 #endif
 
-//#define __DO_SATAN_DEBUG
+#define __DO_SATAN_DEBUG
 #include "satan_debug.hh"
 
 #include "common.hh"
@@ -173,20 +173,46 @@ void LogoScreen::element_on_event(KammoGUI::SVGCanvas::SVGDocument *source,
 		} else if(e_ref == ctx->google_element) {
 			// show google+ community
 			KammoGUI::external_uri("https://plus.google.com/u/0/communities/117584425255812411008");
+		} else if(e_ref == ctx->network_element) {
+			ctx->server_list.clear();
+			ctx->server_list.add_row("localhost");
+#ifdef ANDROID
+			auto list_content = AndroidJavaInterface::list_services();
+			for(auto srv : list_content) {
+				SATAN_DEBUG("   SRVC ---> %s\n", srv.first.c_str());
+				ctx->server_list.add_row(srv.first);
+			}
+#endif
+			ctx->server_list.select_from_list("Select vuKNOB server", NULL,
+							  [ctx, list_content](void *context, bool selected, int row_number, const std::string &row) {
+								  if(selected) {
+									  auto srv = list_content.find(row);
+									  if(srv != list_content.end()) {
+										  ctx->selected_server = srv->second.first;
+										  ctx->selected_port = srv->second.second;
+									  } else {
+										  ctx->selected_server = "localhost";
+										  ctx->selected_port = RemoteInterface::Server::start_server(); // get the port number (the server is probably already started anyways..)
+									  }
+									  SATAN_DEBUG("Selected server ip/port: %s : %d",
+										      ctx->selected_server.c_str(), ctx->selected_port);
+								  }
+							  }
+				);
 		} else if(e_ref == ctx->start_element) {
 			// clear everything and prepare for start
 			Machine::prepare_baseline();
 			SatanProjectEntry::clear_satan_project();
 
-#ifdef ANDROID
-			SATAN_ERROR("Available services:\n");
-			for(auto srv : AndroidJavaInterface::list_services()) {
-				SATAN_ERROR("   SRVC ---> %s\n", srv.first.c_str());
+			// if the selected port is equal to -1, default to the local host & port
+			if(ctx->selected_port == -1) {
+				ctx->selected_port = RemoteInterface::Server::start_server();
+				ctx->selected_server = "localhost";
 			}
-#endif
 			
-			// connect to localhost 
-			RemoteInterface::Client::start_client("localhost", remote_interface_disconnected, failure_response);
+			// connect to the selected server
+			RemoteInterface::Client::start_client(ctx->selected_server, ctx->selected_port,
+							      remote_interface_disconnected, failure_response);
 			
 			// just show main UI
 			static KammoGUI::UserEvent *ue = NULL;
@@ -219,11 +245,16 @@ static void ask_question(void *ignored) {
 
 #endif
 
-LogoScreen::LogoScreen(KammoGUI::SVGCanvas *cnvs, std::string fname) : SVGDocument(fname, cnvs), logo_base_got(false) {
+LogoScreen::LogoScreen(bool hide_network_element, KammoGUI::SVGCanvas *cnvs, std::string fname) : SVGDocument(fname, cnvs), logo_base_got(false), server_list(cnvs) {
 	google_element = new KammoGUI::SVGCanvas::ElementReference(this, "google");
 	google_element->set_event_handler(element_on_event);
 	start_element = new KammoGUI::SVGCanvas::ElementReference(this, "start");
 	start_element->set_event_handler(element_on_event);
+
+	network_element = new KammoGUI::SVGCanvas::ElementReference(this, "network");
+	network_element->set_event_handler(element_on_event);
+	if(hide_network_element) network_element->set_display("none");
+	
 	knobBody_element = new KammoGUI::SVGCanvas::ElementReference(this, "knobBody");
 	knobBody_element->set_event_handler(element_on_event);
 	
@@ -239,21 +270,25 @@ LogoScreen::LogoScreen(KammoGUI::SVGCanvas *cnvs, std::string fname) : SVGDocume
  *
  ***************************/
 
-KammoEventHandler_Declare(LogoScreenHandler,"logoScreen");
+KammoEventHandler_Declare(LogoScreenHandler,"logoScreen:logoScreenOld");
 
 virtual void on_init(KammoGUI::Widget *wid) {
-	if(wid->get_id() == "logoScreen") {
-		KammoGUI::SVGCanvas *cnvs = (KammoGUI::SVGCanvas *)wid;		
-		cnvs->set_bg_color(1.0, 0.631373, 0.137254);
-		(void)new LogoScreen(cnvs, std::string(SVGLoader::get_svg_directory() + "/logoScreen.svg"));
+	KammoGUI::SVGCanvas *cnvs = (KammoGUI::SVGCanvas *)wid;		
+	cnvs->set_bg_color(1.0, 0.631373, 0.137254);
 
-		// start up local VuKNOB server here
-		RemoteInterface::Server::start_server();
-#ifdef ANDROID
-		AndroidJavaInterface::announce_service(6543);
-		AndroidJavaInterface::discover_services();
-#endif
+	if(wid->get_id() == "logoScreen") {
+		(void)new LogoScreen(false, cnvs, std::string(SVGLoader::get_svg_directory() + "/logoScreen.svg"));
+	} else if(wid->get_id() == "logoScreenOld") {
+		(void)new LogoScreen(true, cnvs, std::string(SVGLoader::get_svg_directory() + "/logoScreen.svg"));
 	}
+
+	// start up local VuKNOB server here
+	int port_number = RemoteInterface::Server::start_server();
+#ifdef ANDROID
+	AndroidJavaInterface::announce_service(port_number);
+	AndroidJavaInterface::discover_services();
+#endif
+
 }
 
 KammoEventHandler_Instance(LogoScreenHandler);

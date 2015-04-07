@@ -48,9 +48,6 @@
  *
  ***************************/
 
-#define VUKNOB_SERVER_PORT 6543
-#define VUKNOB_SERVER_PORT_STRING "6543"
-
 #define VUKNOB_MAX_UDP_SIZE 512
 
 #define __MSG_CREATE_OBJECT -1
@@ -1309,12 +1306,13 @@ std::mutex RemoteInterface::Client::client_mutex;
 asio::io_service RemoteInterface::Client::io_service;
 
 RemoteInterface::Client::Client(const std::string &server_host,
+				int server_port,
 				std::function<void()> _disconnect_callback,
 				std::function<void(const std::string &failure_response)> _failure_response_callback) :
 	MessageHandler(io_service), resolver(io_service), udp_resolver(io_service), disconnect_callback(_disconnect_callback)
 {
 	failure_response_callback = _failure_response_callback;
-	auto endpoint_iterator = resolver.resolve({server_host, VUKNOB_SERVER_PORT_STRING });
+	auto endpoint_iterator = resolver.resolve({server_host, std::to_string(server_port) });
 	
 	asio::async_connect(my_socket, endpoint_iterator,
 			    [this](std::error_code ec, asio::ip::tcp::resolver::iterator)
@@ -1326,7 +1324,7 @@ RemoteInterface::Client::Client(const std::string &server_host,
 			    }
 		);
 
-	udp_target_endpoint = *udp_resolver.resolve({asio::ip::udp::v4(), server_host, VUKNOB_SERVER_PORT_STRING });
+	udp_target_endpoint = *udp_resolver.resolve({asio::ip::udp::v4(), server_host, std::to_string(server_port) });
 }
 
 void RemoteInterface::Client::flush_all_objects() {
@@ -1428,12 +1426,13 @@ void RemoteInterface::Client::on_connection_dropped() {
 }
 
 void RemoteInterface::Client::start_client(const std::string &server_host,
+					   int server_port,
 					   std::function<void()> disconnect_callback,
 					   std::function<void(const std::string &fresp)> failure_response_callback) {
 	std::lock_guard<std::mutex> lock_guard(client_mutex);
 
 	try {
-		client = std::shared_ptr<Client>(new Client(server_host, disconnect_callback, failure_response_callback));
+		client = std::shared_ptr<Client>(new Client(server_host, server_port, disconnect_callback, failure_response_callback));
 		
 		client->t1 = std::thread([]() {
 				client->io_service.run();
@@ -1708,10 +1707,21 @@ void RemoteInterface::Server::machine_input_detached(Machine *source, Machine *d
 }
 
 RemoteInterface::Server::Server(const asio::ip::tcp::endpoint& endpoint) : last_obj_id(-1), acceptor(io_service, endpoint),
-									   acceptor_socket(io_service),
-									   udp_socket(io_service,
-										      asio::ip::udp::endpoint(asio::ip::udp::v4(), VUKNOB_SERVER_PORT))
+									   acceptor_socket(io_service)
 {
+	acceptor.listen();
+
+	current_port = acceptor.local_endpoint().port();
+
+	SATAN_ERROR("RemoteInterface::Server::Server() current ip: %s, port: %d\n",
+		    acceptor.local_endpoint().address().to_string().c_str(),
+		    current_port);
+
+#ifdef VUKNOB_UDP_SUPPORT
+	udp_socket = std::make_shared<asio::ip::udp::socket>(io_service,
+							     asio::ip::udp::endpoint(asio::ip::udp::v4(), current_port));
+#endif
+	
 	io_service.post(
 		[this]()
 		{			
@@ -1723,7 +1733,13 @@ RemoteInterface::Server::Server(const asio::ip::tcp::endpoint& endpoint) : last_
 		});
 	
 	do_accept();
+#ifdef VUKNOB_UDP_SUPPORT
 	do_udp_receive();
+#endif
+}
+
+int RemoteInterface::Server::get_port() {
+	return current_port;
 }
 
 void RemoteInterface::Server::do_accept() {
@@ -1752,7 +1768,7 @@ void RemoteInterface::Server::do_accept() {
 }
 
 void RemoteInterface::Server::do_udp_receive() {
-	udp_socket.async_receive_from(
+	udp_socket->async_receive_from(
 		//asio::buffer(udp_buffer),
 		udp_read_msg.prepare_buffer(VUKNOB_MAX_UDP_SIZE),
 		udp_endpoint,
@@ -1872,17 +1888,17 @@ void RemoteInterface::Server::create_service_objects() {
 	}
 }
 
-void RemoteInterface::Server::start_server() {
+int RemoteInterface::Server::start_server() {
 	std::lock_guard<std::mutex> lock_guard(server_mutex);
-	static bool server_created = false;
-	
-	if(server_created) {
-		return;
-	}
-	server_created = true;
 
+	if(server) {
+		return server->get_port();
+	}
+
+	int portval = -1;
+	
 	try {
-		asio::ip::tcp::endpoint endpoint(asio::ip::tcp::v4(), VUKNOB_SERVER_PORT);
+		asio::ip::tcp::endpoint endpoint;//(asio::ip::tcp::v4(), 0); // 0 => select a random available port
 		server = std::shared_ptr<Server>(new Server(endpoint));
 
 		server->t1 = std::thread([]() {
@@ -1895,12 +1911,18 @@ void RemoteInterface::Server::start_server() {
 				}
 			}
 			);
+
+		portval = server->get_port();
 	} catch (std::exception& e) {
 		SATAN_ERROR("Exception caught: %s\n", e.what());
 	}
+
+	return portval;
 }
 
 void RemoteInterface::Server::stop_server() {
+	std::lock_guard<std::mutex> lock_guard(server_mutex);
+	
 	if(server) {
 		server->io_service.dispatch(
 		[]()
@@ -1914,6 +1936,7 @@ void RemoteInterface::Server::stop_server() {
 
 		server->io_service.stop();
 		server->t1.join();
+		server.reset();
 	}
 }
 

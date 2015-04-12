@@ -42,6 +42,10 @@
 #include "machine_sequencer.hh"
 #include "remote_interface.hh"
 
+#ifdef ANDROID
+#include "android_java_interface.hh"
+#endif
+
 extern char *optarg;
 extern int optind;
 extern int optopt;
@@ -100,8 +104,16 @@ int set_realtime_priority(void)
 KammoEventHandler_Declare(MainWindowHandler, "MainWindow:quitnow");
 
 virtual void on_click(KammoGUI::Widget *wid) {
+#ifdef ANDROID
+	SATAN_ERROR("taking down service..\n");
+	AndroidJavaInterface::takedown_service();
+#endif
+	
+	SATAN_ERROR("stopping server..\n");
 	RemoteInterface::Server::stop_server();
+	SATAN_ERROR("disconnecting client..\n");
 	RemoteInterface::Client::disconnect();
+	SATAN_ERROR("exit application..\n");
 	Machine::exit_application();
 }
 

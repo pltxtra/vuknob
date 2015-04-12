@@ -46,6 +46,7 @@ private:
 	static jmethodID sharemusicfile;
 
 	static jmethodID announceservice;
+	static jmethodID takedownservice;
 	static jmethodID discoverservices;
 	static jmethodID listservices;
 
@@ -61,6 +62,7 @@ public:
 	static bool share_musicfile(const std::string &path_to_file);
 
 	static void announce_service(int port);
+	static void takedown_service();
 	static void discover_services();
 	static std::map<std::string, std::pair<std::string, int> > list_services();
 	

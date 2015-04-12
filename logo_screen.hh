@@ -52,10 +52,10 @@ private:
 		virtual void on_touch_event();
 	};
 
-	bool thump_in_progress;
-	double thump_offset;
+	bool thump_in_progress = false;
+	double thump_offset = 0.0;
 	
-	bool logo_base_got;
+	bool logo_base_got = false;
 	KammoGUI::SVGCanvas::SVGMatrix knob_base_t;
 
 	KammoGUI::SVGCanvas::SVGMatrix transform_m;

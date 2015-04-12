@@ -68,7 +68,8 @@ public class NsdHelper {
 	public static final String SERVICE_TYPE = "_vuknob._tcp.";
 
 	public static final String TAG = "SATAN";
-	public String mServiceName = "vuKNOB";
+	public String mServiceName = "<not set>";
+	public String mServiceName_base = "vuKNOB";
 
 	NsdServiceInfo mService;
 
@@ -103,7 +104,7 @@ public class NsdHelper {
 						Log.d(TAG, "Unknown Service Type: " + service.getServiceType());
 					} else if (service.getServiceName().equals(mServiceName)) {
 						Log.d(TAG, "Same machine: ]" + mServiceName + "[ == ]" + service.getServiceName() + "[");
-					} else if (service.getServiceName().contains(mServiceName)){
+					} else if (service.getServiceName().contains(mServiceName_base)){
 						mNsdManager.resolveService(service,
 									   new NsdManager.ResolveListener() {
 										   
@@ -165,7 +166,7 @@ public class NsdHelper {
 		mRegistrationListener = new NsdManager.RegistrationListener() {
 
 				@Override
-				public void onServiceRegistered(NsdServiceInfo NsdServiceInfo) {
+				public void onServiceRegistered(NsdServiceInfo NsdServiceInfo) {					
 					mServiceName = NsdServiceInfo.getServiceName();
 					Log.d(TAG, "Service registered - " + mServiceName);
 				}
@@ -188,7 +189,7 @@ public class NsdHelper {
 	public void registerService(int port) {
 		NsdServiceInfo serviceInfo  = new NsdServiceInfo();
 		serviceInfo.setPort(port);
-		serviceInfo.setServiceName(mServiceName);
+		serviceInfo.setServiceName(mServiceName_base);
 		serviceInfo.setServiceType(SERVICE_TYPE);
 
 		Log.d(TAG, "Will register service on port " + String.valueOf(port) + ".");

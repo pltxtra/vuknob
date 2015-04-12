@@ -56,6 +56,10 @@ namespace std {
 	inline long stol(const string &str) {
 		return atol(str.c_str());
 	}
+
+	inline int stoi(const string &str) {
+		return atoi(str.c_str());
+	}
 };
 
 #endif

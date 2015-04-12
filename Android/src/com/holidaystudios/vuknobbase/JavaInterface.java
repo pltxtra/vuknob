@@ -283,6 +283,10 @@ public class JavaInterface {
 		nsd_helper.registerService(port);
 	}
 
+	public static void TakedownService() {
+		nsd_helper.tearDown();
+	}
+
 	public static void DiscoverServices() {
 		nsd_helper.discoverServices();
 	}

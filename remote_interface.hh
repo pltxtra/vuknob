@@ -137,8 +137,7 @@ protected:
 		
 		~Context();
 		virtual void distribute_message(std::shared_ptr<Message> &msg, bool via_udp) = 0;
-		virtual void post_action(std::function<void()> f) = 0;
-		virtual void dispatch_action(std::function<void()> f) = 0;
+		virtual void post_action(std::function<void()> f, bool do_synch = false) = 0;
 		virtual std::shared_ptr<BaseObject> get_object(int32_t objid) = 0;
 
 		std::shared_ptr<Message> acquire_message();
@@ -460,8 +459,7 @@ public:
 		virtual void on_connection_dropped() override;
 
 		virtual void distribute_message(std::shared_ptr<Message> &msg, bool via_udp) override;
-		virtual void post_action(std::function<void()> f) override;
-		virtual void dispatch_action(std::function<void()> f) override;
+		virtual void post_action(std::function<void()> f, bool do_synch) override;
 		virtual std::shared_ptr<BaseObject> get_object(int32_t objid) override;
 
 		class ClientNotConnected : public std::runtime_error {
@@ -560,8 +558,7 @@ public:
 		static void stop_server();
 		
 		virtual void distribute_message(std::shared_ptr<Message> &msg, bool via_udp) override;
-		virtual void post_action(std::function<void()> f) override;
-		virtual void dispatch_action(std::function<void()> f) override;		
+		virtual void post_action(std::function<void()> f, bool do_synch) override;
 		virtual std::shared_ptr<BaseObject> get_object(int32_t objid) override;
 	};
 

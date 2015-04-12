@@ -39,7 +39,7 @@
 #include "machine_sequencer.hh"
 #include "common.hh"
 
-//#define __DO_SATAN_DEBUG
+#define __DO_SATAN_DEBUG
 #include "satan_debug.hh"
 
 /***************************
@@ -62,6 +62,9 @@
 #define __FCT_RIMACHINE      "RIMachine"
 
 #define __VUKNOB_PROTOCOL_VERSION__ 2
+
+//#define VUKNOB_UDP_SUPPORT
+//#define VUKNOB_UDP_USE
 
 /***************************
  *
@@ -282,6 +285,7 @@ std::shared_ptr<RemoteInterface::Message> RemoteInterface::Context::acquire_mess
 std::shared_ptr<RemoteInterface::Message> RemoteInterface::Context::acquire_reply(const Message &originator) {
 	std::shared_ptr<Message> reply = acquire_message();
 	reply->set_value("id", std::to_string(__MSG_REPLY));
+	reply->set_value("repid", std::to_string(originator.get_value("repid")));
 	return reply;
 }
 
@@ -429,7 +433,7 @@ RemoteInterface::BaseObject::BaseObject(int32_t new_obj_id, const Factory *_fact
 }
 
 void RemoteInterface::BaseObject::send_object_message(std::function<void(std::shared_ptr<Message> &msg_to_send)> complete_message, bool via_udp) {
-	context->dispatch_action(
+	context->post_action(
 		[this, via_udp, complete_message]() {
 			std::shared_ptr<Message> msg2send = context->acquire_message();
 
@@ -451,7 +455,7 @@ void RemoteInterface::BaseObject::send_object_message(std::function<void(std::sh
 				SATAN_ERROR("RemoteInterface::BaseObject::send_object_message() caught an unknown exception.\n");
 				throw;
 			}
-		}
+		}, true
 		);
 }
 
@@ -612,10 +616,10 @@ std::map<std::string, std::string> RemoteInterface::HandleList::get_handles_and_
 	std::map<std::string, std::string> retval;
 
 	if(auto hlst = clientside_handle_list.lock()) {
-		hlst->context->dispatch_action(
+		hlst->context->post_action(
 			[hlst, &retval]() {
 				retval = hlst->handle2hint;
-			}
+			}, true
 			);
 	} else {
 		throw RemoteInterface::Client::ClientNotConnected();
@@ -1012,30 +1016,110 @@ int RemoteInterface::RIMachine::get_nr_of_loops() {
 }
 
 void RemoteInterface::RIMachine::pad_export_to_loop(int loop_id) {
+	auto thiz = std::dynamic_pointer_cast<RIMachine>(shared_from_this());
+	send_object_message(
+		[this, loop_id, thiz](std::shared_ptr<Message> &msg2send) {
+			msg2send->set_value("ignored", thiz->name); // make sure thiz is not optimized away
+
+			msg2send->set_value("command", "export2loop");			
+			msg2send->set_value("loopid", std::to_string(loop_id));
+		}
+		);	
 }
 
 void RemoteInterface::RIMachine::pad_set_octave(int octave) {
+	auto thiz = std::dynamic_pointer_cast<RIMachine>(shared_from_this());
+	send_object_message(
+		[this, octave, thiz](std::shared_ptr<Message> &msg2send) {
+			msg2send->set_value("ignored", thiz->name); // make sure thiz is not optimized away
+
+			msg2send->set_value("command", "setoct");			
+			msg2send->set_value("octave", std::to_string(octave));
+		}
+		);	
 }
 
 void RemoteInterface::RIMachine::pad_set_scale(int scale_index) {
+	auto thiz = std::dynamic_pointer_cast<RIMachine>(shared_from_this());
+	send_object_message(
+		[this, scale_index, thiz](std::shared_ptr<Message> &msg2send) {
+			msg2send->set_value("ignored", thiz->name); // make sure thiz is not optimized away
+
+			msg2send->set_value("command", "setscl");			
+			msg2send->set_value("scale", std::to_string(scale_index));
+		}
+		);	
 }
 
 void RemoteInterface::RIMachine::pad_set_record(bool record) {
+	auto thiz = std::dynamic_pointer_cast<RIMachine>(shared_from_this());
+	send_object_message(
+		[this, record, thiz](std::shared_ptr<Message> &msg2send) {
+			msg2send->set_value("ignored", thiz->name); // make sure thiz is not optimized away
+
+			msg2send->set_value("command", "setrec");
+			msg2send->set_value("record", record ? "true" : "false");
+		}
+		);	
 }
 
 void RemoteInterface::RIMachine::pad_set_quantize(bool do_quantize) {
+	auto thiz = std::dynamic_pointer_cast<RIMachine>(shared_from_this());
+	send_object_message(
+		[this, do_quantize, thiz](std::shared_ptr<Message> &msg2send) {
+			msg2send->set_value("ignored", thiz->name); // make sure thiz is not optimized away
+
+			msg2send->set_value("command", "setqnt");			
+			msg2send->set_value("doquantize", do_quantize ? "true" : "false");
+		}
+		);	
 }
 
 void RemoteInterface::RIMachine::pad_assign_midi_controller(const std::string &controller) {
+	auto thiz = std::dynamic_pointer_cast<RIMachine>(shared_from_this());
+	send_object_message(
+		[this, controller, thiz](std::shared_ptr<Message> &msg2send) {
+			msg2send->set_value("ignored", thiz->name); // make sure thiz is not optimized away
+
+			msg2send->set_value("command", "setctrl");
+			msg2send->set_value("midictrl", controller);
+		}
+		);	
 }
 
 void RemoteInterface::RIMachine::pad_set_chord_mode(ChordMode_t chord_mode) {
+	auto thiz = std::dynamic_pointer_cast<RIMachine>(shared_from_this());
+	send_object_message(
+		[this, chord_mode, thiz](std::shared_ptr<Message> &msg2send) {
+			msg2send->set_value("ignored", thiz->name); // make sure thiz is not optimized away
+
+			msg2send->set_value("command", "setchord");			
+			msg2send->set_value("chordmode", std::to_string((int)chord_mode));
+		}
+		);	
 }
 
 void RemoteInterface::RIMachine::pad_set_arpeggio_pattern(const std::string &arp_pattern) {
+	auto thiz = std::dynamic_pointer_cast<RIMachine>(shared_from_this());
+	send_object_message(
+		[this, arp_pattern, thiz](std::shared_ptr<Message> &msg2send) {
+			msg2send->set_value("ignored", thiz->name); // make sure thiz is not optimized away
+
+			msg2send->set_value("command", "setarp");			
+			msg2send->set_value("arppattern", arp_pattern);
+		}
+		);	
 }
 
 void RemoteInterface::RIMachine::pad_clear() {
+	auto thiz = std::dynamic_pointer_cast<RIMachine>(shared_from_this());
+	send_object_message(
+		[this, thiz](std::shared_ptr<Message> &msg2send) {
+			msg2send->set_value("ignored", thiz->name); // make sure thiz is not optimized away
+
+			msg2send->set_value("command", "padclear");			
+		}
+		);	
 }
 
 void RemoteInterface::RIMachine::pad_enqueue_event(int finger, PadEvent_t event_type, float ev_x, float ev_y) {
@@ -1055,7 +1139,12 @@ void RemoteInterface::RIMachine::pad_enqueue_event(int finger, PadEvent_t event_
 			msg2send->set_value("xp", std::to_string(xp));
 			msg2send->set_value("yp", std::to_string(yp));
 		},
-		false // send via UDP or not
+		
+#if defined(VUKNOB_UDP_SUPPORT) && defined(VUKNOB_UDP_USE)
+		true  // send via UDP
+#else
+		false  // don't send via UDP
+#endif
 		);
 }
 
@@ -1119,12 +1208,113 @@ void RemoteInterface::RIMachine::process_message(Server *context, MessageHandler
 	} else if(command == "r_detach") {
 		process_detach_message(context, msg);
 	} else if(command == "getnrloops") {
+		SATAN_DEBUG("Received request for getnrloops.\n");
 		MachineSequencer *mseq = dynamic_cast<MachineSequencer *>((real_machine_ptr));
 
-		if(mseq != NULL) { // see if it's a MachineSequencer			
+		if(mseq != NULL) { // see if it's a MachineSequencer
+			SATAN_DEBUG("Will send getnrloops reply...\n");
 			std::shared_ptr<Message> reply = context->acquire_reply(msg);
 			reply->set_value("nrloops", std::to_string(mseq->get_nr_of_loops()));
 			src->deliver_message(reply);
+			SATAN_DEBUG("Reply delivered...\n");
+		} else {
+			// not a MachineSequencer
+			throw Context::FailureResponse("Not a MachineSequencer object.");
+		}
+	} else if(command == "export2loop") {
+		MachineSequencer *mseq = dynamic_cast<MachineSequencer *>((real_machine_ptr));
+
+		if(mseq != NULL) { // see if it's a MachineSequencer
+			int loop_id = std::stoi(msg.get_value("loopid"));
+			mseq->export_pad_to_loop(loop_id);
+		} else {
+			// not a MachineSequencer
+			throw Context::FailureResponse("Not a MachineSequencer object.");
+		}
+	} else if(command == "setoct") {
+		MachineSequencer *mseq = dynamic_cast<MachineSequencer *>((real_machine_ptr));
+
+		if(mseq != NULL) { // see if it's a MachineSequencer
+			int octave = std::stoi(msg.get_value("octave"));
+			mseq->get_pad()->set_octave(octave);
+		} else {
+			// not a MachineSequencer
+			throw Context::FailureResponse("Not a MachineSequencer object.");
+		}
+	} else if(command == "setscl") {
+		MachineSequencer *mseq = dynamic_cast<MachineSequencer *>((real_machine_ptr));
+
+		if(mseq != NULL) { // see if it's a MachineSequencer
+			int scale = std::stoi(msg.get_value("scale"));
+			mseq->get_pad()->set_scale(scale);
+		} else {
+			// not a MachineSequencer
+			throw Context::FailureResponse("Not a MachineSequencer object.");
+		}
+	} else if(command == "setrec") {
+		MachineSequencer *mseq = dynamic_cast<MachineSequencer *>((real_machine_ptr));
+
+		if(mseq != NULL) { // see if it's a MachineSequencer
+			bool rec = msg.get_value("record") == "true";
+			mseq->get_pad()->set_record(rec);
+		} else {
+			// not a MachineSequencer
+			throw Context::FailureResponse("Not a MachineSequencer object.");
+		}
+	} else if(command == "setqnt") {
+		MachineSequencer *mseq = dynamic_cast<MachineSequencer *>((real_machine_ptr));
+
+		if(mseq != NULL) { // see if it's a MachineSequencer
+			bool do_quant = msg.get_value("doquantize") == "true";
+			mseq->get_pad()->set_quantize(do_quant);
+		} else {
+			// not a MachineSequencer
+			throw Context::FailureResponse("Not a MachineSequencer object.");
+		}
+	} else if(command == "setctrl") {
+		MachineSequencer *mseq = dynamic_cast<MachineSequencer *>((real_machine_ptr));
+
+		if(mseq != NULL) { // see if it's a MachineSequencer
+			std::string ctrl = msg.get_value("midictrl");
+			mseq->assign_pad_to_midi_controller(ctrl);
+		} else {
+			// not a MachineSequencer
+			throw Context::FailureResponse("Not a MachineSequencer object.");
+		}
+	} else if(command == "setchord") {
+		MachineSequencer *mseq = dynamic_cast<MachineSequencer *>((real_machine_ptr));
+
+		if(mseq != NULL) { // see if it's a MachineSequencer
+			ChordMode_t chord_mode = (ChordMode_t)std::stoi(msg.get_value("chordmode"));
+			MachineSequencer::PadConfiguration::ChordMode cm = MachineSequencer::PadConfiguration::chord_off;
+			switch(chord_mode) {
+			case chord_off:
+				cm = MachineSequencer::PadConfiguration::chord_off;
+				break;
+			case chord_triad:
+				cm = MachineSequencer::PadConfiguration::chord_triad;
+				break;
+			}
+			mseq->get_pad()->set_chord_mode(cm);
+		} else {
+			// not a MachineSequencer
+			throw Context::FailureResponse("Not a MachineSequencer object.");
+		}
+	} else if(command == "setarp") {
+		MachineSequencer *mseq = dynamic_cast<MachineSequencer *>((real_machine_ptr));
+
+		if(mseq != NULL) { // see if it's a MachineSequencer
+			std::string arp_pattern = msg.get_value("arppattern");
+			mseq->set_pad_arpeggio_pattern(arp_pattern);
+		} else {
+			// not a MachineSequencer
+			throw Context::FailureResponse("Not a MachineSequencer object.");
+		}
+	} else if(command == "padclear") {
+		MachineSequencer *mseq = dynamic_cast<MachineSequencer *>((real_machine_ptr));
+
+		if(mseq != NULL) { // see if it's a MachineSequencer
+			mseq->get_pad()->clear_pad();
 		} else {
 			// not a MachineSequencer
 			throw Context::FailureResponse("Not a MachineSequencer object.");
@@ -1320,6 +1510,8 @@ RemoteInterface::Client::Client(const std::string &server_host,
 				    if (!ec)
 				    {
 					    start_receive();
+				    } else {
+					    SATAN_ERROR("Failed to connect to server.\n");
 				    }
 			    }
 		);
@@ -1338,6 +1530,8 @@ void RemoteInterface::Client::flush_all_objects() {
 void RemoteInterface::Client::on_message_received(const Message &msg) {
 	int identifier = std::stol(msg.get_value("id"));
 
+	SATAN_DEBUG("Client() received message: %d\n", identifier);
+	
 	switch(identifier) {
 	case __MSG_PROTOCOL_VERSION:
 	{
@@ -1377,9 +1571,13 @@ void RemoteInterface::Client::on_message_received(const Message &msg) {
 
 	case __MSG_REPLY:
 	{
+		SATAN_DEBUG("Will get repid...\n");
+
 		int32_t reply_identifier = std::stol(msg.get_value("repid"));
+		SATAN_DEBUG("Reply received: %d\n", reply_identifier);
 		auto repmsg = msg_waiting_for_reply.find(reply_identifier);
 		if(repmsg != msg_waiting_for_reply.end()) {
+			SATAN_DEBUG("Matching outstanding request.\n");
 			repmsg->second->reply_to(&msg);
 			msg_waiting_for_reply.erase(repmsg);
 		}
@@ -1446,7 +1644,7 @@ void RemoteInterface::Client::start_client(const std::string &server_host,
 void RemoteInterface::Client::disconnect() {
 	std::lock_guard<std::mutex> lock_guard(client_mutex);
 	if(client) {
-		client->io_service.dispatch(
+		client->io_service.post(
 		[]()
 		{			
 			try {
@@ -1465,7 +1663,7 @@ void RemoteInterface::Client::disconnect() {
 void RemoteInterface::Client::register_ri_machine_set_listener(std::weak_ptr<RIMachine::RIMachineSetListener> ri_mset_listener) {
 	std::lock_guard<std::mutex> lock_guard(client_mutex);
 	if(client) {
-		client->io_service.dispatch(
+		client->io_service.post(
 		[ri_mset_listener]()
 		{			
 			RIMachine::register_ri_machine_set_listener(ri_mset_listener);
@@ -1495,26 +1693,26 @@ void RemoteInterface::Client::distribute_message(std::shared_ptr<Message> &msg, 
 	}
 }
 
-void RemoteInterface::Client::post_action(std::function<void()> f) {
-	io_service.post(f);
-}
-
-void RemoteInterface::Client::dispatch_action(std::function<void()> f) {
-	std::mutex mtx;
-	std::condition_variable cv;
-	bool ready = false;
-	
-	io_service.dispatch(
-		[&ready, &mtx, &cv, &f]() {
-			f();
-			std::unique_lock<std::mutex> lck(mtx);
-			ready = true;
-			cv.notify_all();
-		}
-		);
-
-	std::unique_lock<std::mutex> lck(mtx);
-	while (!ready) cv.wait(lck);
+void RemoteInterface::Client::post_action(std::function<void()> f, bool do_synch) {
+	if(do_synch) {
+		std::mutex mtx;
+		std::condition_variable cv;
+		bool ready = false;
+		
+		io_service.post(
+			[&ready, &mtx, &cv, &f]() {
+				f();
+				std::unique_lock<std::mutex> lck(mtx);
+				ready = true;
+				cv.notify_all();
+			}
+			);
+		
+		std::unique_lock<std::mutex> lck(mtx);
+		while (!ready) cv.wait(lck);
+	} else {
+		io_service.post(f);
+	}
 }
 
 auto RemoteInterface::Client::get_object(int32_t objid) -> std::shared_ptr<BaseObject> {
@@ -1713,10 +1911,10 @@ RemoteInterface::Server::Server(const asio::ip::tcp::endpoint& endpoint) : last_
 
 	current_port = acceptor.local_endpoint().port();
 
-	SATAN_ERROR("RemoteInterface::Server::Server() current ip: %s, port: %d\n",
+	SATAN_DEBUG("RemoteInterface::Server::Server() current ip: %s, port: %d\n",
 		    acceptor.local_endpoint().address().to_string().c_str(),
 		    current_port);
-
+	
 #ifdef VUKNOB_UDP_SUPPORT
 	udp_socket = std::make_shared<asio::ip::udp::socket>(io_service,
 							     asio::ip::udp::endpoint(asio::ip::udp::v4(), current_port));
@@ -1774,8 +1972,7 @@ void RemoteInterface::Server::do_udp_receive() {
 		udp_endpoint,
 		[this](std::error_code ec,
 		       std::size_t bytes_transferred) {
-			SATAN_ERROR("Udp message received - %d bytes\n", bytes_transferred);
-			if(!ec) udp_read_msg.commit_data(bytes_transferred);
+//			if(!ec) udp_read_msg.commit_data(bytes_transferred);
 
 			if((!ec) && udp_read_msg.decode_client_id()) {
 				if(udp_read_msg.decode_header()) {
@@ -1800,8 +1997,9 @@ void RemoteInterface::Server::do_udp_receive() {
 							}
 						} else {
 							SATAN_ERROR("RemoteInterface::Server::do_udp_receive() received an"
-								    " udp message from %s of the wrong size.\n",
-								    udp_endpoint.address().to_string().c_str());
+								    " udp message from %s of the wrong size (%d != %d).\n",
+								    udp_endpoint.address().to_string().c_str(),
+								    bytes_transferred - 16, udp_read_msg.get_body_length());
 						}
 					} else {
 						SATAN_ERROR("RemoteInterface::Server::do_udp_receive() received an"
@@ -1924,19 +2122,25 @@ void RemoteInterface::Server::stop_server() {
 	std::lock_guard<std::mutex> lock_guard(server_mutex);
 	
 	if(server) {
-		server->io_service.dispatch(
+		server->io_service.post(
 		[]()
 		{			
 			try {
+				SATAN_DEBUG("will disconnect clients...\n");
 				server->disconnect_clients();
+				SATAN_DEBUG("clients disconnected!");
 			} catch(std::exception &exp) {
 				throw;
 			}
+			SATAN_DEBUG("stop IO service...!");
+			server->io_service.stop();
 		});
 
-		server->io_service.stop();
+		SATAN_DEBUG("waiting for thread...!");
 		server->t1.join();
+		SATAN_DEBUG("reseting server object...!");
 		server.reset();
+		SATAN_DEBUG("done!");
 	}
 }
 
@@ -1946,26 +2150,26 @@ void RemoteInterface::Server::distribute_message(std::shared_ptr<Message> &msg, 
 	}
 }
 
-void RemoteInterface::Server::post_action(std::function<void()> f) {
-	io_service.post(f);
-}
-
-void RemoteInterface::Server::dispatch_action(std::function<void()> f) {
-	std::mutex mtx;
-	std::condition_variable cv;
-	bool ready = false;
-	
-	io_service.dispatch(
-		[&ready, &mtx, &cv, &f]() {
+void RemoteInterface::Server::post_action(std::function<void()> f, bool do_synch) {
+	if(do_synch) {
+		std::mutex mtx;
+		std::condition_variable cv;
+		bool ready = false;
+		
+		io_service.post(
+			[&ready, &mtx, &cv, &f]() {
 			f();
 			std::unique_lock<std::mutex> lck(mtx);
 			ready = true;
 			cv.notify_all();
-		}
-		);
-
-	std::unique_lock<std::mutex> lck(mtx);
-	while (!ready) cv.wait(lck);
+			}
+			);
+		
+		std::unique_lock<std::mutex> lck(mtx);
+		while (!ready) cv.wait(lck);
+	} else {
+		io_service.post(f);
+	}
 }
 
 auto RemoteInterface::Server::get_object(int32_t objid) -> std::shared_ptr<BaseObject> {

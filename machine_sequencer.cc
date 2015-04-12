@@ -617,6 +617,12 @@ void MachineSequencer::Arpeggiator::Pattern::initiate_built_in() {
 	built_in[i].append(Note(MACHINE_TICKS_PER_LINE - (MACHINE_TICKS_PER_LINE >> 1) + 1,
 				(MACHINE_TICKS_PER_LINE >> 1) - 1,
 				1, 0));
+	// new pattern 6
+	i++;
+	SATAN_DEBUG("new pattern: %d\n", i);
+	built_in[i].append(Note((MACHINE_TICKS_PER_LINE >> 2) - (MACHINE_TICKS_PER_LINE >> 3),
+				(MACHINE_TICKS_PER_LINE >> 3),
+				0, 0));
 }
 
 /*************************************

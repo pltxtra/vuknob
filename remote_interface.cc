@@ -269,6 +269,28 @@ RemoteInterface::Context::~Context() {
 		delete msg;
 }
 
+void RemoteInterface::Context::post_action(std::function<void()> f, bool do_synch) {
+	if(do_synch) {
+		std::mutex mtx;
+		std::condition_variable cv;
+		bool ready = false;
+		
+		io_service.dispatch(
+			[&ready, &mtx, &cv, &f]() {
+				f();
+				std::unique_lock<std::mutex> lck(mtx);
+				ready = true;
+				cv.notify_all();
+			}
+			);
+		
+		std::unique_lock<std::mutex> lck(mtx);
+		while (!ready) cv.wait(lck);
+	} else {
+		io_service.dispatch(f);
+	}
+}
+
 std::shared_ptr<RemoteInterface::Message> RemoteInterface::Context::acquire_message() {
 	Message *m_ptr = NULL;
 	
@@ -1493,7 +1515,6 @@ std::set<std::weak_ptr<RemoteInterface::RIMachine::RIMachineSetListener>,
 
 std::shared_ptr<RemoteInterface::Client> RemoteInterface::Client::client;
 std::mutex RemoteInterface::Client::client_mutex;
-asio::io_service RemoteInterface::Client::io_service;
 
 RemoteInterface::Client::Client(const std::string &server_host,
 				int server_port,
@@ -1651,10 +1672,10 @@ void RemoteInterface::Client::disconnect() {
 				client->my_socket.close();
 			} catch(std::exception &exp) {
 			}
+			client->io_service.stop();
 		});
 
-		client->io_service.stop();
-		client->t1.join();
+		client->io_thread.join();
 
 		client.reset();
 	}
@@ -1690,28 +1711,6 @@ void RemoteInterface::Client::distribute_message(std::shared_ptr<Message> &msg, 
 		}
 	} else {	
 		deliver_message(msg, via_udp);
-	}
-}
-
-void RemoteInterface::Client::post_action(std::function<void()> f, bool do_synch) {
-	if(do_synch) {
-		std::mutex mtx;
-		std::condition_variable cv;
-		bool ready = false;
-		
-		io_service.post(
-			[&ready, &mtx, &cv, &f]() {
-				f();
-				std::unique_lock<std::mutex> lck(mtx);
-				ready = true;
-				cv.notify_all();
-			}
-			);
-		
-		std::unique_lock<std::mutex> lck(mtx);
-		while (!ready) cv.wait(lck);
-	} else {
-		io_service.post(f);
 	}
 }
 
@@ -2099,7 +2098,7 @@ int RemoteInterface::Server::start_server() {
 		asio::ip::tcp::endpoint endpoint;//(asio::ip::tcp::v4(), 0); // 0 => select a random available port
 		server = std::shared_ptr<Server>(new Server(endpoint));
 
-		server->t1 = std::thread([]() {
+		server->io_thread = std::thread([]() {
 				try {
 					server->io_service.run();
 				} catch(std::exception const& e) {
@@ -2137,7 +2136,7 @@ void RemoteInterface::Server::stop_server() {
 		});
 
 		SATAN_DEBUG("waiting for thread...!");
-		server->t1.join();
+		server->io_thread.join();
 		SATAN_DEBUG("reseting server object...!");
 		server.reset();
 		SATAN_DEBUG("done!");
@@ -2147,28 +2146,6 @@ void RemoteInterface::Server::stop_server() {
 void RemoteInterface::Server::distribute_message(std::shared_ptr<Message> &msg, bool via_udp) {
 	for(auto client_agent : client_agents) {
 		client_agent.second->deliver_message(msg, via_udp);
-	}
-}
-
-void RemoteInterface::Server::post_action(std::function<void()> f, bool do_synch) {
-	if(do_synch) {
-		std::mutex mtx;
-		std::condition_variable cv;
-		bool ready = false;
-		
-		io_service.post(
-			[&ready, &mtx, &cv, &f]() {
-			f();
-			std::unique_lock<std::mutex> lck(mtx);
-			ready = true;
-			cv.notify_all();
-			}
-			);
-		
-		std::unique_lock<std::mutex> lck(mtx);
-		while (!ready) cv.wait(lck);
-	} else {
-		io_service.post(f);
 	}
 }
 

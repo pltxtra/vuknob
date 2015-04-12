@@ -1565,14 +1565,16 @@ void Machine::broadcast_attach(Machine *source_machine, Machine *destination_mac
 	for(auto w_mlist : machine_set_listeners) {
 		
 		std::shared_ptr<MachineSetListener> mlist = w_mlist.lock();
-		Machine::run_async_function(
-			[mlist, source_machine, destination_machine, output_name, input_name]() {
-				mlist->machine_input_attached(
-					source_machine, destination_machine,
-					output_name, input_name
-					);
-			}
-			);
+		if(mlist) {
+			Machine::run_async_function(
+				[mlist, source_machine, destination_machine, output_name, input_name]() {
+					mlist->machine_input_attached(
+						source_machine, destination_machine,
+						output_name, input_name
+						);
+				}
+				);
+		}
 	}
 }
 
@@ -1581,14 +1583,16 @@ void Machine::broadcast_detach(Machine *source_machine, Machine *destination_mac
 	for(auto w_mlist : machine_set_listeners) {
 		
 		std::shared_ptr<MachineSetListener> mlist = w_mlist.lock();
-		Machine::run_async_function(
-			[mlist, source_machine, destination_machine, output_name, input_name]() {
-				mlist->machine_input_detached(
-					source_machine, destination_machine,
-					output_name, input_name
-					);
-			}
-			);
+		if(mlist) {
+			Machine::run_async_function(
+				[mlist, source_machine, destination_machine, output_name, input_name]() {
+					mlist->machine_input_detached(
+						source_machine, destination_machine,
+						output_name, input_name
+						);
+				}
+				);
+		}
 	}
 }
 
@@ -1637,11 +1641,13 @@ void Machine::internal_register_machine(Machine *m) {
 	
 	for(auto w_mlist : machine_set_listeners) {
 		std::shared_ptr<MachineSetListener> mlist = w_mlist.lock();
-		Machine::run_async_function(
-			[mlist, m]() {
-				mlist->machine_registered(m);
-			}
-			);
+		if(mlist) {
+			Machine::run_async_function(
+				[mlist, m]() {
+					mlist->machine_registered(m);
+				}
+				);
+		}
 	}
 }
 
@@ -1866,11 +1872,13 @@ void Machine::internal_set_load_state(bool __is_loading) {
 	if(!is_loading) {
 		for(auto w_mlist : machine_set_listeners) {
 			std::shared_ptr<MachineSetListener> mlist = w_mlist.lock();
-			Machine::run_async_function(
-				[mlist]() {
-					mlist->project_loaded();
-				}
-				);
+			if(mlist) {
+				Machine::run_async_function(
+					[mlist]() {
+						mlist->project_loaded();
+					}
+					);
+			}
 		}
 	}
 }

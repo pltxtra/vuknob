@@ -126,6 +126,10 @@ protected:
 	class Context {
 	private:
 		std::deque<Message *> available_messages;
+
+	protected:
+		std::thread io_thread;
+		asio::io_service io_service;
 		
 	public:
 		class FailureResponse : public std::runtime_error {
@@ -137,9 +141,9 @@ protected:
 		
 		~Context();
 		virtual void distribute_message(std::shared_ptr<Message> &msg, bool via_udp) = 0;
-		virtual void post_action(std::function<void()> f, bool do_synch = false) = 0;
 		virtual std::shared_ptr<BaseObject> get_object(int32_t objid) = 0;
 
+		virtual void post_action(std::function<void()> f, bool do_synch = false);
 		std::shared_ptr<Message> acquire_message();
 		std::shared_ptr<Message> acquire_reply(const Message &originator);
 		void recycle_message(Message *used_message);
@@ -417,7 +421,7 @@ public:
 		static void register_ri_machine_set_listener(std::weak_ptr<RIMachineSetListener> listener);
 	};
 
-	class Client : public MessageHandler, public Context {
+	class Client : public Context, public MessageHandler {
 	private:
 		std::map<int32_t, std::shared_ptr<BaseObject> > all_objects;
 
@@ -443,7 +447,6 @@ public:
 		void flush_all_objects();
 		
 		static std::shared_ptr<Client> client;
-		static asio::io_service io_service;
 		static std::mutex client_mutex;
 	       
 	public: // public singleton interface
@@ -459,7 +462,6 @@ public:
 		virtual void on_connection_dropped() override;
 
 		virtual void distribute_message(std::shared_ptr<Message> &msg, bool via_udp) override;
-		virtual void post_action(std::function<void()> f, bool do_synch) override;
 		virtual std::shared_ptr<BaseObject> get_object(int32_t objid) override;
 
 		class ClientNotConnected : public std::runtime_error {
@@ -521,9 +523,6 @@ public:
 		std::map<int32_t, ClientAgent_ptr> client_agents;		
 		int32_t next_client_agent_id = 0;
 		
-		std::thread t1;
-		asio::io_service io_service;
-
 		asio::ip::tcp::acceptor acceptor;
 		asio::ip::tcp::socket acceptor_socket;
 		int current_port;
@@ -558,7 +557,6 @@ public:
 		static void stop_server();
 		
 		virtual void distribute_message(std::shared_ptr<Message> &msg, bool via_udp) override;
-		virtual void post_action(std::function<void()> f, bool do_synch) override;
 		virtual std::shared_ptr<BaseObject> get_object(int32_t objid) override;
 	};
 

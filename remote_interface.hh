@@ -76,7 +76,7 @@ protected:
 
 		class CannotReceiveReply : public std::runtime_error {
 		public:
-			CannotReceiveReply() : runtime_error("A reply could not be received.") {}
+			CannotReceiveReply() : runtime_error("Server reply interrupted.") {}
 			virtual ~CannotReceiveReply() {}
 		};
 		
@@ -135,7 +135,9 @@ protected:
 		class FailureResponse : public std::runtime_error {
 		public:
 			std::string response_message;
-			FailureResponse(const std::string &_response_message) : runtime_error("Remote interface command execution failed - response to sender generated."), response_message(_response_message) {}
+			FailureResponse(const std::string &_response_message) :
+				runtime_error("Remote interface command execution failed - response to sender generated."),
+				response_message(_response_message) {}
 			virtual ~FailureResponse() {}
 		};
 		
@@ -206,6 +208,7 @@ protected:
 		BaseObject(int32_t new_obj_id, const Factory *factory);
 
 		Context *context;
+		std::mutex base_object_mutex;
 
 		void send_object_message(std::function<void(std::shared_ptr<Message> &msg_to_send)> create_msg_callback, bool via_udp = false);
 		void send_object_message(std::function<void(std::shared_ptr<Message> &msg_to_send)> create_msg_callback,
@@ -291,6 +294,49 @@ public:
 
 		static std::map<std::string, std::string> get_handles_and_hints();
 		static void create_instance(const std::string &handle, double xpos, double ypos);
+	};
+	
+	class GlobalControlObject : public BaseObject {
+	private:
+		static std::weak_ptr<GlobalControlObject> clientside_gco;
+		
+		class GlobalControlObjectFactory : public Factory {
+		public:
+			GlobalControlObjectFactory();
+						
+			virtual std::shared_ptr<BaseObject> create(const Message &serialized) override;
+			virtual std::shared_ptr<BaseObject> create(int32_t new_obj_id) override;
+		};
+
+		static GlobalControlObjectFactory globalcontrolobject_factory;
+
+		virtual void post_constructor_client() override; // called after the constructor has been called
+		virtual void process_message(Server *context, MessageHandler *src, const Message &msg) override; // server side processing
+		virtual void process_message(Client *context, const Message &msg) override; // client side processing
+		virtual void serialize(std::shared_ptr<Message> &target) override;
+		virtual void on_delete(Client *context) override; // called on client side when it's about to be deleted
+
+		void parse_serialized_arp_patterns(std::vector<std::string> &retval, const std::string &serialized_arp_patterns);
+		void parse_serialized_keys(const std::string &scale_id, const std::string &serialized_keys);
+		void serialize_arp_patterns(std::shared_ptr<Message> &target);
+		void serialize_keys(std::shared_ptr<Message> &target,
+				    const std::string &id,
+				    std::vector<int> keys);
+	public:
+		GlobalControlObject(const Factory *factory, const Message &serialized); // create client side HandleList
+		GlobalControlObject(int32_t new_obj_id, const Factory *factory); // create server side HandleList
+
+	public: // client side interface
+		static std::shared_ptr<GlobalControlObject> get_global_control_object(); // get a shared ptr to the current GCO, shared_ptr will be empty if the client is not connected
+
+		std::vector<std::string> get_pad_arpeggio_patterns();
+		std::vector<std::string> get_scale_names();
+		std::vector<int> get_scale_keys(const std::string &scale_name);
+
+	private:
+		std::map<std::string, std::vector<int> > scale2keys;
+		std::vector<std::string> scale_names;
+		
 	};
 	
 	class RIMachine : public BaseObject {
@@ -399,7 +445,6 @@ public:
 		std::vector<std::string> inputs;
 		std::vector<std::string> outputs;
 		
-		std::mutex ri_machine_mutex;
 		std::string name, sibling;
 		std::string type;
 		Machine *real_machine_ptr = nullptr;
@@ -477,7 +522,8 @@ public:
 		/**** begin service objects data and logic ****/
 
 		std::map<int32_t, std::shared_ptr<BaseObject> > all_objects;
-		int32_t last_obj_id; // I am making an assumption here that last_obj_id will not be counted up more than 1/sec. This gives that time until overflow for a session will be more than 20000 days. I am making a bet here that the app will crash or the users will run tired before these 20000 days are over.
+
+		int32_t last_obj_id; // I am making an assumption here that last_obj_id will not be counted up more than 1/sec. This gives that time until overflow for a session will be more than 20000 days. If this assumption does not hold, an error state will be communicated to the user.
 
 		std::map<Machine *, std::shared_ptr<RIMachine> > machine2rimachine;
 		
@@ -556,7 +602,7 @@ public:
 		static int start_server(); // will start a server and return the port number. If the server is already started, it will just return the port number.
 		static void stop_server();
 		
-		virtual void distribute_message(std::shared_ptr<Message> &msg, bool via_udp) override;
+		virtual void distribute_message(std::shared_ptr<Message> &msg, bool via_udp = false) override;
 		virtual std::shared_ptr<BaseObject> get_object(int32_t objid) override;
 	};
 

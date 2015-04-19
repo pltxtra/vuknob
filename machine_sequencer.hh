@@ -319,7 +319,7 @@ public:
 		void load_configuration_from_xml(const KXMLDoc &pad_xml);
 
 		static std::vector<std::string> get_scale_names();
-		static std::vector<int> get_scale_key_names(const std::string &scale_name);
+		static std::vector<int> get_scale_keys(const std::string &scale_name);
 	};
 
 private:

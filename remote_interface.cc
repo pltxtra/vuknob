@@ -58,8 +58,10 @@
 #define __MSG_REPLY -6
 #define __MSG_CLIENT_ID -7
 
-#define __FCT_HANDLELIST     "HandleList"
-#define __FCT_RIMACHINE      "RIMachine"
+// Factory names
+#define __FCT_HANDLELIST		"HandleList"
+#define __FCT_GLOBALCONTROLOBJECT	"GloCtrlObj"
+#define __FCT_RIMACHINE			"RIMachine"
 
 #define __VUKNOB_PROTOCOL_VERSION__ 2
 
@@ -671,6 +673,190 @@ RemoteInterface::HandleList::HandleListFactory RemoteInterface::HandleList::hand
 
 /***************************
  *
+ *  Class RemoteInterface::GlobalControlObject::GlobalControlObjectFactory
+ *
+ ***************************/
+
+RemoteInterface::GlobalControlObject::GlobalControlObjectFactory::GlobalControlObjectFactory() : Factory(__FCT_GLOBALCONTROLOBJECT) {}
+
+std::shared_ptr<RemoteInterface::BaseObject> RemoteInterface::GlobalControlObject::GlobalControlObjectFactory::create(const Message &serialized) {
+	std::shared_ptr<GlobalControlObject> gco = std::make_shared<GlobalControlObject>(this, serialized);
+	clientside_gco = gco;
+	return gco;
+}
+
+std::shared_ptr<RemoteInterface::BaseObject> RemoteInterface::GlobalControlObject::GlobalControlObjectFactory::create(int32_t new_obj_id) {
+	return std::make_shared<GlobalControlObject>(new_obj_id, this);
+}
+
+/***************************
+ *
+ *  Class RemoteInterface::GlobalControlObject
+ *
+ ***************************/
+
+void RemoteInterface::GlobalControlObject::parse_serialized_arp_patterns(std::vector<std::string> &result,
+									 const std::string &serialized_arp_patterns) {
+	// parse scale list
+	std::stringstream ptrns_s(serialized_arp_patterns);
+	std::string ptrn_name;
+
+	std::getline(ptrns_s, ptrn_name, ':');
+	while(!ptrns_s.eof() && ptrn_name != "") {
+		result.push_back(ptrn_name);
+
+		std::getline(ptrns_s, ptrn_name, ':');
+	}
+}
+
+void RemoteInterface::GlobalControlObject::parse_serialized_keys(const std::string &scale_id, const std::string &serialized_keys) {
+	// parse scale list
+	std::stringstream keys_s(serialized_keys);
+	std::string key;
+
+	std::vector<int> result;
+	
+	std::getline(keys_s, key, ':');
+	while(!keys_s.eof() && key != "") {
+		result.push_back(std::stoi(key));
+
+		std::getline(keys_s, key, ':');
+	}
+
+	scale2keys[scale_id] = result;
+}
+
+RemoteInterface::GlobalControlObject::GlobalControlObject(const Factory *factory, const Message &serialized) : BaseObject(factory, serialized) {
+	// parse scale list
+	std::stringstream scales_s(serialized.get_value("scales"));
+	std::string scale;
+
+	// get first scale name
+	std::getline(scales_s, scale, ':');
+	while(!scales_s.eof() && scale != "") {
+		// insert scale name
+		scale_names.push_back(scale);
+		
+		// get keys for the scale
+		std::stringstream keys4scale_id;
+		keys4scale_id << "keys4scale_" << scale;
+		std::string serialized_keys = serialized.get_value(keys4scale_id.str());
+
+		parse_serialized_keys(scale, serialized_keys);
+
+		// get next scale name
+		std::getline(scales_s, scale, ':');
+	}
+}
+
+RemoteInterface::GlobalControlObject::GlobalControlObject(int32_t new_obj_id, const Factory *factory) : BaseObject(new_obj_id, factory) {}
+
+void RemoteInterface::GlobalControlObject::post_constructor_client() {}
+
+void RemoteInterface::GlobalControlObject::process_message(Server *context, MessageHandler *src, const Message &msg) {
+	std::string command = msg.get_value("command");
+
+	if(command == "get_arp_patterns") {
+		SATAN_DEBUG("Will send get_arp_patterns reply...\n");
+		std::shared_ptr<Message> reply = context->acquire_reply(msg);
+		serialize_arp_patterns(reply);
+		src->deliver_message(reply);
+		SATAN_DEBUG("Reply delivered...\n");
+	}
+}
+
+void RemoteInterface::GlobalControlObject::process_message(Client *context, const Message &msg) {
+}
+
+void RemoteInterface::GlobalControlObject::serialize_keys(std::shared_ptr<Message> &target,
+							  const std::string &id,
+							  std::vector<int> keys) {
+	std::stringstream keys_serialized;
+
+	for(auto key : keys) {
+		keys_serialized << std::to_string(key) << ":";
+	}
+	target->set_value(id, keys_serialized.str());
+}
+
+void RemoteInterface::GlobalControlObject::serialize_arp_patterns(std::shared_ptr<Message> &target) {
+	std::stringstream ptrns_serialized;
+
+	for(auto ptrn :  MachineSequencer::get_pad_arpeggio_patterns()) {
+		ptrns_serialized << ptrn << ":";
+	}
+	target->set_value("arp_patterns", ptrns_serialized.str());
+}
+
+void RemoteInterface::GlobalControlObject::serialize(std::shared_ptr<Message> &target) {
+	std::vector<std::string> scale_names = MachineSequencer::PadConfiguration::get_scale_names();
+	std::stringstream scales_serialized;
+
+	for(auto scale_name : scale_names) {
+		scales_serialized << scale_name << ":";
+
+		std::stringstream keys4scale_id;
+		keys4scale_id << "keys4scale_" << scale_name;
+		
+		serialize_keys(target, keys4scale_id.str(), MachineSequencer::PadConfiguration::get_scale_keys(scale_name));
+	}
+	target->set_value("scales", scales_serialized.str());
+}
+
+void RemoteInterface::GlobalControlObject::on_delete(Client *context) { /* noop */ }
+
+std::vector<std::string> RemoteInterface::GlobalControlObject::get_pad_arpeggio_patterns() {
+	std::vector<std::string> retval;
+	bool failed = true;
+
+	if(auto gco = clientside_gco.lock()) {
+		gco->send_object_message(
+			[](std::shared_ptr<Message> &msg2send) {				
+				msg2send->set_value("command", "get_arp_patterns");
+			},
+			[this, &retval, &failed](const Message *reply_message) {
+				if(reply_message) {
+					failed = false;
+					parse_serialized_arp_patterns(retval, reply_message->get_value("arp_patterns"));
+				}
+			}
+			);
+	} else {
+		throw RemoteInterface::Client::ClientNotConnected();
+	}
+	
+	if(failed) throw Message::CannotReceiveReply();	
+	return retval;
+}
+
+std::vector<std::string> RemoteInterface::GlobalControlObject::get_scale_names() {
+	std::lock_guard<std::mutex> lock_guard(base_object_mutex);
+	return scale_names;
+}
+
+std::vector<int> RemoteInterface::GlobalControlObject::get_scale_keys(const std::string &scale_name) {
+
+	{
+		std::lock_guard<std::mutex> lock_guard(base_object_mutex);
+		auto scl = scale2keys.find(scale_name);
+		if(scl != scale2keys.end()) {
+			return (*scl).second;
+		}
+	}
+	
+	std::vector<int> empty_retval;
+	return empty_retval;
+}
+
+auto RemoteInterface::GlobalControlObject::get_global_control_object() -> std::shared_ptr<GlobalControlObject> {
+	return clientside_gco.lock();
+}
+
+std::weak_ptr<RemoteInterface::GlobalControlObject> RemoteInterface::GlobalControlObject::clientside_gco;
+RemoteInterface::GlobalControlObject::GlobalControlObjectFactory RemoteInterface::GlobalControlObject::globalcontrolobject_factory;
+
+/***************************
+ *
  *  Class RemoteInterface::RIMachine::RIMachineFactory
  *
  ***************************/
@@ -773,9 +959,9 @@ void RemoteInterface::RIMachine::call_listeners(std::function<void(std::shared_p
 	auto weak_listener = state_listeners.begin();
 	while(weak_listener != state_listeners.end()) {
 		if(auto listener = (*weak_listener).lock()) {
-			ri_machine_mutex.unlock();
+			base_object_mutex.unlock();
 			callback(listener);
-			ri_machine_mutex.lock();
+			base_object_mutex.lock();
 			weak_listener++;
 		} else { // if we cannot lock, the listener doesn't exist so we remove it from the set.
 			weak_listener = state_listeners.erase(weak_listener);
@@ -912,27 +1098,27 @@ void RemoteInterface::RIMachine::detach_input(std::shared_ptr<RIMachine> source_
 
 
 std::string RemoteInterface::RIMachine::get_name() {
-	std::lock_guard<std::mutex> lock_guard(ri_machine_mutex);
+	std::lock_guard<std::mutex> lock_guard(base_object_mutex);
 	return name;
 }
 
 std::string RemoteInterface::RIMachine::get_sibling_name() {
-	std::lock_guard<std::mutex> lock_guard(ri_machine_mutex);
+	std::lock_guard<std::mutex> lock_guard(base_object_mutex);
 	return sibling;
 }
 
 std::string RemoteInterface::RIMachine::get_machine_type() {
-	std::lock_guard<std::mutex> lock_guard(ri_machine_mutex);
+	std::lock_guard<std::mutex> lock_guard(base_object_mutex);
 	return type;
 }
 
 double RemoteInterface::RIMachine::get_x_position() {
-	std::lock_guard<std::mutex> lock_guard(ri_machine_mutex);
+	std::lock_guard<std::mutex> lock_guard(base_object_mutex);
 	return xpos;
 }	
 
 double RemoteInterface::RIMachine::get_y_position() {
-	std::lock_guard<std::mutex> lock_guard(ri_machine_mutex);
+	std::lock_guard<std::mutex> lock_guard(base_object_mutex);
 	return ypos;
 }
 
@@ -952,7 +1138,7 @@ void RemoteInterface::RIMachine::set_position(double xp, double yp) {
 		auto thiz = std::dynamic_pointer_cast<RIMachine>(shared_from_this());
 		send_object_message(
 			[this, xp, yp, thiz](std::shared_ptr<Message> &msg2send) {
-				std::lock_guard<std::mutex> lock_guard(ri_machine_mutex);
+				std::lock_guard<std::mutex> lock_guard(base_object_mutex);
 				
 				msg2send->set_value("command", "setpos");
 				msg2send->set_value("ignored", thiz->name); // make sure thiz is not optimized away
@@ -974,18 +1160,18 @@ void RemoteInterface::RIMachine::delete_machine() {
 }
 
 std::vector<std::string> RemoteInterface::RIMachine::get_input_names() {
-	std::lock_guard<std::mutex> lock_guard(ri_machine_mutex);
+	std::lock_guard<std::mutex> lock_guard(base_object_mutex);
 	return inputs;
 }
 
 std::vector<std::string> RemoteInterface::RIMachine::get_output_names() {
-	std::lock_guard<std::mutex> lock_guard(ri_machine_mutex);
+	std::lock_guard<std::mutex> lock_guard(base_object_mutex);
 	return outputs;
 }
 
 void RemoteInterface::RIMachine::set_state_change_listener(std::weak_ptr<RIMachineStateListener> state_listener) {
 	{
-		std::lock_guard<std::mutex> lock_guard(ri_machine_mutex);
+		std::lock_guard<std::mutex> lock_guard(base_object_mutex);
 		state_listeners.insert(state_listener);
 	}
 
@@ -995,22 +1181,22 @@ void RemoteInterface::RIMachine::set_state_change_listener(std::weak_ptr<RIMachi
 			if(auto listener = state_listener.lock()) {
 				listener->on_move();
 				
-				ri_machine_mutex.lock();		
+				base_object_mutex.lock();		
 				for(auto connection : connection_data) {
 					auto mch = std::dynamic_pointer_cast<RIMachine>(context->get_object(connection.first));
 					
-					ri_machine_mutex.unlock();
+					base_object_mutex.unlock();
 					listener->on_attach(mch, connection.second.first, connection.second.second);
-					ri_machine_mutex.lock();
+					base_object_mutex.lock();
 				}
-				ri_machine_mutex.unlock();
+				base_object_mutex.unlock();
 			}
 		}
 		);
 }
 
 std::set<std::string> RemoteInterface::RIMachine::available_midi_controllers() {
-	std::lock_guard<std::mutex> lock_guard(ri_machine_mutex);
+	std::lock_guard<std::mutex> lock_guard(base_object_mutex);
 	return midi_controllers;
 }
 
@@ -1416,7 +1602,7 @@ void RemoteInterface::RIMachine::process_detach_message(Context *context, const 
 }
 
 void RemoteInterface::RIMachine::process_message(Client *context, const Message &msg) {
-	std::lock_guard<std::mutex> lock_guard(ri_machine_mutex);
+	std::lock_guard<std::mutex> lock_guard(base_object_mutex);
 	std::string command = msg.get_value("command");
 	
 	if(command == "setpos") {
@@ -1833,15 +2019,26 @@ void RemoteInterface::Server::machine_registered(Machine *m_ptr) {
 		[this, m_ptr]()
 		{
 			SATAN_DEBUG("!!! Machine %s was registered\n", m_ptr->get_name().c_str());
-
-			create_object_from_factory(__FCT_RIMACHINE,
-						   [this, m_ptr](std::shared_ptr<BaseObject> nuobj) {
-							   auto mch = std::dynamic_pointer_cast<RIMachine>(nuobj);
-							   mch->serverside_init_from_machine_ptr(m_ptr);
-
-							   machine2rimachine[m_ptr] = mch;
-						   }
-				);
+			std::string resp_msg;
+			
+			try {
+				create_object_from_factory(__FCT_RIMACHINE,
+							   [this, m_ptr](std::shared_ptr<BaseObject> nuobj) {
+								   auto mch = std::dynamic_pointer_cast<RIMachine>(nuobj);
+								   mch->serverside_init_from_machine_ptr(m_ptr);
+								   
+								   machine2rimachine[m_ptr] = mch;
+							   }
+					);
+			} catch(BaseObject::ObjIdOverflow &e) {
+				resp_msg = "Internal server error - Object ID overflow. Please restart session.";
+			}
+			if(resp_msg != "") {
+				std::shared_ptr<Message> response = server->acquire_message();
+				response->set_value("id", std::to_string(__MSG_FAILURE_RESPONSE));
+				response->set_value("response", resp_msg);
+				distribute_message(response);
+			}
 		}
 		
 		);
@@ -2079,6 +2276,9 @@ void RemoteInterface::Server::disconnect_clients() {
 void RemoteInterface::Server::create_service_objects() {
 	{ // create handle list object
 		create_object_from_factory(__FCT_HANDLELIST, [](std::shared_ptr<BaseObject> new_obj){});
+	}
+	{ // create global control object
+		create_object_from_factory(__FCT_GLOBALCONTROLOBJECT, [](std::shared_ptr<BaseObject> new_obj){});
 	}
 	{ // register us as a machine set listener
 		Machine::register_machine_set_listener(shared_from_this());

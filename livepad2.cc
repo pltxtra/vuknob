@@ -178,8 +178,10 @@ void LivePad2::select_mode() {
 
 	listView->add_row("No Arpeggio");
 
-	for(auto arpid :  MachineSequencer::get_pad_arpeggio_patterns()) {
-		listView->add_row(arpid);
+	if(auto gco = RemoteInterface::GlobalControlObject::get_global_control_object()) {	
+		for(auto arpid :  gco->get_pad_arpeggio_patterns()) {
+			listView->add_row(arpid);
+		}
 	}
 }
 
@@ -200,44 +202,47 @@ static const char *key_text[] = {
 };
 
 void LivePad2::refresh_scale_key_names() {
-	std::vector<int> keys = MachineSequencer::PadConfiguration::get_scale_key_names(scale_name);
-	SATAN_DEBUG("keys[%s].size() = %d\n", scale_name.c_str(), keys.size());
-	for(int n = 0; n < 8; n++) {
-		std::stringstream key_name_id;
-		key_name_id << "key_name_" << n;
-		SATAN_DEBUG("Will try to get id: %s\n", key_name_id.str().c_str());
-		KammoGUI::SVGCanvas::ElementReference key_name(this, key_name_id.str());
-
-		int key_number = keys[n % keys.size()];
-		
-		std::stringstream key_name_text;
-		key_name_text << key_text[key_number] << (octave + (key_number / 12) + (n / keys.size()));
-		SATAN_DEBUG("   [%d] -> %s\n", key_number, key_name_text.str().c_str());
-		key_name.set_text_content(key_name_text.str());
+	if(auto gco = RemoteInterface::GlobalControlObject::get_global_control_object()) {
+		std::vector<int> keys = gco->get_scale_keys(scale_name);
+		SATAN_DEBUG("keys[%s].size() = %d\n", scale_name.c_str(), keys.size());
+		for(int n = 0; n < 8; n++) {
+			std::stringstream key_name_id;
+			key_name_id << "key_name_" << n;
+			SATAN_DEBUG("Will try to get id: %s\n", key_name_id.str().c_str());
+			KammoGUI::SVGCanvas::ElementReference key_name(this, key_name_id.str());
+			
+			int key_number = keys[n % keys.size()];
+			
+			std::stringstream key_name_text;
+			key_name_text << key_text[key_number] << (octave + (key_number / 12) + (n / keys.size()));
+			SATAN_DEBUG("   [%d] -> %s\n", key_number, key_name_text.str().c_str());
+			key_name.set_text_content(key_name_text.str());
+		}
 	}
 }
 
 void LivePad2::scale_selected(const std::string &_scale_name) {
 	scale_name = _scale_name;
 	
-	std::vector<std::string> scale_names = MachineSequencer::PadConfiguration::get_scale_names();
-	std::vector<std::string>::iterator k;
-	int n = 0;
-	
-	
-	for(auto scale : MachineSequencer::PadConfiguration::get_scale_names()) {
-		if(scale_name == scale) {
-			scale_index = n;
+	if(auto gco = RemoteInterface::GlobalControlObject::get_global_control_object()) {
+		int n = 0;
+		
+		for(auto scale : gco->get_scale_names()) {
+			if(scale_name == scale) {
+				scale_index = n;
+			}
+			n++;
 		}
-		n++;
-	}       	
+	}
 }
 
 void LivePad2::select_scale() {
 	current_selector = selecting_scale;
 
-	for(auto scale : MachineSequencer::PadConfiguration::get_scale_names()) {
-		listView->add_row(scale);
+	if(auto gco = RemoteInterface::GlobalControlObject::get_global_control_object()) {
+		for(auto scale : gco->get_scale_names()) {
+			listView->add_row(scale);
+		}
 	}
 }
 
@@ -282,13 +287,19 @@ void LivePad2::select_menu() {
 
 	if(mseq) { 
 		listView->add_row("New loop");
+		std::string failure_message = "";
 		
-		int max_loop = mseq->get_nr_of_loops();	
-		for(int k = 0; k < max_loop; k++) {
-			std::ostringstream loop_id;
-			loop_id << "Loop #" << k;
-			listView->add_row(loop_id.str());
+		try {
+			int max_loop = mseq->get_nr_of_loops();	
+			for(int k = 0; k < max_loop; k++) {
+				std::ostringstream loop_id;
+				loop_id << "Loop #" << k;
+				listView->add_row(loop_id.str());
+			}
+		} catch(std::exception &e) {
+			failure_message = e.what();
 		}
+		if(failure_message.size() != 0) jInformer::inform(failure_message);
 	}
 }
 
@@ -308,12 +319,14 @@ void LivePad2::refresh_quantize_indicator() {
 
 void LivePad2::refresh_scale_indicator() {
 	int n = 0;
-	
-	for(auto scale : MachineSequencer::PadConfiguration::get_scale_names()) {
-		if(scale_index == n) {
-			selectScale_element.find_child_by_class("selectedText").set_text_content(scale);
+
+	if(auto gco = RemoteInterface::GlobalControlObject::get_global_control_object()) {
+		for(auto scale : gco->get_scale_names()) {
+			if(scale_index == n) {
+				selectScale_element.find_child_by_class("selectedText").set_text_content(scale);
+			}
+			n++;
 		}
-		n++;
 	}
 }
 

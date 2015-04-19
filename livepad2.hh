@@ -29,8 +29,6 @@
 
 #include <kamogui.hh>
 
-#include "machine.hh"
-#include "machine_sequencer.hh"
 #include "listview.hh"
 #include "remote_interface.hh"
 

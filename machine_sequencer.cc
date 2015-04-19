@@ -1250,7 +1250,7 @@ std::vector<std::string> MachineSequencer::PadConfiguration::get_scale_names() {
 	return retval;
 }
 
-std::vector<int> MachineSequencer::PadConfiguration::get_scale_key_names(const std::string &scale_name) {
+std::vector<int> MachineSequencer::PadConfiguration::get_scale_keys(const std::string &scale_name) {
 	std::vector<int> retval;
 	
 	int k, max;

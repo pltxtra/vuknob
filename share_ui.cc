@@ -51,7 +51,7 @@ virtual void on_click(KammoGUI::Widget *wid) {
 	SATAN_DEBUG_("ShareOgg on click...\n");
 	if(wid->get_id() == "ShareOgg") {
 #ifdef ANDROID
-		std::string oname = Machine::get_rec_fname();
+		std::string oname = Machine::get_record_file_name();
 		oname += ".ogg";
 		SATAN_DEBUG_("ShareOgg %s...\n", oname.c_str());
 

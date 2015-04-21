@@ -2106,7 +2106,7 @@ int Machine::get_lpb() {
 	return __lpb;
 }
 
-void Machine::set_rec_status(bool _dorec) {
+void Machine::set_record_state(bool _dorec) {
 	Machine::machine_operation_enqueue(
 		[] (void *d) {
 			is_recording = (*((bool *)d));
@@ -2114,11 +2114,11 @@ void Machine::set_rec_status(bool _dorec) {
 		&_dorec, true);
 }
 
-bool Machine::get_rec_status() {
+bool Machine::get_record_state() {
 	return is_recording;
 }
 
-void Machine::set_rec_fname(std::string fnm) {
+void Machine::set_record_file_name(std::string fnm) {
 	Machine::machine_operation_enqueue(
 		[] (void *d) {
 			record_fname = *((std::string *)d);
@@ -2126,7 +2126,7 @@ void Machine::set_rec_fname(std::string fnm) {
 		&fnm, true);
 }
 
-std::string Machine::get_rec_fname() {
+std::string Machine::get_record_file_name() {
 	std::string retval;
 	Machine::machine_operation_enqueue(
 		[] (void *d) {

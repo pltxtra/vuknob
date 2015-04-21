@@ -91,7 +91,7 @@ void get_project_info(void *data) {
 	gue->artist = trim(artist->get_text());
 	gue->genre = trim(genre->get_text());
 
-	Machine::set_rec_fname(std::string(DEFAULT_EXPORT_PATH) + "/" + gue->title);       
+	Machine::set_record_file_name(std::string(DEFAULT_EXPORT_PATH) + "/" + gue->title);       
 
 	q->push_event(gue);
 }
@@ -144,9 +144,9 @@ void set_project_info(void *data) {
 	genre->set_text(trim(s->genre));
 
 	if(s->title == "") {
-		Machine::set_rec_fname("");       
+		Machine::set_record_file_name("");       
 	} else {
-		Machine::set_rec_fname(std::string(DEFAULT_EXPORT_PATH) + "/" + trim(s->title));       
+		Machine::set_record_file_name(std::string(DEFAULT_EXPORT_PATH) + "/" + trim(s->title));       
 	}
 	
 	delete s;

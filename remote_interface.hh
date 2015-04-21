@@ -53,7 +53,7 @@ protected:
 	class BaseObject;
 
 	class Message {
-	public:		
+	public:
 		enum { header_length = 8 };
 
 		class NoSuchKey : public std::runtime_error {
@@ -61,7 +61,7 @@ protected:
 			NoSuchKey() : runtime_error("No such key in message.") {}
 			virtual ~NoSuchKey() {}
 		};
-		
+
 		class IllegalChar : public std::runtime_error {
 		public:
 			IllegalChar() : runtime_error("Key or value contains illegal character.") {}
@@ -79,34 +79,34 @@ protected:
 			CannotReceiveReply() : runtime_error("Server reply interrupted.") {}
 			virtual ~CannotReceiveReply() {}
 		};
-		
+
 		Message();
 		Message(Context *context);
 
 		void set_reply_handler(std::function<void(const Message *reply_msg)> reply_received_callback);
 		void reply_to(const Message *reply_msg);
 		bool is_awaiting_reply();
-		
+
 		void set_value(const std::string &key, const std::string &value);
-		std::string get_value(const std::string &key) const;		
+		std::string get_value(const std::string &key) const;
 
 		asio::streambuf::mutable_buffers_type prepare_buffer(std::size_t length);
 		void commit_data(std::size_t length);
 		asio::streambuf::const_buffers_type get_data();
-		
+
 	private:
 		Context *context;
-		
-		mutable bool encoded;		
-		mutable uint32_t body_length;	
+
+		mutable bool encoded;
+		mutable uint32_t body_length;
 		mutable int32_t client_id;
 		mutable asio::streambuf sbuf;
 		mutable std::ostream ostrm;
 		mutable int data2send;
-		
+
 		std::function<void(const Message *reply_msg)> reply_received_callback;
 		bool awaiting_reply = false;
-		
+
 		std::map<std::string, std::string> key2val;
 
 	public:
@@ -114,7 +114,7 @@ protected:
 
 		inline uint32_t get_body_length() { return body_length; }
 		inline int32_t get_client_id() { return client_id; }
-		
+
 		bool decode_client_id(); // only for messages arriving via UDP
 		bool decode_header();
 		bool decode_body();
@@ -130,7 +130,7 @@ protected:
 	protected:
 		std::thread io_thread;
 		asio::io_service io_service;
-		
+
 	public:
 		class FailureResponse : public std::runtime_error {
 		public:
@@ -140,7 +140,7 @@ protected:
 				response_message(_response_message) {}
 			virtual ~FailureResponse() {}
 		};
-		
+
 		~Context();
 		virtual void distribute_message(std::shared_ptr<Message> &msg, bool via_udp) = 0;
 		virtual std::shared_ptr<BaseObject> get_object(int32_t objid) = 0;
@@ -150,7 +150,7 @@ protected:
 		std::shared_ptr<Message> acquire_reply(const Message &originator);
 		void recycle_message(Message *used_message);
 	};
-	
+
 	class MessageHandler : public std::enable_shared_from_this<MessageHandler> {
 	private:
 		Message read_msg;
@@ -160,7 +160,7 @@ protected:
 		void do_read_body();
 		void do_write();
 		void do_write_udp(std::shared_ptr<Message> &msg);
-		
+
 	protected:
 		asio::ip::tcp::socket my_socket;
 
@@ -177,11 +177,11 @@ protected:
 		virtual void on_message_received(const Message &msg) = 0;
 		virtual void on_connection_dropped() = 0;
 	};
-	
+
 	class BaseObject : public std::enable_shared_from_this<BaseObject> {
 	private:
 		bool __is_server_side = false;
-		
+
 	protected:
 		class Factory {
 		private:
@@ -192,18 +192,18 @@ protected:
 				FactoryAlreadyCreated() : runtime_error("Tried to create multiple RemoteInterface::BaseObject::Factory for the same type.") {}
 				virtual ~FactoryAlreadyCreated() {}
 			};
-			
+
 			Factory(const char* type);
 			~Factory();
 
 			const char* get_type() const;
-			
+
 			virtual std::shared_ptr<BaseObject> create(const Message &serialized) = 0;
 			virtual std::shared_ptr<BaseObject> create(int32_t new_obj_id) = 0;
 		};
 
 		BaseObject(const Factory *factory, const Message &serialized);
-		
+
 		// used to create server side objects - which will then be serialized into messages and sent to all the clients.
 		BaseObject(int32_t new_obj_id, const Factory *factory);
 
@@ -215,13 +215,13 @@ protected:
 					 std::function<void(const Message *reply_message)> reply_received_callback);
 
 		inline bool is_server_side() { return __is_server_side; }
-		
+
 	public:
 		class ObjectType {
 		public:
 			const char *type_name;
 		};
-		
+
 		class NoSuchFactory : public std::runtime_error {
 		public:
 			NoSuchFactory() : runtime_error("Tried to create object in unknown RemoteInterface::BaseObject::Factory.") {}
@@ -253,7 +253,7 @@ protected:
 		virtual void process_message(Client *context, const Message &msg) = 0; // client side processing
 		virtual void serialize(std::shared_ptr<Message> &target) = 0;
 		virtual void on_delete(Client *context) = 0; // called on client side when it's about to be deleted
-		
+
 		static std::shared_ptr<BaseObject> create_object_from_message(const Message &msg);
 		static std::shared_ptr<BaseObject> create_object_on_server(int32_t new_obj_id, const std::string &type);
 
@@ -271,11 +271,11 @@ public:
 	private:
 		std::map<std::string, std::string> handle2hint;
 		static std::weak_ptr<HandleList> clientside_handle_list;
-		
+
 		class HandleListFactory : public Factory {
 		public:
 			HandleListFactory();
-						
+
 			virtual std::shared_ptr<BaseObject> create(const Message &serialized) override;
 			virtual std::shared_ptr<BaseObject> create(int32_t new_obj_id) override;
 		};
@@ -287,7 +287,7 @@ public:
 		virtual void process_message(Client *context, const Message &msg); // client side processing
 		virtual void serialize(std::shared_ptr<Message> &target);
 		virtual void on_delete(Client *context); // called on client side when it's about to be deleted
-		
+
 	public:
 		HandleList(const Factory *factory, const Message &serialized); // create client side HandleList
 		HandleList(int32_t new_obj_id, const Factory *factory); // create server side HandleList
@@ -295,15 +295,15 @@ public:
 		static std::map<std::string, std::string> get_handles_and_hints();
 		static void create_instance(const std::string &handle, double xpos, double ypos);
 	};
-	
+
 	class GlobalControlObject : public BaseObject {
 	private:
 		static std::weak_ptr<GlobalControlObject> clientside_gco;
-		
+
 		class GlobalControlObjectFactory : public Factory {
 		public:
 			GlobalControlObjectFactory();
-						
+
 			virtual std::shared_ptr<BaseObject> create(const Message &serialized) override;
 			virtual std::shared_ptr<BaseObject> create(int32_t new_obj_id) override;
 		};
@@ -333,12 +333,22 @@ public:
 		std::vector<std::string> get_scale_names();
 		std::vector<int> get_scale_keys(const std::string &scale_name);
 
+		bool is_it_playing();
+		void play();
+		void stop();
+		void rewind();
+		void set_record_state(bool do_record);
+		bool get_record_state();
+		std::string get_record_file_name();
+
+//		void register_periodic(std::function<void(int line)>, int nr_lines_per_period);
+
 	private:
 		std::map<std::string, std::vector<int> > scale2keys;
 		std::vector<std::string> scale_names;
-		
+
 	};
-	
+
 	class RIMachine : public BaseObject {
 	public:
 		enum PadEvent_t {
@@ -356,7 +366,7 @@ public:
 			chord_off = 0,
 			chord_triad = 1
 		};
-		
+
 		/* server side API */
 		RIMachine(const Factory *factory, const Message &serialized);
 		RIMachine(int32_t new_obj_id, const Factory *factory);
@@ -372,7 +382,7 @@ public:
 				  const std::string &source_output_name,
 				  const std::string &destination_input_name);
 
-	public: 	/* client side base API */	
+	public: 	/* client side base API */
 		class RIMachineSetListener {
 		public:
 			virtual void ri_machine_registered(std::shared_ptr<RIMachine> ri_machine) = 0;
@@ -389,7 +399,51 @@ public:
 					       const std::string src_output,
 					       const std::string dst_input) = 0;
 		};
-		
+
+		class Controller {
+		public:
+			enum Type {
+				ric_int = 0,
+				ric_float = 1,
+				ric_bool = 2,
+				ric_string = 3,
+				ric_enum = 4, // integer values map to a name
+				ric_sigid = 5 // integer values map to sample bank index
+			};
+
+			std::string get_name(); // name of the control
+			std::string get_title(); // user displayable title
+
+			void get_min(float &val);
+			void get_max(float &val);
+			void get_step(float &val);
+			void get_min(int &val);
+			void get_max(int &val);
+			void get_step(int &val);
+
+			void get_value(int &val);
+			void get_value(float &val);
+			void get_value(bool &val);
+			void get_value(std::string &val);
+
+			std::string get_value_name(const int &val);
+
+			void set_value(int &val);
+			void set_value(float &val);
+			void set_value(bool &val);
+			void set_value(std::string &val);
+		};
+
+		/// get a hint about what this machine is (for example, "effect" or "generator")
+		std::string get_hint();
+
+		/// Returns a set of controller groups
+		std::vector<std::string> get_controller_groups();
+		/// Returns the set of all controller names in a given group
+		std::vector<std::string> get_controller_names(const std::string &group_name);
+		/// Return a Controller object
+		std::shared_ptr<Controller> get_controller(const std::string &controller_name);
+
 		std::string get_name();
 		std::string get_sibling_name();
 		std::string get_machine_type();
@@ -397,9 +451,9 @@ public:
 		double get_x_position();
 		double get_y_position();
 		void set_position(double xpos, double ypos);
-		
+
 		void delete_machine(); // called on client - asks server to delete the machine.
-		
+
 		std::vector<std::string> get_input_names();
 		std::vector<std::string> get_output_names();
 
@@ -419,7 +473,7 @@ public:
 		void pad_set_arpeggio_pattern(const std::string &arp_pattern);
 		void pad_clear();
 		void pad_enqueue_event(int finger, PadEvent_t event_type, float ev_x, float ev_y);
-		
+
 	public:
 		virtual void post_constructor_client(); // called after the constructor has been called
 		virtual void process_message(Server *context, MessageHandler *src, const Message &msg); // server side processing
@@ -434,35 +488,35 @@ public:
 
 			virtual std::shared_ptr<BaseObject> create(const Message &serialized);
 			virtual std::shared_ptr<BaseObject> create(int32_t new_obj_id);
-			
+
 		};
 
 		static RIMachineFactory rimachine_factory;
 		static std::set<std::weak_ptr<RIMachineSetListener>,
-				std::owner_less<std::weak_ptr<RIMachineSetListener> > > listeners;	
-		
+				std::owner_less<std::weak_ptr<RIMachineSetListener> > > listeners;
+
 		std::multimap<int32_t, std::pair<std::string, std::string> > connection_data; // [source machine objid]->(output name, input name)
 		std::vector<std::string> inputs;
 		std::vector<std::string> outputs;
-		
+
 		std::string name, sibling;
 		std::string type;
 		Machine *real_machine_ptr = nullptr;
 		double xpos, ypos;
-		std::set<std::string> midi_controllers;		
+		std::set<std::string> midi_controllers;
 
 		void process_attach_message(Context *context, const Message &msg);
 		void process_detach_message(Context *context, const Message &msg);
-		
+
 		void parse_serialized_midi_ctrl_list(std::string serialized);
 		void parse_serialized_connections_data(std::string serialized);
 		void call_listeners(std::function<void(std::shared_ptr<RIMachineStateListener> listener)> callback);
-		
+
 		// used on client side when somethings changed server side
 		std::set<std::weak_ptr<RIMachineStateListener>,
 			 std::owner_less<std::weak_ptr<RIMachineStateListener> > >state_listeners;
 
-		friend class Client;		
+		friend class Client;
 		static void register_ri_machine_set_listener(std::weak_ptr<RIMachineSetListener> listener);
 	};
 
@@ -471,37 +525,37 @@ public:
 		std::map<int32_t, std::shared_ptr<BaseObject> > all_objects;
 
 		int32_t client_id = -1;
-		
+
 		// code for handling messages waiting for a reply
 		int32_t next_reply_id = 0;
 		std::map<int32_t, std::shared_ptr<Message> > msg_waiting_for_reply;
-		
+
 		std::map<std::string, std::string> handle2hint;
-	       		
+
 		std::thread t1;
 		asio::ip::tcp::resolver resolver;
 		asio::ip::udp::resolver udp_resolver;
 		std::function<void()> disconnect_callback;
 		std::function<void(const std::string &fresp)> failure_response_callback;
-		
+
 		Client(const std::string &server_host,
 		       int server_port,
 		       std::function<void()> disconnect_callback,
 		       std::function<void(const std::string &failure_response)> failure_response_callback);
 
 		void flush_all_objects();
-		
+
 		static std::shared_ptr<Client> client;
 		static std::mutex client_mutex;
-	       
+
 	public: // public singleton interface
 		static void start_client(const std::string &server_host, int server_port,
 					 std::function<void()> disconnect_callback,
 					 std::function<void(const std::string &failure_response)> failure_response_callback);
 		static void disconnect();
-		
+
 		static void register_ri_machine_set_listener(std::weak_ptr<RIMachine::RIMachineSetListener> ri_mset_listener);
-		
+
 	public:
 		virtual void on_message_received(const Message &msg) override;
 		virtual void on_connection_dropped() override;
@@ -526,7 +580,7 @@ public:
 		int32_t last_obj_id; // I am making an assumption here that last_obj_id will not be counted up more than 1/sec. This gives that time until overflow for a session will be more than 20000 days. If this assumption does not hold, an error state will be communicated to the user.
 
 		std::map<Machine *, std::shared_ptr<RIMachine> > machine2rimachine;
-		
+
 		int32_t reserve_new_obj_id();
 		void create_object_from_factory(const std::string &factory_type,
 						std::function<void(std::shared_ptr<BaseObject> nuobj)> new_object_init_callback);
@@ -541,16 +595,16 @@ public:
 		virtual void machine_input_detached(Machine *source, Machine *destination,
 						    const std::string &output_name,
 						    const std::string &input_name) override; // MachineSetListener interface
-		
+
 		std::shared_ptr<HandleList> handle_list;
-		
+
 		/**** end service objects data and logic ****/
-		
+
 		class ClientAgent : public MessageHandler {
 		private:
 			int32_t id;
 			Server *server;
-			
+
 			void send_handler_message();
 		public:
 			ClientAgent(int32_t id, asio::ip::tcp::socket _socket, Server *server);
@@ -559,28 +613,28 @@ public:
 			void disconnect();
 
 			int32_t get_id() { return id; }
-			
+
 			virtual void on_message_received(const Message &msg) override;
 			virtual void on_connection_dropped() override;
 		};
 		friend class ClientAgent;
 
 		typedef std::shared_ptr<ClientAgent> ClientAgent_ptr;
-		std::map<int32_t, ClientAgent_ptr> client_agents;		
+		std::map<int32_t, ClientAgent_ptr> client_agents;
 		int32_t next_client_agent_id = 0;
-		
+
 		asio::ip::tcp::acceptor acceptor;
 		asio::ip::tcp::socket acceptor_socket;
 		int current_port;
-		
-		std::shared_ptr<asio::ip::udp::socket> udp_socket;		
+
+		std::shared_ptr<asio::ip::udp::socket> udp_socket;
 		Message udp_read_msg;
 		asio::ip::udp::endpoint udp_endpoint;
-		
+
 		void do_accept();
 		void drop_client(std::shared_ptr<ClientAgent> client_agent);
 		void do_udp_receive();
-		
+
 		void disconnect_clients();
 		void create_service_objects();
 		void add_create_object_header(std::shared_ptr<Message> &target, std::shared_ptr<BaseObject> obj);
@@ -590,18 +644,18 @@ public:
 		void send_all_objects_to_new_client(std::shared_ptr<MessageHandler> client_agent);
 
 		int get_port();
-		
+
 		Server(const asio::ip::tcp::endpoint& endpoint);
 
 		void route_incomming_message(ClientAgent *src, const Message &msg);
-		
+
 		static std::shared_ptr<Server> server;
 		static std::mutex server_mutex;
-		
+
 	public:
 		static int start_server(); // will start a server and return the port number. If the server is already started, it will just return the port number.
 		static void stop_server();
-		
+
 		virtual void distribute_message(std::shared_ptr<Message> &msg, bool via_udp = false) override;
 		virtual std::shared_ptr<BaseObject> get_object(int32_t objid) override;
 	};

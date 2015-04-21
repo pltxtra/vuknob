@@ -89,7 +89,7 @@ virtual void on_click(KammoGUI::Widget *wid) {
 	else if(wid->get_id() == "ExportSequence2MIDI")
 		exportLoops = false;
 
-	std::string path = Machine::get_rec_fname();
+	std::string path = Machine::get_record_file_name();
 	export_path = path + ".mid";
 
 	if(path == "") {

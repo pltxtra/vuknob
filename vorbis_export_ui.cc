@@ -125,11 +125,11 @@ static void yes(void *ignored) {
 		KammoGUI::display_notification("Disabled:",
 					       "Cannot export vorbis while playback is activated.");
 	} else {
-		SATAN_DEBUG("wav file: %s\n", Machine::get_rec_fname().c_str());
+		SATAN_DEBUG("wav file: %s\n", Machine::get_record_fname().c_str());
 		
 		FILE *input = NULL, *output = NULL;
 		
-		std::string iname = Machine::get_rec_fname();
+		std::string iname = Machine::get_record_file_name();
 		iname += ".wav";
 		input = fopen(
 			iname.c_str(),
@@ -200,7 +200,7 @@ virtual void on_click(KammoGUI::Widget *wid) {
 	}	
 #endif
 
-	export_path = Machine::get_rec_fname() + ".ogg";
+	export_path = Machine::get_record_file_name() + ".ogg";
 
 	if(export_path == ".ogg") {
 		KammoGUI::display_notification(

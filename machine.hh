@@ -842,10 +842,10 @@ public:
 	static int get_lpb();
 	
 	/// set/get recording status.
-	static void set_rec_status(bool status);
-	static bool get_rec_status();
-	static void set_rec_fname(std::string fname);
-	static std::string get_rec_fname();
+	static void set_record_state(bool status);
+	static bool get_record_state();
+	static void set_record_file_name(std::string file_name);
+	static std::string get_record_file_name();
 	
 	/// get machine by name
 	static Machine *get_by_name(std::string name);

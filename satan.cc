@@ -317,7 +317,6 @@ public:
 		     << "   -u name                 : Use name as identity.\n"
 		     << "   -l                      : listen for incomming connections.\n"
 		     << "   -c                      : connect to host.\n"
-		     << "   -t                      : run test code for distributed object.\n"
 		     << "\n\n";
 	}
 
@@ -327,8 +326,7 @@ public:
 		bool connect = false;
 		string connect_to = "";
 		string user_name = "";
-		bool do_dummy_distributedobject_test = false;
-		while ((ch = getopt(argc, argv, "hu:lc:t")) != -1) {
+		while ((ch = getopt(argc, argv, "hu:lc:")) != -1) {
 			switch (ch) {
 			case 'h':
 				usage();
@@ -344,8 +342,6 @@ public:
 				connect = true;
 				connect_to = string(optarg);
 				break;
-			case 't':
-				do_dummy_distributedobject_test = true;
 				break;
 			case '?':
 			default:

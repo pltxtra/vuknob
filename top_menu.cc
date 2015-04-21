@@ -122,7 +122,7 @@ void TopMenu::resized() {
 void TopMenu::expose() {
 	__cnv->blit_SVGBob(bt_rewind,				                     x1,         y1);
 	__cnv->blit_SVGBob(show_pulse ? bt_play_pulse : bt_play,                     x1 + w,     y1);
-	__cnv->blit_SVGBob(Machine::get_rec_status() ? bt_record_on : bt_record_off, x1 + 2 * w, y1);
+	__cnv->blit_SVGBob(Machine::get_record_state() ? bt_record_on : bt_record_off, x1 + 2 * w, y1);
 
 	__cnv->blit_SVGBob(current_selection == selected_project ? bt_project_sel : bt_project,
 			   x2 - 3 * w, y1);
@@ -160,7 +160,7 @@ void TopMenu::on_event(KammoGUI::canvasEvent_t ce, int x, int y) {
 	if(x < w) {
 		// rewind
 		SATAN_DEBUG("TopMenu::on_event()    - rewind\n");
-		MachineSequencer::rewind();
+		Machine::rewind();
 	} else if(x < 2 * w) {
 		// play
 		SATAN_DEBUG("TopMenu::on_event()    - play\n");
@@ -172,7 +172,7 @@ void TopMenu::on_event(KammoGUI::canvasEvent_t ce, int x, int y) {
 	} else if(x < 3 * w) {
 		// record
 		SATAN_DEBUG("TopMenu::on_event()    - record\n");
-		if(Machine::get_rec_fname() == "") {
+		if(Machine::get_record_file_name() == "") {
 			do_record = false;
 			KammoGUI::display_notification(
 				"Information",
@@ -186,9 +186,9 @@ void TopMenu::on_event(KammoGUI::canvasEvent_t ce, int x, int y) {
 			KammoGUI::display_notification(
 				"During playback..",
 				std::string("The sound is written to: ") +
-				Machine::get_rec_fname() + ".wav");
+				Machine::get_record_file_name() + ".wav");
 		
-		Machine::set_rec_status(do_record);
+		Machine::set_record_state(do_record);
 	} else if(x > (x2 - w)) {
 		// jam
 		static KammoGUI::UserEvent *ue = NULL;

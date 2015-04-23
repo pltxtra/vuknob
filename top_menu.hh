@@ -31,8 +31,9 @@
 #define TOPMENU_CLASS
 
 #include "canvas_widget.hh"
+#include "remote_interface.hh"
 
-class TopMenu : public CanvasWidget {
+class TopMenu : public CanvasWidget, public RemoteInterface::GlobalControlObject::PlaybackStateListener {
 private:
 	KammoGUI::Canvas::SVGDefinition *bt_rewind_d;
 	KammoGUI::Canvas::SVGDefinition *bt_play_d, *bt_play_pulse_d;
@@ -50,7 +51,7 @@ private:
 	KammoGUI::Canvas::SVGBob *bt_compose, *bt_compose_sel;
 	KammoGUI::Canvas::SVGBob *bt_jam, *bt_jam_sel;
 
-	static TopMenu *top_menu;
+	static std::shared_ptr<TopMenu> top_menu;
 
 	enum MenuSelection {
 		selected_none, selected_project, selected_compose, selected_jam
@@ -61,14 +62,14 @@ private:
 	// since the sequence_row_playing_changed() callback is running
 	// on the playback thread, we have this set_row_playing_markers() function
 	// that the first function will put in queue to execute on the UI thread, where it belongs.
-	static void run_play_pulse_marker(void *rowp);	
+	static void run_play_pulse_marker(void *rowp);
 
 	// this callback is called by Machine on every sequence_step line
 	static void sequence_row_playing_changed(int row);
-	
+
 	int w;
 	bool show_pulse;
-	bool do_record;
+	bool is_playing = false, is_recording = false;
 public:
 	TopMenu(CanvasWidgetContext *cwc);
 
@@ -77,8 +78,12 @@ public:
 	virtual void on_event(KammoGUI::canvasEvent_t ce, int x, int y);
 
 	static void new_view_enabled(KammoGUI::Widget *w);
-	
+
 	static void setup(KammoGUI::Canvas *cnv);
+
+	// RemoteInterface::GlobalControlObject::PlaybackStateListener
+	virtual void playback_state_changed(bool is_playing) override;
+	virtual void recording_state_changed(bool is_recording) override;
 };
 
 #endif

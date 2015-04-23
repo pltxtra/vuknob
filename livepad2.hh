@@ -36,7 +36,8 @@
 #define VZONES PAD_VZONES
 
 class LivePad2 : public KammoGUI::SVGCanvas::SVGDocument,
-		 public RemoteInterface::RIMachine::RIMachineSetListener {
+		 public RemoteInterface::RIMachine::RIMachineSetListener,
+		 public RemoteInterface::GlobalControlObject::PlaybackStateListener {
 private:
 	static LivePad2 *l_pad2;
 
@@ -47,9 +48,11 @@ private:
 
 	int octave, scale_index;
 	std::string scale_name;
-	
+
 	bool record, quantize;
 	std::string chord_mode, mode, controller;
+
+	bool is_recording = false, is_playing = false;
 
 	KammoGUI::SVGCanvas::ElementReference graphArea_element;
 	KammoGUI::SVGCanvas::SVGRect graphArea_viewport;
@@ -57,7 +60,7 @@ private:
 
 	std::set<std::weak_ptr<RemoteInterface::RIMachine>,
 		 std::owner_less<std::weak_ptr<RemoteInterface::RIMachine> > >msequencers; // all known machine sequencers
-	
+
 	ListView *listView;
 
 	KammoGUI::SVGCanvas::ElementReference octaveUp_element;
@@ -77,7 +80,7 @@ private:
 				 selecting_chord, selecting_scale, selecting_controller,
 				 selecting_menu};
 	currentSelector_t current_selector;
-	
+
 	void refresh_scale_key_names();
 
 	void machine_selected(const std::string &machine_name);
@@ -107,7 +110,7 @@ private:
 	static void yes(void *ctx);
 	static void no(void *ctx);
 	void ask_clear_pad();
-	
+
 	static void button_on_event(KammoGUI::SVGCanvas::SVGDocument *source, KammoGUI::SVGCanvas::ElementReference *e_ref,
 				    const KammoGUI::SVGCanvas::MotionEvent &event);
 	static void listview_callback(void *context, bool row_selected, int row_index, const std::string &text);
@@ -116,14 +119,18 @@ private:
 public:
 	LivePad2(KammoGUI::SVGCanvas *cnv, std::string file_name);
 	~LivePad2();
-	
+
 	virtual void on_resize();
 	virtual void on_render();
 
 	static void use_new_MachineSequencer(std::shared_ptr<RemoteInterface::RIMachine> mseq);
 
-	virtual void ri_machine_registered(std::shared_ptr<RemoteInterface::RIMachine> ri_machine);
-	virtual void ri_machine_unregistered(std::shared_ptr<RemoteInterface::RIMachine> ri_machine);
+	virtual void ri_machine_registered(std::shared_ptr<RemoteInterface::RIMachine> ri_machine) override;
+	virtual void ri_machine_unregistered(std::shared_ptr<RemoteInterface::RIMachine> ri_machine) override;
+
+	// RemoteInterface::GlobalControlObject::PlaybackStateListener
+	virtual void playback_state_changed(bool is_playing) override;
+	virtual void recording_state_changed(bool is_recording) override;
 };
 
 #endif

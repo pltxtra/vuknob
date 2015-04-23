@@ -58,10 +58,10 @@ using namespace std;
  *
  ***************************/
 
-TopMenu *TopMenu::top_menu = NULL;
+std::shared_ptr<TopMenu> TopMenu::top_menu;
 
 TopMenu::TopMenu(CanvasWidgetContext *cwc) :
-	CanvasWidget(cwc, 0.0, 0.0, 1.0, 1.0, 0xff), current_selection(selected_none), show_pulse(false), do_record(false) {
+	CanvasWidget(cwc, 0.0, 0.0, 1.0, 1.0, 0xff), current_selection(selected_none), show_pulse(false) {
 
 	bt_rewind_d   = KammoGUI::Canvas::SVGDefinition::from_file(
 		std::string(CanvasWidgetContext::svg_directory + "/TopMenu-Rewind.svg"));
@@ -86,13 +86,13 @@ TopMenu::TopMenu(CanvasWidgetContext *cwc) :
 		std::string(CanvasWidgetContext::svg_directory + "/TopMenu-Jam.svg"));
 	bt_jam_sel_d   = KammoGUI::Canvas::SVGDefinition::from_file(
 		std::string(CanvasWidgetContext::svg_directory + "/TopMenu-Jam-Selected.svg"));
-	
+
 	bt_rewind = new KammoGUI::Canvas::SVGBob(__cnv, bt_rewind_d);
 	bt_play = new KammoGUI::Canvas::SVGBob(__cnv, bt_play_d);
 	bt_play_pulse = new KammoGUI::Canvas::SVGBob(__cnv, bt_play_pulse_d);
 	bt_record_on = new KammoGUI::Canvas::SVGBob(__cnv, bt_record_on_d);
 	bt_record_off = new KammoGUI::Canvas::SVGBob(__cnv, bt_record_off_d);
-	
+
 	bt_project = new KammoGUI::Canvas::SVGBob(__cnv, bt_project_d);
 	bt_project_sel = new KammoGUI::Canvas::SVGBob(__cnv, bt_project_sel_d);
 	bt_compose = new KammoGUI::Canvas::SVGBob(__cnv, bt_compose_d);
@@ -104,13 +104,13 @@ TopMenu::TopMenu(CanvasWidgetContext *cwc) :
 
 void TopMenu::resized() {
 	w = y2 - y1;
-	
+
 	bt_rewind->set_blit_size(w, w);
 	bt_play->set_blit_size(w, w);
 	bt_play_pulse->set_blit_size(w, w);
 	bt_record_on->set_blit_size(w, w);
 	bt_record_off->set_blit_size(w, w);
-	
+
 	bt_project->set_blit_size(w, w);
 	bt_project_sel->set_blit_size(w, w);
 	bt_compose->set_blit_size(w, w);
@@ -122,7 +122,7 @@ void TopMenu::resized() {
 void TopMenu::expose() {
 	__cnv->blit_SVGBob(bt_rewind,				                     x1,         y1);
 	__cnv->blit_SVGBob(show_pulse ? bt_play_pulse : bt_play,                     x1 + w,     y1);
-	__cnv->blit_SVGBob(Machine::get_record_state() ? bt_record_on : bt_record_off, x1 + 2 * w, y1);
+	__cnv->blit_SVGBob(is_recording ? bt_record_on : bt_record_off, x1 + 2 * w, y1);
 
 	__cnv->blit_SVGBob(current_selection == selected_project ? bt_project_sel : bt_project,
 			   x2 - 3 * w, y1);
@@ -149,7 +149,7 @@ void TopMenu::new_view_enabled(KammoGUI::Widget *new_view) {
 		top_menu->current_selection = selected_jam;
 	} else {
 		top_menu->current_selection = selected_none;
-	} 
+	}
 }
 
 void TopMenu::on_event(KammoGUI::canvasEvent_t ce, int x, int y) {
@@ -157,38 +157,46 @@ void TopMenu::on_event(KammoGUI::canvasEvent_t ce, int x, int y) {
 
 	SATAN_DEBUG("TopMenu::on_event()\n");
 
+	auto gco = RemoteInterface::GlobalControlObject::get_global_control_object();
+
 	if(x < w) {
 		// rewind
 		SATAN_DEBUG("TopMenu::on_event()    - rewind\n");
-		Machine::rewind();
+		if(gco) gco->rewind();
 	} else if(x < 2 * w) {
 		// play
 		SATAN_DEBUG("TopMenu::on_event()    - play\n");
-		if(Machine::is_it_playing()) {
-			Machine::stop();
-		} else {
-			Machine::play();
+
+		if(gco) {
+			if(gco->is_it_playing()) {
+				gco->stop();
+			} else {
+				gco->play();
+			}
 		}
 	} else if(x < 3 * w) {
 		// record
+		std::string fname = "";
+		if(gco) fname = gco->get_record_file_name();
+
 		SATAN_DEBUG("TopMenu::on_event()    - record\n");
-		if(Machine::get_record_file_name() == "") {
-			do_record = false;
+		if(fname == "") {
+			is_recording = false;
 			KammoGUI::display_notification(
 				"Information",
 				"Please save the project one time first...");
 			return;
 		}
 
-		do_record = !do_record;
+		is_recording = !is_recording;
 
-		if(do_record)
+		if(is_recording)
 			KammoGUI::display_notification(
 				"During playback..",
 				std::string("The sound is written to: ") +
-				Machine::get_record_file_name() + ".wav");
-		
-		Machine::set_record_state(do_record);
+				fname + ".wav");
+
+		if(gco) gco->set_record_state(is_recording);
 	} else if(x > (x2 - w)) {
 		// jam
 		static KammoGUI::UserEvent *ue = NULL;
@@ -205,7 +213,7 @@ void TopMenu::on_event(KammoGUI::canvasEvent_t ce, int x, int y) {
 			std::map<std::string, void *> args;
 			KammoGUI::EventHandler::trigger_user_event(ue, args);
 		}
-	} else if(x > (x2 - 3 * w)) {	
+	} else if(x > (x2 - 3 * w)) {
 		// project
 		static KammoGUI::UserEvent *ue = NULL;
 		KammoGUI::get_widget((KammoGUI::Widget **)&ue, "showProjectContainer");
@@ -234,15 +242,34 @@ void TopMenu::setup(KammoGUI::Canvas *cnvs) {
 
 	float min_h = w_inch / 6.0f;
 	min_h = min_h < 0.3f ? min_h : 0.3f;
-	
+
 	CanvasWidgetContext *cwc =
 		new CanvasWidgetContext(cnvs, w_inch, min_h);
 	cnvs->set_bg_color(0.9f, 0.9f, 0.9f);
-	top_menu = new TopMenu(cwc);
+	top_menu = std::make_shared<TopMenu>(cwc);
 
 	cwc->enable_events();
 
+	RemoteInterface::GlobalControlObject::register_playback_state_listener(top_menu);
 	Machine::register_periodic(sequence_row_playing_changed, 1);
+}
+
+void TopMenu::playback_state_changed(bool _is_playing) {
+	KammoGUI::run_on_GUI_thread(
+		[this, _is_playing]() {
+			is_playing = _is_playing;
+			redraw();
+		}
+		);
+}
+
+void TopMenu::recording_state_changed(bool _is_recording) {
+	KammoGUI::run_on_GUI_thread(
+		[this, _is_recording]() {
+			is_recording = _is_recording;
+			redraw();
+		}
+		);
 }
 
 /***************************
@@ -266,8 +293,8 @@ virtual void on_init(KammoGUI::Widget *wid) {
 virtual void on_value_changed(KammoGUI::Widget *wid) {
 	if(wid->get_id() == "modeTabs") {
 		KammoGUI::Tabs *t = (KammoGUI::Tabs *)wid;
-		
-		SATAN_DEBUG("Tab changed... %s\n", t->get_current_view()->get_id().c_str());		
+
+		SATAN_DEBUG("Tab changed... %s\n", t->get_current_view()->get_id().c_str());
 		TopMenu::new_view_enabled(t->get_current_view());
 	}
 }

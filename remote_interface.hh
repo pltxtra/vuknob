@@ -109,6 +109,8 @@ protected:
 
 		std::map<std::string, std::string> key2val;
 
+		void clear_msg_content();
+
 	public:
 		static void recycle(Message *msg);
 
@@ -298,8 +300,6 @@ public:
 
 	class GlobalControlObject : public BaseObject {
 	private:
-		static std::weak_ptr<GlobalControlObject> clientside_gco;
-
 		class GlobalControlObjectFactory : public Factory {
 		public:
 			GlobalControlObjectFactory();
@@ -307,8 +307,6 @@ public:
 			virtual std::shared_ptr<BaseObject> create(const Message &serialized) override;
 			virtual std::shared_ptr<BaseObject> create(int32_t new_obj_id) override;
 		};
-
-		static GlobalControlObjectFactory globalcontrolobject_factory;
 
 		virtual void post_constructor_client() override; // called after the constructor has been called
 		virtual void process_message(Server *context, MessageHandler *src, const Message &msg) override; // server side processing
@@ -327,6 +325,17 @@ public:
 		GlobalControlObject(int32_t new_obj_id, const Factory *factory); // create server side HandleList
 
 	public: // client side interface
+		class PlaybackStateListener {
+		public:
+			virtual void playback_state_changed(bool is_playing) = 0;
+			virtual void recording_state_changed(bool is_recording) = 0;
+		};
+
+		class PeriodicPlaybackListener {
+		public:
+			virtual void periodic_playback_update(int current_line) = 0;
+		};
+
 		static std::shared_ptr<GlobalControlObject> get_global_control_object(); // get a shared ptr to the current GCO, shared_ptr will be empty if the client is not connected
 
 		std::vector<std::string> get_pad_arpeggio_patterns();
@@ -341,12 +350,22 @@ public:
 		bool get_record_state();
 		std::string get_record_file_name();
 
+		static void register_playback_state_listener(std::shared_ptr<PlaybackStateListener> listener_object);
+
 //		void register_periodic(std::function<void(int line)>, int nr_lines_per_period);
 
 	private:
+		static std::weak_ptr<GlobalControlObject> clientside_gco;
+		static GlobalControlObjectFactory globalcontrolobject_factory;
+		static std::mutex gco_mutex;
+		static std::vector<std::weak_ptr<PlaybackStateListener> > playback_state_listeners;
+
+		static void insert_new_playback_state_listener_object(std::shared_ptr<PlaybackStateListener> listener_object);
+
+		bool is_playing = false, is_recording = false;
+
 		std::map<std::string, std::vector<int> > scale2keys;
 		std::vector<std::string> scale_names;
-
 	};
 
 	class RIMachine : public BaseObject {

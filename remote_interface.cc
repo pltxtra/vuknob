@@ -106,11 +106,19 @@ void RemoteInterface::Message::set_value(const std::string &key, const std::stri
 
 std::string RemoteInterface::Message::get_value(const std::string &key) const {
 	auto result = key2val.find(key);
-	if(result == key2val.end()) throw NoSuchKey();
+	if(result == key2val.end()) {
+#ifdef __DO_SATAN_DEBUG
+		for(auto k2v : key2val) {
+			SATAN_DEBUG("[%s] does not match [%s] -> %s.\n", key.c_str(), k2v.first.c_str(), k2v.second.c_str());
+		}
+#endif
+		throw NoSuchKey();
+	}
 	return result->second;
 }
 
 asio::streambuf::mutable_buffers_type RemoteInterface::Message::prepare_buffer(std::size_t length) {
+	clear_msg_content();
 	return sbuf.prepare(length);
 }
 
@@ -221,7 +229,7 @@ bool RemoteInterface::Message::decode_body() {
 	std::getline(is, key, '=');
 	while(!is.eof() && key != "") {
 		std::getline(is, val, ';');
-		if(key != "" && val != "") {
+		if(key != "") {
 			key2val[decode_string(key)] = decode_string(val);
 		}
 		std::getline(is, key, '=');
@@ -247,13 +255,17 @@ void RemoteInterface::Message::encode() const {
 	data2send += header_length; // add header length to the total data size
 }
 
+void RemoteInterface::Message::clear_msg_content() {
+	data2send = 0;
+	awaiting_reply = false;
+	reply_received_callback = [](const Message *reply_msg){};
+	key2val.clear();
+}
+
 void RemoteInterface::Message::recycle(Message *msg) {
 	if(msg->context) {
 		msg->sbuf.consume(msg->data2send);
-		msg->data2send = 0;
-		msg->awaiting_reply = false;
-		msg->reply_received_callback = [](const Message *reply_msg){};
-		msg->key2val.clear();
+		msg->clear_msg_content();
 		msg->context->recycle_message(msg);
 	} else {
 		delete msg;
@@ -498,7 +510,16 @@ void RemoteInterface::BaseObject::send_object_message(std::function<void(std::sh
 				msg2send->set_value("id", std::to_string(obj_id));
 				msg2send->set_reply_handler(
 					[reply_received_callback, &ready, &mtx, &cv](const Message *reply_msg) {
-						reply_received_callback(reply_msg);
+						try {
+							reply_received_callback(reply_msg);
+						} catch(const std::exception &e) {
+							SATAN_ERROR("RemoteInterface::BaseObject::send_object_message() - failed to process server reply: %s\n",
+								    e.what());
+							throw;
+						} catch(...) {
+							SATAN_ERROR("RemoteInterface::Client::send_object_message() - failed to process server reply, unknown exception.\n");
+							throw;
+						}
 
 						std::unique_lock<std::mutex> lck(mtx);
 						ready = true;
@@ -771,15 +792,40 @@ void RemoteInterface::GlobalControlObject::process_message(Server *context, Mess
 	} else if(command == "play") {
 		SATAN_DEBUG("play command received...\n");
 		Machine::play();
+
+		// update state of clients
+		send_object_message(
+			[](std::shared_ptr<Message> &msg2send) {
+				msg2send->set_value("command", "play");
+			}
+			);
+
 	} else if(command == "stop") {
 		SATAN_DEBUG("stop command received...\n");
 		Machine::stop();
+
+		// update state of clients
+		send_object_message(
+			[](std::shared_ptr<Message> &msg2send) {
+				msg2send->set_value("command", "stop");
+			}
+			);
+
 	} else if(command == "rewind") {
 		SATAN_DEBUG("rewind command received...\n");
 		Machine::rewind();
 	} else if(command == "set_rec_state") {
 		SATAN_DEBUG("set rec_state command received...\n");
-		Machine::set_record_state(msg.get_value("state") == "true");
+		bool isrec = msg.get_value("state") == "true";
+		Machine::set_record_state(isrec);
+
+		// update state of clients
+		send_object_message(
+			[isrec](std::shared_ptr<Message> &msg2send) {
+				msg2send->set_value("command", isrec ? "dorecord" : "dontrecord");
+			}
+			);
+
 	} else if(command == "is_it_recording") {
 		SATAN_DEBUG("Will send is_it_recording reply...\n");
 		std::shared_ptr<Message> reply = context->acquire_reply(msg);
@@ -796,6 +842,25 @@ void RemoteInterface::GlobalControlObject::process_message(Server *context, Mess
 }
 
 void RemoteInterface::GlobalControlObject::process_message(Client *context, const Message &msg) {
+	std::string command = msg.get_value("command");
+
+	if(command == "play") {
+		SATAN_DEBUG("Client: Playing is now true.\n");
+		is_playing = true;
+		for(auto w_clb : playback_state_listeners) if(auto clb = w_clb.lock()) clb->playback_state_changed(is_playing);
+	} else if(command == "stop") {
+		SATAN_DEBUG("Client: Playing is now false.\n");
+		is_playing = false;
+		for(auto w_clb : playback_state_listeners) if(auto clb = w_clb.lock()) clb->playback_state_changed(is_playing);
+	} else if(command == "dorecord") {
+		SATAN_DEBUG("Client: Recording is now true.\n");
+		is_recording = true;
+		for(auto w_clb : playback_state_listeners) if(auto clb = w_clb.lock()) clb->recording_state_changed(is_recording);
+	} else if(command == "dontrecord") {
+		SATAN_DEBUG("Client: Recording is now false.\n");
+		is_recording = false;
+		for(auto w_clb : playback_state_listeners) if(auto clb = w_clb.lock()) clb->recording_state_changed(is_recording);
+	}
 }
 
 void RemoteInterface::GlobalControlObject::serialize_keys(std::shared_ptr<Message> &target,
@@ -960,12 +1025,53 @@ std::string RemoteInterface::GlobalControlObject::get_record_file_name() {
 	return rec_fname;
 }
 
+void RemoteInterface::GlobalControlObject::insert_new_playback_state_listener_object(std::shared_ptr<PlaybackStateListener> listener_object) {
+	// insert listener into our vector
+	playback_state_listeners.push_back(listener_object);
+
+	// cleanup non valid listeners
+	auto i = playback_state_listeners.begin();
+	while(i != playback_state_listeners.end()) {
+		auto locked = (*i).lock();
+		if(!locked) {
+			i = playback_state_listeners.erase(i);
+		} else {
+			i++;
+		}
+	}
+}
+
+void RemoteInterface::GlobalControlObject::register_playback_state_listener(std::shared_ptr<PlaybackStateListener> listener_object) {
+	std::lock_guard<std::mutex> lock_guard(gco_mutex);
+	auto gco = clientside_gco.lock();
+
+	if(gco) {
+		gco->context->post_action(
+			[gco, listener_object]() {
+				insert_new_playback_state_listener_object(listener_object);
+
+				// call the callback with the current state
+				listener_object->playback_state_changed(gco->is_playing);
+				listener_object->playback_state_changed(gco->is_recording);
+			}
+			);
+	} else {
+		insert_new_playback_state_listener_object(listener_object);
+
+		// call the callback with the current state
+		listener_object->playback_state_changed(false);
+		listener_object->playback_state_changed(false);
+	}
+}
+
 auto RemoteInterface::GlobalControlObject::get_global_control_object() -> std::shared_ptr<GlobalControlObject> {
 	return clientside_gco.lock();
 }
 
 std::weak_ptr<RemoteInterface::GlobalControlObject> RemoteInterface::GlobalControlObject::clientside_gco;
 RemoteInterface::GlobalControlObject::GlobalControlObjectFactory RemoteInterface::GlobalControlObject::globalcontrolobject_factory;
+std::mutex RemoteInterface::GlobalControlObject::gco_mutex;
+std::vector<std::weak_ptr<RemoteInterface::GlobalControlObject::PlaybackStateListener> > RemoteInterface::GlobalControlObject::playback_state_listeners;
 
 /***************************
  *
@@ -1898,6 +2004,7 @@ void RemoteInterface::Client::on_message_received(const Message &msg) {
 		if(repmsg != msg_waiting_for_reply.end()) {
 			SATAN_DEBUG("Matching outstanding request.\n");
 			repmsg->second->reply_to(&msg);
+			SATAN_DEBUG("Reply processed.\n");
 			msg_waiting_for_reply.erase(repmsg);
 		}
 	}

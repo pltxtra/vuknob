@@ -68,20 +68,20 @@ typedef void (*__MACHINE_PERIODIC_CALLBACK_F)(int playback_position);
 typedef void __MACHINE_OPERATION_CALLBACK;
 
 class Machine {
-public:	
+public:
 	class Controller;
 	class StaticSignalLoader;
-	
+
 	/*
 	 * exception classes
 	 *
-	 */	
+	 */
 	class ParameterOutOfSpec : public std::runtime_error {
 		public:
 			ParameterOutOfSpec() : runtime_error("Internal parameter outside of acceptable scope.") {}
 			virtual ~ParameterOutOfSpec() {}
 		};
-	
+
 private:
 
 	// this class will make sure that all Machine global data
@@ -89,7 +89,7 @@ private:
 	class ProjectEntry : public SatanProjectEntry {
 	public:
 		ProjectEntry();
-		
+
 		virtual std::string get_xml_attributes();
 		virtual void generate_xml(std::ostream &output);
 		virtual void set_defaults();
@@ -108,17 +108,17 @@ private:
 		static void parse_static_signals(const KXMLDoc &satanproject);
 
 	};
-	
+
 	friend class ProjectEntry;
 	friend class Controller;
 	friend class MachineSequencer;
-	
+
 public:
-	
+
 	class MachineSetListener {
 	public:
 		virtual void project_loaded() = 0;
-		
+
 		virtual void machine_registered(Machine *m_ptr) = 0;
 		virtual void machine_unregistered(Machine *m_ptr) = 0;
 
@@ -131,7 +131,7 @@ public:
 
 		void machine_dereference(Machine *m_ptr); // call this from your MachineSetListener if you don't intend to use the m_ptr anymore
 	};
-	
+
 	class Controller {
 	public:
 		enum Type {
@@ -142,8 +142,8 @@ public:
 			c_enum,
 			c_sigid
 		};
-		
-		
+
+
 	private:
 		friend class Machine;
 
@@ -157,10 +157,10 @@ public:
 		bool float_is_FTYPE;
 
 		std::map<int, std::string> enumnames;
-		
+
 		bool has_midi_ctrl;
 		int coarse_controller, fine_controller;
-		
+
 		Controller(
 			Type tp,
 			const std::string &name, // internal name
@@ -199,21 +199,21 @@ public:
 		std::string get_name();
 		std::string get_title();
 		Type get_type();
-		
+
 		void get_min(float &val);
 		void get_max(float &val);
 		void get_step(float &val);
 		void get_min(int &val);
 		void get_max(int &val);
 		void get_step(int &val);
-		
+
 		void get_value(int &val);
 		void get_value(float &val);
 		void get_value(bool &val);
 		void get_value(std::string &val);
-		
+
 		std::string get_value_name(const int &val);
-		
+
 		void set_value(int &val);
 		void set_value(float &val);
 		void set_value(bool &val);
@@ -226,7 +226,7 @@ public:
 		// when calling.
 		bool has_midi_controller(int &coarse_controller, int &fine_controller);
 	};
-	
+
 protected:
 
 	class SignalBase  {
@@ -236,33 +236,33 @@ protected:
 		int channels;
 		int samples;
 		int frequency;
-		
+
 		std::string name;
-		
+
 		void *buffer;
-		
+
 		SignalBase(const std::string &nm);
 		/*
 		 * private static functions, also used by class Machine
 		 *
 		 */
-		
+
 		friend class Machine;
 		friend class StaticSignalLoader;
-		
+
 		void internal_clear_buffer();
-		
+
 	public:
 		Dimension get_dimension();
 		Resolution get_resolution();
 		int get_channels();
 		int get_samples();
 		int get_frequency();
-		
+
 		void *get_buffer();
-		
+
 		std::string get_name();
-		
+
 		void clear_buffer();
 	};
 
@@ -273,7 +273,7 @@ protected:
 		class ProjectEntry : public SatanProjectEntry {
 		public:
 			ProjectEntry();
-		
+
 			virtual std::string get_xml_attributes();
 			virtual void generate_xml(std::ostream &output);
 			virtual void parse_xml(int project_interface_level, KXMLDoc &xml_node);
@@ -282,9 +282,9 @@ protected:
 			static ProjectEntry this_will_register_us_as_a_project_entry;
 		};
 		friend class ProjectEntry;
-	
+
 		std::string file_path;
-	
+
 		StaticSignal(
 			Dimension d, Resolution r,
 			int channels, int samples, int frequency,
@@ -304,10 +304,10 @@ protected:
 			int channels, int samples, int frequency,
 			std::string file_path,
 			std::string name);
-	
+
 		/* loader friend */
 		friend class StaticSignalLoader;
-	
+
 		/* called from loaders */
 		static void replace_signal(
 			int index,
@@ -316,12 +316,12 @@ protected:
 			std::string file_path,
 			std::string name,
 			void *data);
-	
+
 		std::string get_file_path();
 
-		static std::string save_signal_xml(int index);	
+		static std::string save_signal_xml(int index);
 		static void load_signal_xml(const KXMLDoc &sigxml);
-		static void clear_signal(int index);		
+		static void clear_signal(int index);
 	public:
 		static StaticSignal *get_signal(int index);
 		static std::map<int, StaticSignal *> get_all_signals();
@@ -338,7 +338,7 @@ protected:
 		// and a count of how many times the machine
 		// is listening..
 		std::map<Machine *, int> attached_machines;
-	
+
 		Machine *originator;
 
 		//bool alloc_2d_buffer(Signal *s);
@@ -349,7 +349,7 @@ protected:
 		static int def_samples[_MAX_D];
 		static int def_frequency[_MAX_D];
 		static std::map<Dimension, std::set<Signal *> > signal_map;
-	
+
 		/*
 		 * internal static functions
 		 *
@@ -359,7 +359,7 @@ protected:
 		static void internal_alloc_0d_buffer(Signal *s);
 		/// allocates a MIDI buffer.
 		static void internal_alloc_MIDI_buffer(Signal *s);
-	
+
 		static void internal_set_defaults(Dimension d, int samples, Resolution r, int frequency);
 		static void internal_get_defaults(Dimension d, int &samples, Resolution &r, int &frequency);
 		static void internal_register_signal(Signal *s);
@@ -367,7 +367,7 @@ protected:
 
 		/// 0 dimension ("sound")
 		Signal(int c, Machine *originator, const std::string &name, Dimension d = _0D);
-	
+
 		/// destructor
 		~Signal();
 
@@ -379,7 +379,7 @@ protected:
 			static Signal *create_signal(int c, Machine *originator, const std::string &name, Dimension d = _0D);
 			static void destroy_signal(Signal *signal);
 		};
-	
+
 		class Description {
 		public:
 			Description();
@@ -387,7 +387,7 @@ protected:
 			int dimension;
 			int channels;
 			bool premix;
-		};	
+		};
 
 		Machine *get_originator();
 
@@ -397,12 +397,12 @@ protected:
 		void detach(Machine *m);
 
 		std::vector<Machine *> get_attached_machines();
-	
+
 		/* linked list functionality */
 		void link(Machine *, Signal *);
 		Signal *get_next(Machine *);
 		Signal *unlink(Machine *, Signal *); // find and unlink the given signal, returns the new head, if the head was detached..
-	
+
 		/*
 		 *  Static functions
 		 *
@@ -418,17 +418,17 @@ public:
 	class StaticSignalLoader {
 	private:
 		std::string identity;
-		
+
 		static std::vector<StaticSignalLoader *>*registered_loaders;
-		
+
 		static void internal_load_signal(int index, const std::string &file_path);
-		
+
 	protected:
 		StaticSignalLoader(const std::string &identity);
-		
+
 		virtual bool is_signal_valid(const std::string &fname) = 0;
 		virtual void load_static_signal(const std::string &fname, bool only_preview, int static_index) = 0;
-		
+
 		void replace_signal(
 			int index,
 			Dimension d, Resolution r,
@@ -440,12 +440,12 @@ public:
 			Dimension d, Resolution r,
 			int channels, int samples, int frequency,
 			void *data);
-		
+
 	public:
 		static std::map<int, std::string> get_all_signal_names();
 		static std::string get_signal_name_for_slot(int index);
 		static bool is_valid(const std::string &path);
-		static void preview_signal(const std::string &path);	
+		static void preview_signal(const std::string &path);
 		static void load_signal(
 			int index,
 			const std::string &file_path);
@@ -455,10 +455,10 @@ private:
 	DECLARE_TIME_MEASURE_OBJECT(tmes_A);
 	DECLARE_TIME_MEASURE_OBJECT(tmes_B);
 	DECLARE_TIME_MEASURE_OBJECT(tmes_C);
-	
+
 	// just so no one uses it...
 	Machine();
-			
+
 	/* General machine data */
 	bool has_been_deregistered = true; // default to true - this will be unset when it's registered
 	int reference_counter = 0;
@@ -468,17 +468,17 @@ private:
 	std::string base_name; /* used to create the default value of name */
 	bool base_name_is_name; // indicates that base_name should be use as is
 	Machine *next_render_chain;
-	
+
 	// if visualized - the graphical x and y position
 	float x_position, y_position;
-	
+
 	void destroy_tightly_attached_machines();
 	void execute();
 	void premix(Signal *result, Signal *head);
 	bool find_machine_in_graph(Machine *machine); // this function is used to detect loops
 	Signal *get_output(const std::string &name);
 	std::string get_controller_xml(); // this function is used to export control values to xml
-	
+
 	/********************************************
 	 * Internal Representation of the
 	 * Public interface to the Machine object
@@ -489,7 +489,7 @@ private:
 private:
 	void internal_attach_input(Machine *source_machine,
 				   const std::string &output_name,
-				   const std::string &input_name);	
+				   const std::string &input_name);
 	void internal_detach_input(Machine *source_machine,
 				   const std::string &output_name,
 				   const std::string &input_name
@@ -541,14 +541,14 @@ public:
 	int get_input_index(const std::string &input);
 	/// Returns the index of the named output
 	int get_output_index(const std::string &output);
-	
+
 	std::string get_name();
 	void set_name(const std::string &nm);
 
 	float get_x_position();
 	float get_y_position();
 	void set_position(float x, float y);
-	
+
 	/// Returns a set of controller groups
 	std::vector<std::string> get_controller_groups();
 	/// Returns the set of all controller names
@@ -557,7 +557,7 @@ public:
 	std::vector<std::string> get_controller_names(const std::string &group_name);
 	/// Returns a controller pointer (remember to delete it...)
 	Controller *get_controller(const std::string &name);
-	/// get a hint about what this machine is (for example, "effect" or "generator") 
+	/// get a hint about what this machine is (for example, "effect" or "generator")
 	std::string get_hint();
 
 	/******************************************************************
@@ -569,20 +569,20 @@ public:
 public:
 	// operation called ONLY by NON audio playback threads
 	static void machine_operation_enqueue(std::function<void(void *data)> callback, void *callback_data, bool do_synch);
-	
+
 private:
 	// operation ONLY called by audio playback thread
 	static void machine_operation_dequeue();
-	
+
 	/***************************************
 	 *
 	 *  For inheritance!
 	 *
 	 ***************************************/
 protected:
-	
+
 	static jThread::Monitor *machine_space_lock; // lock down the machine space
-	
+
 	std::map<std::string, Signal::Description> input_descriptor;
 	std::map<std::string, Signal::Description> output_descriptor;
 
@@ -598,7 +598,7 @@ protected:
 	// Call this AFTER you have initiated
 	// all data in your derived class from the XML block
 	void setup_using_xml(const KXMLDoc &mxml);
-	
+
 	// create a new controller handle
 	Controller *create_controller(
 		Controller::Type tp,
@@ -613,9 +613,9 @@ protected:
 	// map a machine controller to a MIDI controller
 	// fine_controller < 0 means no fine controller used
 	void set_midi_controller(Controller *ctrl, int coarse_controller, int fine_controller);
-	
+
 	// used to tightly connect this machine with Machine *m
-	void tightly_connect(Machine *m);	
+	void tightly_connect(Machine *m);
 	// detaches all inputs
 	void detach_all_inputs(Machine *m = NULL);
 	// detaches all outputs
@@ -636,22 +636,22 @@ protected:
 	// machine and then it returns a boolean which
 	// tells you if you should delete it or not.
 	virtual bool detach_and_destroy() = 0;
-	
+
 	// Additional XML-formated descriptive data.
 	// Should only be called from monitor protected
 	// functions, Machine::*, like get_base_xml_description()
 	virtual std::string get_class_name() = 0;
 	virtual std::string get_descriptive_xml() = 0;
-	
+
 	// setup_machine should be called as soon as you have filled the input/output_descriptor pairs.
 	void setup_machine();
-	
+
 	virtual void fill_buffers() = 0;
 
 	// reset a machine to a defined state
-	virtual void reset() = 0; 	
-	
-	/// Returns a set of controller groups	
+	virtual void reset() = 0;
+
+	/// Returns a set of controller groups
 	virtual std::vector<std::string> internal_get_controller_groups() = 0;
 	/// Returns the set of all controller names
 	virtual std::vector<std::string> internal_get_controller_names() = 0;
@@ -659,7 +659,7 @@ protected:
 	virtual std::vector<std::string> internal_get_controller_names(const std::string &group_name) = 0;
 	/// Returns a controller pointer (remember to delete it...)
 	virtual Controller *internal_get_controller(const std::string &name) = 0;
-	/// get a hint about what this machine is (for example, "effect" or "generator") 
+	/// get a hint about what this machine is (for example, "effect" or "generator")
 	virtual std::string internal_get_hint() = 0;
 
 	/***************************************
@@ -683,7 +683,7 @@ protected:
 					 Dimension dim,
 					 int len, Resolution res,
 					 int frequency);
-	
+
 	// Async Operations
 	static void run_async_operation(AsyncOp *op);
 	static void run_async_function(std::function<void()> f);
@@ -691,7 +691,7 @@ protected:
 private:
 	static void lock_machine_space();
 	static void unlock_machine_space();
-	
+
 private:
 #define SHUFFLE_FACTOR_DIVISOR 100
 	static int shuffle_factor; // a value in the range [0..SHUFFLE_FACTOR_DIVISOR)
@@ -718,12 +718,12 @@ private:
 	static Machine *sink; // There can only be one...
 	static std::vector<Machine *>machine_set; // global array of all machines
 
-	static std::set<std::weak_ptr<MachineSetListener>, std::owner_less<std::weak_ptr<MachineSetListener> > > machine_set_listeners;	
+	static std::set<std::weak_ptr<MachineSetListener>, std::owner_less<std::weak_ptr<MachineSetListener> > > machine_set_listeners;
 	static std::vector<std::pair<__MACHINE_PERIODIC_CALLBACK_F, int> > periodic_callback_set;
 
 	// async operations object
 	static AsyncOperations *async_ops;
-	
+
 	/***********************************
 	 *
 	 * Internal static functions
@@ -737,7 +737,7 @@ private:
 	// inform all machine_set_listeners of a attached or detached signal
 	static void broadcast_attach(Machine *s, Machine *d, const std::string &output, const std::string &input);
 	static void broadcast_detach(Machine *s, Machine *d, const std::string &output, const std::string &input);
-	
+
 	// sink registration
 	static void internal_register_sink(Machine *s);
 	static void internal_unregister_sink(Machine *s);
@@ -748,11 +748,11 @@ private:
 	static void internal_deregister_machine(Machine *m);
 	// dereference a machine
 	static void internal_dereference_machine(Machine *m);
-	
+
 	static void calculate_samples_per_tick();
 	static void calculate_next_tick_at_and_sequence_position();
 	static void trigger_periodic_functions();
-	
+
 	// generate data for the sink, returns 0 on success
 	static int internal_fill_sink(int (*fill_sink_callback)(int status, void *cbd), void *callback_data);
 
@@ -773,7 +773,7 @@ protected:
 	static void internal_set_load_state(bool is_loading);
 	static void internal_get_rec_fname(std::string *fname);
 	static Machine *internal_get_by_name(const std::string &name);
-	
+
 	/********************************************
 	 *
 	 * Singleton/static interface to the Machine network
@@ -782,7 +782,7 @@ protected:
 public:
 	/// called only once from startup thread
 	static void prepare_baseline();
-	
+
 	/// Call this to register a function that should be called periodically, where the period is defined by the interval_in_playback_positions parameter
 	static void register_periodic(__MACHINE_PERIODIC_CALLBACK_F fp,
 				      int interval_in_playback_positions);
@@ -792,13 +792,13 @@ public:
 
 	/// If you use the MachineSetListener API - you must also use this dereference function when you are no longer interested in a machine
 	static void dereference_machine(Machine *m_ptr);
-	
+
 	/// returns the set of registered machines (deprecated)
 	static std::vector<Machine *> get_machine_set();
 
 	/// check if we are playing
 	static bool is_it_playing();
-	
+
 	/// Set machines into play mode
 	static void play();
 
@@ -806,10 +806,10 @@ public:
 	static void stop();
 
 	/// set playback position
-	static void jump_to(int position);	
+	static void jump_to(int position);
 
 	/// rewind playback
-	static void rewind();	
+	static void rewind();
 
 	/// shuffle settings in the range [0, 100]
 	static int get_shuffle_factor();
@@ -817,16 +817,16 @@ public:
 
 	/// Returns true if the current setup supports low latency features
 	static bool get_low_latency_mode();
-	
+
 	/// get loop state and positions
 	static bool get_loop_state();
 	static int get_loop_start();
 	static int get_loop_length();
 
 	/// Hint to machine if we are loading from a file
-	/// this can be used to minimize "chatter" from machines, which can make loading faster	
+	/// this can be used to minimize "chatter" from machines, which can make loading faster
 	static void set_load_state(bool is_loading);
-	
+
 	/// set loop state and positions
 	static void set_loop_state(bool do_loop);
 	static void set_loop_start(int line);
@@ -840,13 +840,13 @@ public:
 	static int get_bpm();
 	/// get LPB (lines per beat)
 	static int get_lpb();
-	
+
 	/// set/get recording status.
 	static void set_record_state(bool status);
 	static bool get_record_state();
 	static void set_record_file_name(std::string file_name);
 	static std::string get_record_file_name();
-	
+
 	/// get machine by name
 	static Machine *get_by_name(std::string name);
 
@@ -858,7 +858,7 @@ public:
 
 	/// Destroy ALL machines
 	static void destroy_all_machines();
-	
+
 	/// This will end up as a call to exit()
 	static void exit_application();
 };

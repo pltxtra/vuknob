@@ -69,7 +69,7 @@ CanvasWidgetContext::CanvasWidgetContext(KammoGUI::Canvas *canvas_object, float 
 	width_in_inches(wi), height_in_inches(hi), __cnv(canvas_object)
 {
 	init_statics();
-	
+
 	__cnv->set_callbacks(
 		this,
 		CanvasWidgetContext::canvas_widget_expose_cb,
@@ -112,14 +112,14 @@ void CanvasWidgetContext::locate_SVG_directory() {
 	std::string candidate;
 	std::vector<std::string> try_list;
 	std::vector<std::string>::iterator try_list_entry;
-	
+
 	candidate = dir_bfr;
 
 #ifdef ANDROID
 	candidate += "/app_nativedata/SVG";
 #else
 	candidate += "/SVG";
-#endif	
+#endif
 	try_list.push_back(candidate);
 
 	candidate = std::string(CONFIG_DIR) + "/SVG";
@@ -128,7 +128,7 @@ void CanvasWidgetContext::locate_SVG_directory() {
 	for(try_list_entry  = try_list.begin();
 	    try_list_entry != try_list.end();
 	    try_list_entry++) {
-	
+
 		svg_directory = *try_list_entry;
 		std::cout << "Trying to read SVG files in ]" << svg_directory << "[ ...\n";
 
@@ -219,7 +219,7 @@ void CanvasWidgetContext::draw_string(std::string str,
 	   << "   width=\"" << (w * 100.0f) << "\""
 	   << "   height=\"" << (100.0f) << "\""
 	   << "   version=\"1.0\">"
-		
+
 	   << "<g>\n"
 	   << "    <text\n"
 	   << "       x=\"30\"\n"
@@ -230,12 +230,12 @@ void CanvasWidgetContext::draw_string(std::string str,
 	   << str
 	   << "</text>\n"
 	   << "</g>\n"
-		
+
 	   << "</svg>";
 
 	SATAN_DEBUG("draw_string: width %d, height %d\n",
 		    x2 - x1, y2 - y1);
-	
+
 	// Create SVG Definition object
 	KammoGUI::Canvas::SVGDefinition *strdef = NULL;
 	try {
@@ -304,7 +304,7 @@ void CanvasWidgetContext::canvas_widget_event(KammoGUI::canvasEvent_t ce,
 	if(ce == KammoGUI::cvButtonHold) {
 		SATAN_DEBUG_("  BUTTON HOLD EVENT!\n");
 	}
-	
+
 	if(ce == KammoGUI::cvButtonPress) {
 		std::vector<CanvasWidget *>::iterator i;
 		for(i  = __widget.begin();
@@ -358,11 +358,11 @@ int CanvasWidgetContext::get_active_layers() {
 
 void CanvasWidgetContext::init_statics() {
 	if(init_statics_done) return;
-	
+
 	init_statics_done = true;
 	/* locate SVG directory */
 	locate_SVG_directory();
-	
+
 	/* init symbols */
 
 //	char *symval = (char *)"0123456789abcdef";
@@ -447,10 +447,10 @@ void CanvasWidgetContext::init_statics() {
 "         sodipodi:role=\"line\""
 "         id=\"tspan5690\""
 			"         x=\"2.4965672\"";
-		
+
 		stream << "         y=\"1075.6406\">&#" << ((int)k) << ";</tspan></text>";
-		
-		stream << 
+
+		stream <<
 "    <text"
 "       xml:space=\"preserve\""
 "       style=\"font-size:37.60708618px;font-style:normal;font-variant:normal;font-weight:normal;font-stretch:normal;text-align:start;line-height:125%;writing-mode:lr-tb;text-anchor:start;fill:#ffffff;fill-opacity:1;stroke:none;stroke-width:1px;stroke-linecap:butt;stroke-linejoin:miter;stroke-opacity:1;font-family:Liberation Mono;-inkscape-font-specification:Liberation Mono\""
@@ -464,7 +464,7 @@ void CanvasWidgetContext::init_statics() {
 			"         x=\"2.6889365\"";
 
 		stream << "         y=\"1091.6981\">&#" << ((int)k) << ";</tspan></text>";
-		
+
 		stream << "  </g>"
 			"</svg>";
 		{
@@ -472,7 +472,7 @@ void CanvasWidgetContext::init_statics() {
 			mstream << " Failed to creates symbol for &#" << ((int)k) << ";";
 //			char buffer[256];
 //			snprintf(buffer, 255, "%s\n", mstream.str().c_str();
-			
+
 			KammoGUI::Canvas::SVGDefinition *symdef;
 
 			symdef = NULL;
@@ -531,3 +531,6 @@ void CanvasWidget::resize() {
 	y2 = vy2 * context->__height;
 }
 
+void CanvasWidget::redraw() {
+	__cnv->redraw();
+}

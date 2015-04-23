@@ -510,13 +510,8 @@ void LivePad2::graphArea_on_event(KammoGUI::SVGCanvas::SVGDocument *source, Kamm
 		jInformer::inform("Select a machine in the drop down menu down to the left, otherwise you will not get any sound.");
 		return;
 	}
-	if(auto gco = RemoteInterface::GlobalControlObject::get_global_control_object()) {
-		if(gco->is_it_playing() == false) {
-			jInformer::inform("Press the play button on the top left first, please. Otherwise you will not get any sound.");
-			return;
-		}
-	} else {
-		jInformer::inform("You are not connected to a vuKNOB server.");
+	if(ctx->is_playing == false) {
+		jInformer::inform("Press the play button on the top left first, please. Otherwise you will not get any sound.");
 		return;
 	}
 
@@ -581,6 +576,24 @@ void LivePad2::graphArea_on_event(KammoGUI::SVGCanvas::SVGDocument *source, Kamm
 	}
 }
 
+void LivePad2::playback_state_changed(bool _is_playing) {
+	KammoGUI::run_on_GUI_thread(
+		[this, _is_playing]() {
+			is_playing = _is_playing;
+			get_parent()->redraw();
+		}
+		);
+}
+
+void LivePad2::recording_state_changed(bool _is_recording) {
+	KammoGUI::run_on_GUI_thread(
+		[this, _is_recording]() {
+			is_recording = _is_recording;
+			get_parent()->redraw();
+		}
+		);
+}
+
 LivePad2::LivePad2(KammoGUI::SVGCanvas *cnv, std::string file_name) : SVGDocument(file_name, cnv), octave(3), scale_index(0), scale_name("C- "), record(false), quantize(false),
 	chord_mode("chord off"), mode("No Arpeggio"), controller("velocity"), listView(NULL), current_selector(not_selecting)
 {
@@ -639,6 +652,7 @@ LivePad2::LivePad2(KammoGUI::SVGCanvas *cnv, std::string file_name) : SVGDocumen
 	listView = new ListView(cnv);
 
 	refresh_machine_settings();
+
 }
 
 LivePad2::~LivePad2() {
@@ -707,6 +721,7 @@ virtual void on_init(KammoGUI::Widget *wid) {
 
 		static auto lpad = std::make_shared<LivePad2>(cnvs, SVGLoader::get_svg_path("/livePad2.svg"));
 		RemoteInterface::Client::register_ri_machine_set_listener(lpad);
+		RemoteInterface::GlobalControlObject::register_playback_state_listener(lpad);
 	}
 }
 

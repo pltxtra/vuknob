@@ -43,7 +43,7 @@ private:
 	// the first time. When this is set, init_statics() won't do anything
 	// the following times it's called
 	static bool init_statics_done;
-	
+
 	// disable input events
 	bool events_disabled;
 
@@ -51,10 +51,10 @@ private:
 	// active_layer will be logically ANDed with the layer
 	// of a widget) (a widget can therefore be on multiple layers..)
 	int active_layers;
-	
+
 	std::vector<CanvasWidget *> __widget;
 	CanvasWidget *__widget_in_focus;
-	
+
 	static std::map<int, KammoGUI::Canvas::SVGDefinition *> symbol;
 	std::map<int, KammoGUI::Canvas::SVGBob ** > prerendered_symbol;
 
@@ -71,7 +71,7 @@ public:
 
 	void add_widget(CanvasWidget *wid);
 	void drop_widget(CanvasWidget *wid);
-	
+
 	KammoGUI::Canvas *__cnv;
 	int __width;
 	int __height;
@@ -88,7 +88,7 @@ public:
 			 int x1, int y1,
 			 int x2, int y2,
 			 std::string color);
-	
+
 	void set_active_layers(int _layers);
 	int get_active_layers();
 
@@ -111,11 +111,11 @@ public:
 class CanvasWidget {
 private:
 	friend class CanvasWidgetContext;
-	
+
 	CanvasWidget();
 protected:
 	CanvasWidgetContext *context;
-	
+
 	// percent of parent canvas, defined at construction
 	float vx1, vy1, vx2, vy2;
 
@@ -123,9 +123,9 @@ protected:
 	KammoGUI::Canvas *__cnv;
 
 	bool do_ignore_events;
-	
+
 	// in pixels, recalculated
-	int x1, y1, x2, y2;	
+	int x1, y1, x2, y2;
 
 	CanvasWidget(CanvasWidgetContext *cntxt,
 		     float _vx1,
@@ -137,14 +137,16 @@ protected:
 public:
 	void ignore_events();
 	void unignore_events();
-	
+
 	virtual ~CanvasWidget();
-	
+
 	void resize();
 
 	virtual void resized() = 0;
 	virtual void expose() = 0;
 	virtual void on_event(KammoGUI::canvasEvent_t ce, int x, int y) = 0;
+
+	void redraw();
 };
 
 #endif

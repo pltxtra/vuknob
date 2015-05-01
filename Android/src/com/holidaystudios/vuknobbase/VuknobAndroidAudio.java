@@ -47,13 +47,13 @@ public class VuknobAndroidAudio {
 
 	public static native void registerNativeAudioConfigurationData(int freq, int blen, int dev_class);
 	public static native boolean javaThread();
-	
+
 	private static class AudioThread extends Thread {
 
 		AudioThread() {
 			super("VuknobAndroidAudioThread");
 		}
-		
+
 		public void run() {
 			while(VuknobAndroidAudio.javaThread()) {
 				if(at != null)
@@ -61,7 +61,7 @@ public class VuknobAndroidAudio {
 			}
 		}
 	}
-	
+
 	private static AudioTrack at = null;
 
 	private static int sampleRate, minBufferSize;
@@ -69,23 +69,25 @@ public class VuknobAndroidAudio {
 	/*** THESE VALUES MUST MATCH THE VALUES IN dynlib.h ***/
 	static final int __PLAYBACK_OPENSL_DIRECT    = 14; // The device should use direct OpenSL rendering
 	static final int __PLAYBACK_OPENSL_BUFFERED  = 16; // The device should use buffered OpenSL rendering
-	
+
 	private static int getPlaybackMode() {
 		/********** CREATE HASHMAP OF KNOWN DEVICES / PLAYBACK TYPE **********/
 		HashMap<String, Integer> known_devices = new HashMap<String, Integer>();
 
-		// hammerhead (aka Nexus 5) does not sound good in direct mode, so we set it to buffered mode. 
+		// hammerhead (aka Nexus 5) does not sound good in direct mode, so we set it to buffered mode.
 		known_devices.put("hammerhead", __PLAYBACK_OPENSL_BUFFERED);
-		// m0 (aka Samsung Galaxy S3) does not sound good in direct mode, so we set it to buffered mode. 
+		// m0 (aka Samsung Galaxy S3) does not sound good in direct mode, so we set it to buffered mode.
 		known_devices.put("m0", __PLAYBACK_OPENSL_BUFFERED);
-		// m7 (aka HTC One (M7)) does not sound good in direct mode, so we set it to buffered mode. 
+		// m7 (aka HTC One (M7)) does not sound good in direct mode, so we set it to buffered mode.
 		known_devices.put("m7", __PLAYBACK_OPENSL_DIRECT);
+		// zeroflte (aka Galaxy S6) does not sound good in direct mode, so we set it to buffered mode.
+		known_devices.put("zeroflte", __PLAYBACK_OPENSL_BUFFERED);
 
 		/** IF THE DEVICE IS UNKNOWN; RETURN DEFAULT SETTING ****/
 		// Previousoly we would default to direct mode (the recommended mode by Google - that isn't working on Nexus 5 as of September 2014... go figure...)
-		// But now I default to BUFFERED 
+		// But now I default to BUFFERED
 		int return_value = __PLAYBACK_OPENSL_BUFFERED;
-		
+
 		/** GET PREFERRED PLAYBACK MODE OF KNOWN DEVICE, IF IT IS KNOWN  *****/
 		if(known_devices.containsKey(android.os.Build.DEVICE)) {
 			return_value = known_devices.get(android.os.Build.DEVICE);
@@ -100,12 +102,12 @@ public class VuknobAndroidAudio {
 		if(return_value == __PLAYBACK_OPENSL_DIRECT)
 			s += "\n   OpenSL Mode: Direct.";
 		else if(return_value == __PLAYBACK_OPENSL_BUFFERED)
-			s += "\n   OpenSL Mode: Buffered.";		
+			s += "\n   OpenSL Mode: Buffered.";
 		Log.v("VuKNOB", s);
 
 		return return_value;
 	}
-	
+
 	public static void scanNativeAudioConfiguration(AudioManager audioManager) {
 		// set default frame rate and buffer size
 		int f = 44100, b = 4410;
@@ -116,16 +118,16 @@ public class VuknobAndroidAudio {
 			f,
 			AudioFormat.CHANNEL_OUT_STEREO,
 			AudioFormat.ENCODING_PCM_16BIT);
-		
+
 		// then we try to use the new api for native configuration data
 		try {
 			Class<?> cls = audioManager.getClass();
 			Class[] cArg = new Class[1];
 			cArg[0] = String.class;
-			
+
 			java.lang.reflect.Method getProperty = cls.getMethod("getProperty", cArg);
 			Object result = null;
-			
+
 			result = getProperty.invoke(audioManager, "android.media.property.OUTPUT_FRAMES_PER_BUFFER");
 			java.lang.String framesPerBuffer = (java.lang.String)result;
 
@@ -137,7 +139,7 @@ public class VuknobAndroidAudio {
 
 			f = Integer.parseInt(sampleRate);
 			b = Integer.parseInt(framesPerBuffer);
-			
+
 		} catch(java.lang.NoSuchMethodException ignored) {
 			Log.v("SATAN", "Api audioManager.getProperty() is not available.");
 			// ignore
@@ -157,7 +159,7 @@ public class VuknobAndroidAudio {
 	}
 
 	public static int default_frequency = 0, default_buffer_size = 0;
-	
+
 	public static void createThread() {
 		AudioThread athread = new AudioThread();
 		athread.start();
@@ -167,14 +169,14 @@ public class VuknobAndroidAudio {
 		if(at != null)
 			at.stop();
 	}
-	
+
 	public static AudioTrack getAudioBridge() {
 		sampleRate = AudioTrack.getNativeOutputSampleRate(AudioManager.STREAM_MUSIC);
 		minBufferSize = AudioTrack.getMinBufferSize(
 			sampleRate,
 			AudioFormat.CHANNEL_OUT_STEREO,
 			AudioFormat.ENCODING_PCM_16BIT);
-		
+
 		at = new AudioTrack(
 			AudioManager.STREAM_MUSIC,
 			sampleRate,

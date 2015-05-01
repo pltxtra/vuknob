@@ -36,7 +36,7 @@
 #include <sys/stat.h>
 #include <fcntl.h>
 
-//#define __DO_DYNLIB_DEBUG
+#define __DO_DYNLIB_DEBUG
 #include "dynlib_debug.h"
 
 #include "riff_wave_output.h"
@@ -120,7 +120,7 @@ int srate(jack_nframes_t nframes, void *unused_mtable_ptr) {
 int fillerup(jack_nframes_t len, void *mtable_ptr) {
 	static int ctr = 150;
 	MachineTable *mt = (MachineTable *)mtable_ptr;
-	
+
 	if((len != instance->len) || (instance->new_frequency != instance->frequency)) {
 		instance->len = len;
 		instance->frequency = instance->new_frequency;
@@ -136,7 +136,7 @@ int fillerup(jack_nframes_t len, void *mtable_ptr) {
 	 * buffers with zeroes.
 	 */
 
-	if((ctr--) == 0) { 
+	if((ctr--) == 0) {
 		DYNLIB_DEBUG("mtable-ptr in fillerup: %p\n", mt);
 		ctr = 150;
 	}
@@ -153,24 +153,24 @@ int fillerup(jack_nframes_t len, void *mtable_ptr) {
 
 	/* free all allocated midi events after each run */
 	instance->first_free_slot = instance->midi_event_buffer;
-	
+
 	return 0;
 }
 
 void execute_sink(MachineTable *mt) {
 	SignalPointer *s = mt->get_input_signal(mt, "stereo");
-	
+
 	float *in = NULL;
 	int il = 0;
 	int ic = 0;
 
 	if(s == NULL)
 		return;
-	
+
 	in = mt->get_signal_buffer(s);
 	il = mt->get_signal_samples(s);
 	ic = mt->get_signal_channels(s);
-	
+
 	jack_default_audio_sample_t *out_l =
 		(jack_default_audio_sample_t *)
 		jack_port_get_buffer (instance->output_left, il);
@@ -181,12 +181,12 @@ void execute_sink(MachineTable *mt) {
 	int i;
 
 	float im;
-	
+
 	if(ic != 2) {
 		mt->register_failure(mt, "Unexpected number of input channels in signal connected to LiveOut, expected 2.");
 		return;
 	}
-	
+
 	for(i = 0; i < il; i++) {
 		/* channel 0 (left) */
 		out_l[i] = (jack_default_audio_sample_t)in[i * ic + 0];
@@ -215,7 +215,7 @@ MachineType init_midi(MachineTable *mt) {
 	for(i = 0; i < MAX_MIDI_IN; i++) {
 		if(instance->midi_in[i] == NULL) {
 			char input_name[256];
-			
+
 			snprintf(input_name, 255, "midi_in%02d", i);
 
 			instance->midi_in[i] = jack_port_register
@@ -245,14 +245,14 @@ void execute_midi(MachineTable *mt, MachineType mtype) {
 
 	if(s == NULL)
 		return;
-	
+
 	out = (void **)mt->get_signal_buffer(s);
 	ol = mt->get_signal_samples(s);
-	oc = mt->get_signal_channels(s);	
+	oc = mt->get_signal_channels(s);
 
 	static int ctr = 15;
-		
-	if(ctr > 0) { 
+
+	if(ctr > 0) {
 		DYNLIB_DEBUG("In execute_midi for jackif!\n");
 		ctr--;
 	}
@@ -261,18 +261,18 @@ void execute_midi(MachineTable *mt, MachineType mtype) {
 		mt->register_failure(mt, "Unexpected number of output channels in signal connected to LiveOut_Midi, expected 2.");
 		return;
 	}
-	
+
 	void* port_buf = jack_port_get_buffer(instance->midi_in[mtype], instance->len);
 	jack_midi_event_t in_event;
 	jack_nframes_t event_count = jack_midi_get_event_count(port_buf);
-	
-	int i;	
+
+	int i;
 
 	if(event_count > ol) {
 		mt->register_failure(mt, "Midi event count larger than output buffer size - this is insane.");
 		return;
 	}
-	
+
 	if(instance->first_free_slot - instance->midi_event_buffer >= MIDI_BUFFER_SIZE) {
 		DYNLIB_DEBUG("Error in LiveOut:Midi - Midi buffer was too small, events are missed.");
 		return;
@@ -303,8 +303,8 @@ void delete_jack() {
 	if(instance == NULL) return;
 
 	/* free instance data here */
-	jack_client_close(instance->client);	
-	
+	jack_client_close(instance->client);
+
 	free(instance);
 	instance = NULL;
 }
@@ -314,18 +314,18 @@ void *init_jack(MachineTable *mt) {
 	instance = (JackInstanceData *)malloc(sizeof(JackInstanceData));
 	if(instance == NULL) return NULL;
 	memset(instance, 0, sizeof(JackInstanceData));
-	
+
 	/* prepare midi event buffer */
 	instance->midi_event_buffer =
 		(uint8_t *)malloc(sizeof(uint8_t) * MIDI_BUFFER_SIZE);
 	instance->first_free_slot = instance->midi_event_buffer;
-	
+
 	/* if we fail to allocate buffer - toss everything */
 	if(instance->midi_event_buffer == NULL) {
 		free(instance);
 		return NULL;
 	}
-	
+
 	/* init jack */
 	jack_status_t status = 0x00;
 	if ((instance->client = jack_client_new("satan")) == 0)
@@ -333,7 +333,7 @@ void *init_jack(MachineTable *mt) {
 		DYNLIB_DEBUG("jack server not running [0x%08x]?\n", status);
 		goto fail;
 	}
-	
+
 	DYNLIB_DEBUG("FLuffofluffo!\n"); fflush(0);
 	instance->frequency = jack_get_sample_rate (instance->client);
 
@@ -372,10 +372,10 @@ void *init(MachineTable *mt, const char *name) {
 	MachineType *retval;
 
 	DYNLIB_DEBUG("\n\n\n***************CREATING: %s****************\n\n\n", name);
-	
+
 	retval = (MachineType *)malloc(sizeof(MachineType));
 	if(retval == NULL) return NULL;
-	
+
 	if(instance == NULL) {
 		/* Allocate and initiate instance data here */
 		DYNLIB_DEBUG("Creating new jack instance: %p\n", retval); fflush(0);
@@ -385,7 +385,7 @@ void *init(MachineTable *mt, const char *name) {
 		}
 		DYNLIB_DEBUG("jack instance created: %p\n", instance); fflush(0);
 	}
-	
+
 	if(strcmp("liveoutsink", name) == 0) {
 		instance->jack_open = 1;
 		*retval = -1;
@@ -398,7 +398,7 @@ void *init(MachineTable *mt, const char *name) {
 		}
 		return retval;
 	}
-	
+
 	return NULL;
 }
 
@@ -407,7 +407,7 @@ void delete(void *data) {
 
 	if(mtype == -1)
 		instance->jack_open = 0;
-	else 
+	else
 		delete_midi(mtype);
 
 	/* free MachineType */
@@ -470,17 +470,17 @@ typedef struct AlsaInstance_ {
 
 	pthread_mutexattr_t attr;
 	pthread_mutex_t mutex;
-	
+
 	snd_pcm_t *handle;
 
 	snd_pcm_hw_params_t *hwparams;
 	snd_pcm_sw_params_t *swparams;
-	
+
 	int16_t *samples;
 	size_t length;
 
 	MachineTable *mt;
-	
+
 	struct RIFF_WAVE_FILE riff_file;
 
 	int alsa_open;
@@ -496,7 +496,7 @@ typedef struct AlsaInstance_ {
 	unsigned int buffer_time;               /* ring buffer length in us */
 	unsigned int period_time;               /* period time in us */
 	int resample;                                /* enable alsa-lib resampling */
-	
+
 	snd_pcm_sframes_t buffer_size;
 	snd_pcm_sframes_t period_size;
 	snd_output_t *output;
@@ -633,7 +633,7 @@ static int set_swparams(AlsaInstance *instance)
 /*
  *   Underrun and suspend recovery
  */
- 
+
 static int xrun_recovery(snd_pcm_t *handle, int err)
 {
         if (err == -EPIPE) {    /* under-run */
@@ -678,11 +678,11 @@ int alsa_fill_sink_callback(int callback_status, void *data) {
 					strncpy(file_name, "DEFAULT.WAV", sizeof(file_name));
 				}
 
-				RIFF_create_file(&(inst->riff_file), file_name);				
+				RIFF_create_file(&(inst->riff_file), file_name);
 			}
 		}
 		break;
-			
+
 	default:
 	case _notSink:
 	case _sinkPaused:
@@ -694,7 +694,7 @@ int alsa_fill_sink_callback(int callback_status, void *data) {
 		       0,
 		       sizeof(int16_t) * inst->channels * inst->length);
 		break;
-	}		
+	}
 
 	RIFF_write_data(&(inst->riff_file),
 			inst->samples,
@@ -715,7 +715,7 @@ int alsa_fill_sink_callback(int callback_status, void *data) {
 			if (xrun_recovery(inst->handle, err) < 0) {
 				DYNLIB_DEBUG("Write error: %s\n", snd_strerror(err));
 				exit(EXIT_FAILURE);
-			} 
+			}
 			break;  /* skip one period */
 		}
 		ptr += err * inst->channels;
@@ -741,9 +741,9 @@ void *alsa_thread(void *data)
 
 	instance->doRecord = 0;
 	instance->recordFile = -1;
-	
+
 	mt = instance->mt;
-	
+
 	memset(instance->samples,
 	       0,
 	       sizeof(int16_t) * instance->channels * instance->length);
@@ -781,12 +781,12 @@ void *alsa_thread(void *data)
 	pthread_mutex_unlock(&(instance->mutex));
 
 	DYNLIB_DEBUG("   TIME TO CLEANUP ALSA\n");
-		
+
 	cleanup_alsa(instance);
 	free(instance);
-	
+
 	DYNLIB_DEBUG(" ALSA thread terminating.\n");
-	
+
 	return NULL;
 }
 
@@ -794,11 +794,11 @@ void execute_sink(AlsaInstance *instance, MachineTable *mt) {
 	SignalPointer *s = mt->get_input_signal(mt, "stereo");
 
 	if(s == NULL) return;
-	
+
 	fp8p24_t *in = mt->get_signal_buffer(s);
 
 	int il = mt->get_signal_samples(s);
-	int ic = mt->get_signal_channels(s);	
+	int ic = mt->get_signal_channels(s);
 
 	int i;
 
@@ -807,25 +807,25 @@ void execute_sink(AlsaInstance *instance, MachineTable *mt) {
 		int32_t out;
 
 		in[i] = mulfp8p24(in[i], vol);
-		
+
 		if(in[i] < itofp8p24(-1)) in[i] = itofp8p24(-1);
 		if(in[i] > itofp8p24(1)) in[i] = itofp8p24(1);
-		
+
 		out = (in[i] << 7);
 		out = (out & 0xffff0000) >> 16;
-		
+
 		instance->samples[i] = (int16_t)out;
 	}
 }
 
- 
+
 /*
  *
  */
 
 static AlsaInstance *init_alsa(MachineTable *mt) {
         int err;
-		
+
 	DYNLIB_DEBUG("asounder8.3\n");
 
 	AlsaInstance *instance = (AlsaInstance *)malloc(sizeof(AlsaInstance));
@@ -842,10 +842,10 @@ static AlsaInstance *init_alsa(MachineTable *mt) {
 	instance->resample = 1;                                /* enable alsa-lib resampling */
 
 	instance->volume = 0.5f;
-	
+
 	pthread_mutexattr_init(&(instance->attr));
 	pthread_mutex_init(&(instance->mutex), &(instance->attr));
-	
+
 	snd_pcm_hw_params_alloca(&(instance->hwparams));
         snd_pcm_sw_params_alloca(&(instance->swparams));
 
@@ -865,7 +865,7 @@ static AlsaInstance *init_alsa(MachineTable *mt) {
 			goto failure;
 		}
         }
-        
+
         if ((err = set_hwparams(instance)) < 0) {
                 DYNLIB_DEBUG("Setting of hwparams failed: %s\n", snd_strerror(err));
                 goto failure;
@@ -891,7 +891,7 @@ static AlsaInstance *init_alsa(MachineTable *mt) {
 	instance->alsa_open = 1;
 
 	/* set audio signal defaults */
-	mt->set_signal_defaults(mt, _0D, instance->period_size, FTYPE_RESOLUTION, instance->rate);	
+	mt->set_signal_defaults(mt, _0D, instance->period_size, FTYPE_RESOLUTION, instance->rate);
 	/* set midi signal defaults */
 	mt->set_signal_defaults(mt, _MIDI, instance->period_size, _PTR, instance->rate);
 
@@ -902,14 +902,14 @@ static AlsaInstance *init_alsa(MachineTable *mt) {
 	instance->mt = mt;
 
 	RIFF_prepare(&(instance->riff_file), instance->rate);
-	
+
 	if(pthread_create(
 		   &(instance->thread),
 		   &(instance->pta),
 		   alsa_thread,
 		   instance) != 0)
 		goto failure;
-	
+
 
         return instance;
 
@@ -923,7 +923,7 @@ static AlsaInstance *init_alsa(MachineTable *mt) {
 		free(instance->samples);
 		instance->samples = NULL;
 	}
-	
+
 	if(instance) {
 		free(instance);
 		instance = NULL;
@@ -953,7 +953,7 @@ void *init(MachineTable *mt, const char *name) {
 		retval = NULL; /* NO MIDI SUPPORT YET */
 		return retval;
 	}
-	
+
 	return NULL;
 }
 
@@ -1023,27 +1023,27 @@ void execute(MachineTable *mt, void *data) {
 typedef struct _PulseInstanceData {
 	pthread_t thread;
 	pthread_attr_t pta;
-	
+
 	pa_simple *s;
 
 	int pulse_open;
-	
+
 	int16_t buffer[PULSE_BUFFER_SIZE * PULSE_CHANNELS];
-		
+
 } PulseInstanceData;
 
 PulseInstanceData *instance = NULL;
 
 void *pulse_thread(void *mtable_ptr) {
 	int error;
-	MachineTable *mt = (MachineTable *)mtable_ptr;       
+	MachineTable *mt = (MachineTable *)mtable_ptr;
 
 	for (;;) {
 		if(mt->fill_sink(mt) != 0) {
 			DYNLIB_DEBUG("fill sink failed.\n");
 			sleep(1);
 		}
-		
+
 		if (pa_simple_write(instance->s,
 				    instance->buffer,
 				    PULSE_BUFFER_SIZE * PULSE_CHANNELS,
@@ -1057,7 +1057,7 @@ void *pulse_thread(void *mtable_ptr) {
 	/* OK, this may win the ugly contest... */
 	for (;;) {
 		DYNLIB_DEBUG("Pulse has failed, no output.\n");
-		sleep(1);					
+		sleep(1);
 	}
 
 	return NULL;
@@ -1068,7 +1068,7 @@ void execute_sink(MachineTable *mt) {
 
 	float *in = mt->get_signal_buffer(s);
 	int il = mt->get_signal_samples(s);
-	int ic = mt->get_signal_channels(s);	
+	int ic = mt->get_signal_channels(s);
 	int i;
 	float im;
 
@@ -1106,20 +1106,20 @@ PulseInstanceData *init_pulse(MachineTable *mt) {
 
 	/* OK, create pthread for this */
 	pthread_attr_init(&(instance->pta));
-		
+
 	if(pthread_create(
 		   &(instance->thread),
 		   &(instance->pta),
 		   pulse_thread,
 		   mt) != 0)
 		goto failure;
-	
+
 	return instance;
 
  failure:
 	if(instance != NULL) free(instance);
 	instance = NULL;
-	
+
 	return NULL;
 }
 
@@ -1127,10 +1127,10 @@ void *init(MachineTable *mt, const char *name) {
 	MachineType *retval;
 
 	DYNLIB_DEBUG("\n\n\n***************CREATING: %s****************\n\n\n", name);
-	
+
 	retval = (MachineType *)malloc(sizeof(MachineType));
 	if(retval == NULL) return NULL;
-	
+
 	if(instance == NULL) {
 		/* Allocate and initiate instance data here */
 		DYNLIB_DEBUG("Creating new pulse audio instance: %p\n", retval); fflush(0);
@@ -1140,7 +1140,7 @@ void *init(MachineTable *mt, const char *name) {
 		}
 		DYNLIB_DEBUG("pulse audio instance created: %p\n", instance); fflush(0);
 	}
-	
+
 	if(strcmp("liveoutsink", name) == 0) {
 		instance->pulse_open = 1;
 		*retval = -1;
@@ -1150,7 +1150,7 @@ void *init(MachineTable *mt, const char *name) {
 		retval = NULL; /* NO MIDI SUPPORT YET */
 		return retval;
 	}
-	
+
 	return NULL;
 }
 
@@ -1217,7 +1217,7 @@ typedef struct AndroidInstance_ {
 	MachineTable *mt;
 
 	struct RIFF_WAVE_FILE riff_file;
-	
+
 	int doRecord, recordFile;
 
 	int android_open;
@@ -1250,7 +1250,7 @@ int fill_sink_callback(int callback_status, void *data) {
 	mt = inst->mt;
 
 	(void) pthread_mutex_unlock(&(__a_mutex));
-	
+
 	switch(callback_status) {
 	case _sinkJustPlay:
 		if(inst->recordFile != -1) {
@@ -1270,11 +1270,11 @@ int fill_sink_callback(int callback_status, void *data) {
 					strncpy(file_name, "/mnt/sdcard/SATAN_OUTPUT.WAV", sizeof(file_name));
 				}
 
-				RIFF_create_file(&(inst->riff_file), file_name);				
+				RIFF_create_file(&(inst->riff_file), file_name);
 			}
 		}
 		break;
-		
+
 	default:
 	case _sinkPaused:
 		(void) inst->android_audio_stop_f();
@@ -1283,14 +1283,14 @@ int fill_sink_callback(int callback_status, void *data) {
 		RIFF_close_file(&(inst->riff_file));
 
 		inst->doRecord = 0;
-		
+
 		memset(inst->file_output_data,
 		       0,
 		       sizeof(int16_t) * inst->file_output_channels * inst->file_output_samples);
-		
+
 		break;
-	}		
-	
+	}
+
 	RIFF_write_data(
 		&(inst->riff_file), inst->file_output_data,
 		inst->file_output_samples * inst->file_output_channels * sizeof(int16_t));
@@ -1319,21 +1319,21 @@ int android_dynamic_machine_entry(void *data)
 		inst = NULL;
 		goto fail_unlock_return;
 	}
-		
+
 	MachineTable *mt = NULL;
 	mt = inst->mt;
 
 	(void) pthread_mutex_unlock(&(__a_mutex));
 
 	int status = mt->fill_sink(mt, fill_sink_callback, inst);
-	
+
 	return status;
-	
+
 fail_unlock_return:
 	(void) pthread_mutex_unlock(&(__a_mutex));
 fail_return:
 	return -1;
-	
+
 }
 
 float volume = 0.50;
@@ -1341,11 +1341,11 @@ void execute_sink(MachineTable *mt, AndroidInstance *inst) {
 	SignalPointer *s = mt->get_input_signal(mt, "stereo");
 
 	if(s == NULL) return;
-	
+
 	FTYPE *in = mt->get_signal_buffer(s);
 
 	int il = mt->get_signal_samples(s);
-	int ic = mt->get_signal_channels(s);	
+	int ic = mt->get_signal_channels(s);
 
 	if(inst->file_output_data == NULL ||
 	   il != inst->file_output_samples ||
@@ -1354,7 +1354,7 @@ void execute_sink(MachineTable *mt, AndroidInstance *inst) {
 
 		inst->file_output_samples = il;
 		inst->file_output_channels = ic;
-		
+
 		inst->file_output_data = (int16_t *)malloc(
 			inst->file_output_channels * inst->file_output_samples * sizeof(int16_t));
 
@@ -1363,7 +1363,7 @@ void execute_sink(MachineTable *mt, AndroidInstance *inst) {
 			inst->file_output_samples = inst->file_output_channels = 0;
 		}
 	}
-	
+
 	FTYPE vol = ftoFTYPE(volume);
 
 	// XXX check for !0 return (== error!) and do something
@@ -1372,7 +1372,7 @@ void execute_sink(MachineTable *mt, AndroidInstance *inst) {
 	// at this point, the android_audio_callback
 	// is assumed to have mutliplied each sample with
 	// volume factor...
-	
+
 	// mix input into disk output buffer
 	int i;
 
@@ -1387,19 +1387,19 @@ void execute_sink(MachineTable *mt, AndroidInstance *inst) {
 			if(in[i] >= (fp8p24_t)0x01000000) {
 				in[i] = 0x00ffffff;
 			}
-			
+
 			out = (in[i] << 7);
 			out = (out & 0xffff0000) >> 16;
 #else
 			out = (int32_t)((float)in[i] * 32767.0f);
 #endif
-			
+
 			inst->file_output_data[i] = (int16_t)out;
 		}
 	}
 }
 
- 
+
 /*
  *
  */
@@ -1408,7 +1408,7 @@ static AndroidInstance *init_android(MachineTable *mt) {
 	DYNLIB_DEBUG("VuknobAndroidAudio\n");
 
 	AndroidInstance *inst = NULL;
-	
+
 	if(!__a_mutex_created) {
 		pthread_mutexattr_init(&(__a_attr));
 		pthread_mutex_init(&(__a_mutex), &(__a_attr));
@@ -1419,37 +1419,37 @@ static AndroidInstance *init_android(MachineTable *mt) {
 
 	if(!valid_instance) {
 		inst = (AndroidInstance *)malloc(sizeof(AndroidInstance));
-		if(!inst) goto return_unlock;	
+		if(!inst) goto return_unlock;
 
 		memset(inst, 0, sizeof(AndroidInstance));
-		
+
 		inst->instance_is_invalid = 0;
 		inst->doRecord = 0;
 		inst->recordFile = -1;
-		
+
 		int period_size = 0, rate = 0;
-		
+
 		mt->VuknobAndroidAudio__SETUP_STUFF(&period_size, &rate,
 						    android_dynamic_machine_entry,
 						    inst,
 						    &(inst->android_audio_callback),
 						    &(inst->android_audio_stop_f)
 			);
-		
+
 		inst->android_open = 1;
-		
+
 		/* set audio signal defaults */
- 		mt->set_signal_defaults(mt, _0D, period_size, FTYPE_RESOLUTION, rate);	
+ 		mt->set_signal_defaults(mt, _0D, period_size, FTYPE_RESOLUTION, rate);
 		/* set midi signal defaults */
 		mt->set_signal_defaults(mt, _MIDI, period_size, _PTR, rate);
-		
+
 		inst->mt = mt;
 
 		RIFF_prepare(mt, inst, period_size * 2, &(inst->riff_file), rate);
 	} else {
-		DYNLIB_DEBUG("Trying to create two instances of an Android Audio output, that's not allowed.\n");	
+		DYNLIB_DEBUG("Trying to create two instances of an Android Audio output, that's not allowed.\n");
 	}
-	
+
 return_unlock:
 	(void) pthread_mutex_unlock(&(__a_mutex));
 
@@ -1466,11 +1466,11 @@ void *init(MachineTable *mt, const char *name) {
 		/* NO MIDI SUPPORT YET */
 		return NULL;
 	}
-	 
-	DYNLIB_DEBUG("\n\n\n***************CREATING AUDIOTRACK : %s****************\n\n\n", name);	
-	
+
+	DYNLIB_DEBUG("\n\n\n***************CREATING AUDIOTRACK : %s****************\n\n\n", name);
+
 	/* Init all and android */
-	
+
 	AndroidInstance *inst = NULL;
 	if((inst = init_android(mt)) == NULL) {
 		DYNLIB_DEBUG("android audio instance NOT CREATED\n"); fflush(0);
@@ -1490,9 +1490,9 @@ void delete(void *data) {
 
 	valid_instance = NULL;
 	inst->instance_is_invalid = 1;
-	
+
 	(void) pthread_mutex_unlock(&(__a_mutex));
-	DYNLIB_DEBUG("  DELETING LIVEOUT 4!\n");  fflush(0);	
+	DYNLIB_DEBUG("  DELETING LIVEOUT 4!\n");  fflush(0);
 }
 
 void *get_controller_ptr(MachineTable *mt, void *ignored,
@@ -1552,17 +1552,17 @@ typedef struct __playBuffer {
 
 typedef struct OpenSLInstance_ {
 	/*
-	 * 
+	 *
 	 *
 	 */
 	MachineTable *mt;
 
 	OPENSL_STREAM *stream;
 	int period_size;
-	
+
 	FTYPE *empty_buffer;
 	short *temp_buffer;
-	
+
 	pthread_cond_t signal;
 	pthread_mutexattr_t attr;
 	pthread_mutex_t mutex;
@@ -1573,7 +1573,7 @@ typedef struct OpenSLInstance_ {
 	int buffer_to_play;
 	int buffer_segment_to_play;
 	int unlock_me;
-	
+
 	/**********
 	 *
 	 * Data used for writing audio output to a file
@@ -1584,21 +1584,21 @@ typedef struct OpenSLInstance_ {
 	int isPlaying;
 	int16_t *file_output_data;
 	int file_output_channels, file_output_samples;
-	
+
 } OpenSLInstance;
 
 static OpenSLInstance *singleton_instance = NULL;
 
 // finalizes the audio into the temp_buffer, ready for writing when entering the fill_sink_callback()
-void finalize_audio(OpenSLInstance *p, FTYPE *buffer, FTYPE vol) { 
+void finalize_audio(OpenSLInstance *p, FTYPE *buffer, FTYPE vol) {
 	if(p == NULL) return;
 
 	int size = __opensl_buffer_factor * p->stream->outBufSamples;
-	
+
 	if(buffer == NULL) {
 		buffer = p->empty_buffer;
 	}
-	
+
 	int i;
 	for(i=0; i < size; i++){
 		buffer[i] = mulFTYPE(buffer[i], vol);
@@ -1612,7 +1612,7 @@ void finalize_audio(OpenSLInstance *p, FTYPE *buffer, FTYPE vol) {
 		if(buffer[i] >= (fp8p24_t)0x01000000) {
 			buffer[i] = 0x00ffffff;
 		}
-		
+
 		out = (buffer[i] << 7);
 		out = (out & 0xffff0000) >> 16;
 #else
@@ -1639,16 +1639,16 @@ OpenSLInstance *init_OpenSL(MachineTable *mt) {
 	case __PLAYBACK_OPENSL_BUFFERED:
 	{
 		int minimum_configuration_found = 0;
-		
+
 		do {
 			float total = period_size_f * ((float)__opensl_buffer_queue_size) * ((float)__opensl_buffer_factor) *
 				(1 / rate_f);
-			if(total > 0.08 && (__opensl_buffer_queue_size > 2) && (__opensl_buffer_factor > 1)) {
+			if(total > 0.08 && (__opensl_buffer_queue_size >= 2) && (__opensl_buffer_factor > 1)) {
 				if(__opensl_buffer_queue_size > 2) {
 					__opensl_buffer_queue_size--;
 				} else {
 					__opensl_buffer_factor--;
-				}			
+				}
 			} else {
 				minimum_configuration_found = -1;
 			}
@@ -1667,16 +1667,16 @@ OpenSLInstance *init_OpenSL(MachineTable *mt) {
 		DYNLIB_INFORM("    init_OpenSL() - unknown playback mode: %d\n", playback_mode);
 		exit(0);
 	}
-	
+
 	DYNLIB_DEBUG(" ------ FINAL - total buffer: %d (factor: %d, queue: %d)\n",
 		     period_size * __opensl_buffer_queue_size * __opensl_buffer_factor,
 		     __opensl_buffer_factor,
 		     __opensl_buffer_queue_size);
-		
+
 	OpenSLInstance *inst = (OpenSLInstance *)malloc(sizeof(OpenSLInstance));
 	short *buffers = (short *)malloc(sizeof(short) * 2 * __opensl_buffer_factor * __opensl_buffer_queue_size * period_size); // 2 channels, __opensl_buffer_factor, __opensl_buffer_queue_size times the period size
 	FTYPE *_empty_buffer = (FTYPE *)malloc(sizeof(FTYPE) * 2 * __opensl_buffer_factor * period_size); // 2 channels, __opensl_buffer_factor, period size
-	
+
 	if((inst != NULL) && (buffers != NULL) && (_empty_buffer != NULL)) {
 		memset(buffers, 0, sizeof(short) * 2 * __opensl_buffer_factor * __opensl_buffer_queue_size * period_size);
 		memset(inst, 0, sizeof(OpenSLInstance));
@@ -1688,7 +1688,7 @@ OpenSLInstance *init_OpenSL(MachineTable *mt) {
 			mt->set_signal_defaults(mt, _0D, __opensl_buffer_factor * period_size, FTYPE_RESOLUTION, rate);
 			/* set midi signal defaults */
 			mt->set_signal_defaults(mt, _MIDI, __opensl_buffer_factor * period_size, _PTR, rate);
-			
+
 			RIFF_prepare(mt, inst, __opensl_buffer_factor * period_size * 2, &(inst->riff_file), rate);
 		} else {
 			// android_OpenAudioDevice() failed..
@@ -1703,7 +1703,7 @@ OpenSLInstance *init_OpenSL(MachineTable *mt) {
 		for(k = 0; k < __opensl_buffer_queue_size; k++) {
 			inst->playback_buffer[k].data = &buffers[2 * k * __opensl_buffer_factor * period_size];
 		}
-		
+
 		inst->empty_buffer = _empty_buffer;
 		inst->temp_buffer = inst->playback_buffer[0].data;
 
@@ -1740,7 +1740,7 @@ int fill_sink_callback(int callback_status, void *data) {
 		// non valid mt, just return...
 		return _sinkCallbackOK;
 	}
-	
+
 	switch(callback_status) {
 	case _sinkJustPlay:
 		inst->doRecord = 0;
@@ -1756,7 +1756,7 @@ int fill_sink_callback(int callback_status, void *data) {
 					strncpy(file_name, "/mnt/sdcard/SATAN_OUTPUT.WAV", sizeof(file_name));
 				}
 
-				RIFF_create_file(&(inst->riff_file), file_name);				
+				RIFF_create_file(&(inst->riff_file), file_name);
 			}
 		}
 		break;
@@ -1764,7 +1764,7 @@ int fill_sink_callback(int callback_status, void *data) {
 	case _sinkResumed:
 		inst->isPlaying = 1;
 		return _sinkCallbackOK;
-		
+
 	default:
 	case _sinkPaused:
 	case _notSink:
@@ -1773,7 +1773,7 @@ int fill_sink_callback(int callback_status, void *data) {
 		RIFF_close_file(&(inst->riff_file));
 
 		inst->doRecord = 0;
-		
+
 		memset(inst->file_output_data,
 		       0,
 		       sizeof(int16_t) * inst->file_output_channels * inst->file_output_samples);
@@ -1782,8 +1782,8 @@ int fill_sink_callback(int callback_status, void *data) {
 		(void) finalize_audio(inst, NULL, ftoFTYPE(0.0f));
 
 		return _sinkCallbackOK;
-	}		
-	
+	}
+
 	RIFF_write_data(
 		&(inst->riff_file), inst->file_output_data,
 		inst->file_output_samples * inst->file_output_channels * sizeof(int16_t));
@@ -1809,7 +1809,7 @@ void openSL_thread_callback_standard(void *data) {
 	if(inst->buffer_segment_to_play == __opensl_buffer_factor) {
 		inst->buffer_segment_to_play = 0;
 		inst->buffer_to_play = (inst->buffer_to_play + 1) % __opensl_buffer_queue_size;
-		
+
 		if(inst->unlock_me > 0) {
 			pthread_mutex_lock(&(inst->mutex));
 			inst->unlock_me--;
@@ -1827,7 +1827,7 @@ void openSL_thread_callback_standard(void *data) {
 }
 
 void openSL_thread_callback_minimum_latency(void *data) {
-	OpenSLInstance *inst = (OpenSLInstance *)data;	
+	OpenSLInstance *inst = (OpenSLInstance *)data;
 	MachineTable *mt = inst->mt;
 	static MachineTable *last_mt = NULL;
 
@@ -1839,7 +1839,7 @@ void openSL_thread_callback_minimum_latency(void *data) {
 		last_mt = mt;
 		(void) mt->fill_sink(mt, fill_sink_callback, inst);
 	}
-	
+
 	if(mt == NULL || inst->isPlaying == 0) {
 		// either we are not playing, or
 		// we have a non valid mt (i.e. == NULL) we should just finalize using NULL, then write the resulting empty audio.
@@ -1850,7 +1850,7 @@ void openSL_thread_callback_minimum_latency(void *data) {
 }
 
 void *openSL_feeder_thread(void *data) {
-	OpenSLInstance *inst = (OpenSLInstance *)data;	
+	OpenSLInstance *inst = (OpenSLInstance *)data;
 	MachineTable *mt = NULL;
 	MachineTable *last_mt = NULL;
 
@@ -1872,7 +1872,7 @@ void *openSL_feeder_thread(void *data) {
 
 			last_mt = mt;
 		}
-		
+
 		if(mt == NULL || inst->isPlaying == 0) {
 			// either we are not playing, or
 			// we have a non valid mt (i.e. == NULL) we should just finalize using NULL, then write the resulting empty audio.
@@ -1884,7 +1884,7 @@ void *openSL_feeder_thread(void *data) {
 		if(inst->buffer_to_play == inst->buffer_to_render) {
 			pthread_mutex_lock(&(inst->mutex));
 			inst->unlock_me = 1;
-			pthread_cond_wait(&(inst->signal), &(inst->mutex));		
+			pthread_cond_wait(&(inst->signal), &(inst->mutex));
 			pthread_mutex_unlock(&(inst->mutex));
 		}
 
@@ -1901,9 +1901,9 @@ void *init(MachineTable *mt, const char *name) {
 		/* NO MIDI SUPPORT YET */
 		return NULL;
 	}
-	 
-	DYNLIB_DEBUG("\n\n\n***************CREATING OPEN SL ES: %s****************\n\n\n", name);	
-	
+
+	DYNLIB_DEBUG("\n\n\n***************CREATING OPEN SL ES: %s****************\n\n\n", name);
+
 	/* Init all and android */
 
 	OpenSLInstance *inst = NULL;
@@ -1923,9 +1923,9 @@ void *init(MachineTable *mt, const char *name) {
 			{ // create feeder thread (the thread that actually generates data, but feeds the openSL which plays it)
 				pthread_mutexattr_init(&(inst->attr));
 				pthread_mutex_init(&(inst->mutex), &(inst->attr));
-				
+
 				pthread_cond_init (&(inst->signal), NULL);
-				
+
 				pthread_attr_init(&(inst->pta));
 				if(pthread_create(
 					   &(inst->thread),
@@ -1936,18 +1936,18 @@ void *init(MachineTable *mt, const char *name) {
 			}
 			android_StartStream(inst->stream, openSL_thread_callback_standard, inst);
 		}
-		
+
 		singleton_instance = inst;
 	} else {
 		inst = singleton_instance;
 	}
 
-	inst->mt = mt;		
+	inst->mt = mt;
 
 #ifdef DO_ANALYZIS
 	mt->run_simple_thread(analyzis_thread, NULL);
 #endif
-	
+
 	DYNLIB_DEBUG("android OpenSL audio instance created: %p\n", inst); fflush(0);
 
 	return inst;
@@ -1964,7 +1964,7 @@ void delete(void *data) {
 
 	DYNLIB_DEBUG("    calling disable_low_latency_mode() (%d)\n", gettid());
 	inst->mt->disable_low_latency_mode();
-	
+
 	// invalidate machine table
 	inst->mt = NULL;
 }
@@ -1985,18 +1985,18 @@ void reset(MachineTable *mt, void *data) {
 void execute(MachineTable *mt, void *data) {
 	OpenSLInstance *inst = (OpenSLInstance *)data;
 	FTYPE vol = ftoFTYPE(volume);
-	
+
 	SignalPointer *s = mt->get_input_signal(mt, "stereo");
 
 	if(s == NULL) {
 		(void) finalize_audio(inst, NULL, vol);
 		return;
 	}
-	
+
 	FTYPE *in = mt->get_signal_buffer(s);
 
 	int il = mt->get_signal_samples(s);
-	int ic = mt->get_signal_channels(s);	
+	int ic = mt->get_signal_channels(s);
 
 	if(inst->file_output_data == NULL ||
 	   il != inst->file_output_samples ||
@@ -2005,7 +2005,7 @@ void execute(MachineTable *mt, void *data) {
 
 		inst->file_output_samples = il;
 		inst->file_output_channels = ic;
-		
+
 		inst->file_output_data = (int16_t *)malloc(
 			inst->file_output_channels * inst->file_output_samples * sizeof(int16_t));
 
@@ -2014,14 +2014,14 @@ void execute(MachineTable *mt, void *data) {
 			inst->file_output_samples = inst->file_output_channels = 0;
 		}
 	}
-	
+
 	// XXX check for !0 return (== error!) and do something
 	(void) finalize_audio(inst, in, vol);
 
 	// at this point, the finalize_audio() function
 	// is assumed to have mutliplied each sample with
 	// volume factor...
-	
+
 	// mix input into disk output buffer
 	int i;
 	if(inst->file_output_data != NULL) {
@@ -2035,7 +2035,7 @@ void execute(MachineTable *mt, void *data) {
 			if(in[i] >= (FTYPE)0x01000000) {
 				in[i] = 0x00ffffff;
 			}
-			
+
 			out = (in[i] << 7);
 			out = (out & 0xffff0000) >> 16;
 #else

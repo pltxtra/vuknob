@@ -468,6 +468,7 @@ private:
 	std::string base_name; /* used to create the default value of name */
 	bool base_name_is_name; // indicates that base_name should be use as is
 	Machine *next_render_chain;
+	std::vector<std::string> controller_groups;
 
 	// if visualized - the graphical x and y position
 	float x_position, y_position;

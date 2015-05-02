@@ -70,83 +70,9 @@
 
 /***************************
  *
- *  Class RemoteInterface::Message
+ *  Decoder/Encoder functions
  *
  ***************************/
-
-RemoteInterface::Message::Message() : context(), ostrm(&sbuf), data2send(0) {}
-
-RemoteInterface::Message::Message(RemoteInterface::Context *_context) : context(_context), ostrm(&sbuf), data2send(0) {}
-
-void RemoteInterface::Message::set_reply_handler(std::function<void(const Message *reply_msg)> __reply_received_callback) {
-	reply_received_callback = __reply_received_callback;
-	awaiting_reply = true;
-}
-
-void RemoteInterface::Message::reply_to(const Message *reply_msg) {
-	reply_received_callback(reply_msg);
-}
-
-bool RemoteInterface::Message::is_awaiting_reply() {
-	return awaiting_reply;
-}
-
-void RemoteInterface::Message::set_value(const std::string &key, const std::string &value) {
-	if(key.find(';') != std::string::npos) throw IllegalChar();
-	if(key.find('=') != std::string::npos) throw IllegalChar();
-	if(value.find(';') != std::string::npos) throw IllegalChar();
-	if(value.find('=') != std::string::npos) throw IllegalChar();
-
-	key2val[key] = value;
-
-	data2send += key.size() + value.size() + 2; // +2 for the '=' and ';' that encode will add later
-
-	encoded = false;
-}
-
-std::string RemoteInterface::Message::get_value(const std::string &key) const {
-	auto result = key2val.find(key);
-	if(result == key2val.end()) {
-#ifdef __DO_SATAN_DEBUG
-		for(auto k2v : key2val) {
-			SATAN_DEBUG("[%s] does not match [%s] -> %s.\n", key.c_str(), k2v.first.c_str(), k2v.second.c_str());
-		}
-#endif
-		throw NoSuchKey();
-	}
-	return result->second;
-}
-
-asio::streambuf::mutable_buffers_type RemoteInterface::Message::prepare_buffer(std::size_t length) {
-	clear_msg_content();
-	return sbuf.prepare(length);
-}
-
-void RemoteInterface::Message::commit_data(std::size_t length) {
-	sbuf.commit(length);
-}
-
-asio::streambuf::const_buffers_type RemoteInterface::Message::get_data() {
-	return sbuf.data();
-}
-
-bool RemoteInterface::Message::decode_client_id() {
-	std::istream is(&sbuf);
-	std::string header;
-	is >> header;
-	sscanf(header.c_str(), "%08x", &client_id);
-
-	return true;
-}
-
-bool RemoteInterface::Message::decode_header() {
-	std::istream is(&sbuf);
-	std::string header;
-	is >> header;
-	sscanf(header.c_str(), "%08x", &body_length);
-
-	return true;
-}
 
 static std::string decode_string(const std::string &encoded) {
 	char inp[encoded.size() + 1];
@@ -167,7 +93,7 @@ static std::string decode_string(const std::string &encoded) {
 				else if(v[u] <= 'F' && v[u] >= 'A') v[u] = 0xA + v[u] - 'A';
 				else if(v[u] <= '9' && v[u] >= '0') v[u] = v[u] - '0';
 			}
-			v[0] = (v[0] << 8) | v[1];
+			v[0] = (v[0] << 4) | v[1];
 			v[1] = '\0';
 
 			output += v;
@@ -221,14 +147,149 @@ static std::string encode_string(const std::string &uncoded) {
 	return output;
 }
 
+template <class ContainerT>
+class Serializer {
+public:
+	typedef typename ContainerT::value_type ElementT;
+
+	Serializer() {
+		element_to_string = [](ElementT e) -> std::string {
+			return e;
+		};
+
+		string_to_element = [](std::string str) -> ElementT {
+			return str;
+		};
+	}
+
+	std::string serialize(const ContainerT &elements) {
+		std::stringstream serialized;
+
+		for(auto element : elements) {
+			serialized << encode_string(element_to_string(element)) << ";";
+		}
+
+		return encode_string(serialized.str());
+	}
+
+	ContainerT deserialize(const std::string &serialized) {
+		ContainerT retval;
+
+		std::istringstream is(decode_string(serialized));
+
+		std::string val;
+
+		std::getline(is, val, ';');
+		while(!is.eof() && val != "") {
+			retval.push_back(string_to_element(decode_string(val)));
+
+			std::getline(is, val, ';');
+		}
+
+		return retval;
+	}
+
+private:
+	std::function<std::string(const ElementT &e)> element_to_string;
+	std::function<ElementT(const std::string &str)> string_to_element;
+};
+
+/***************************
+ *
+ *  Class RemoteInterface::Message
+ *
+ ***************************/
+
+RemoteInterface::Message::Message() : context(), ostrm(&sbuf), data2send(0) {}
+
+RemoteInterface::Message::Message(RemoteInterface::Context *_context) : context(_context), ostrm(&sbuf), data2send(0) {}
+
+void RemoteInterface::Message::set_reply_handler(std::function<void(const Message *reply_msg)> __reply_received_callback) {
+	reply_received_callback = __reply_received_callback;
+	awaiting_reply = true;
+}
+
+void RemoteInterface::Message::reply_to(const Message *reply_msg) {
+	reply_received_callback(reply_msg);
+}
+
+bool RemoteInterface::Message::is_awaiting_reply() {
+	return awaiting_reply;
+}
+
+void RemoteInterface::Message::set_value(const std::string &key, const std::string &value) {
+	if(key.find(';') != std::string::npos) throw IllegalChar();
+	if(key.find('=') != std::string::npos) throw IllegalChar();
+	if(value.find(';') != std::string::npos) throw IllegalChar();
+	if(value.find('=') != std::string::npos) throw IllegalChar();
+
+	auto enc_key = encode_string(key);
+	auto enc_val = encode_string(value);
+
+	key2val[enc_key] = enc_val;
+
+	data2send += enc_key.size() + enc_val.size() + 2; // +2 for the '=' and ';' that encode will add later
+
+	encoded = false;
+}
+
+std::string RemoteInterface::Message::get_value(const std::string &key) const {
+	auto result = key2val.find(key);
+	if(result == key2val.end()) {
+#ifdef __DO_SATAN_DEBUG
+		for(auto k2v : key2val) {
+			SATAN_DEBUG("[%s] does not match [%s] -> %s.\n", key.c_str(), k2v.first.c_str(), k2v.second.c_str());
+		}
+#endif
+		throw NoSuchKey(key.c_str());
+	}
+	return result->second;
+}
+
+asio::streambuf::mutable_buffers_type RemoteInterface::Message::prepare_buffer(std::size_t length) {
+	clear_msg_content();
+	return sbuf.prepare(length);
+}
+
+void RemoteInterface::Message::commit_data(std::size_t length) {
+	sbuf.commit(length);
+}
+
+asio::streambuf::const_buffers_type RemoteInterface::Message::get_data() {
+	return sbuf.data();
+}
+
+bool RemoteInterface::Message::decode_client_id() {
+	std::istream is(&sbuf);
+	std::string header;
+	is >> header;
+	sscanf(header.c_str(), "%08x", &client_id);
+
+	return true;
+}
+
+bool RemoteInterface::Message::decode_header() {
+	std::istream is(&sbuf);
+	std::string header;
+	is >> header;
+	sscanf(header.c_str(), "%08x", &body_length);
+
+	SATAN_DEBUG("decode_header()-> [%s]\n", header.c_str());
+
+	return true;
+}
+
 bool RemoteInterface::Message::decode_body() {
 	std::istream is(&sbuf);
 
 	std::string key, val;
 
 	std::getline(is, key, '=');
+	SATAN_DEBUG("decode_body()\n");
 	while(!is.eof() && key != "") {
+		SATAN_DEBUG("   key: %s\n", key.c_str());
 		std::getline(is, val, ';');
+		SATAN_DEBUG("     -> val: %s\n", val.c_str());
 		if(key != "") {
 			key2val[decode_string(key)] = decode_string(val);
 		}
@@ -247,10 +308,19 @@ void RemoteInterface::Message::encode() const {
 	snprintf(header, 9, "%08x", data2send);
 	ostrm << header;
 
+	int checksum = 0;
+	SATAN_DEBUG("encode() header -> [%s]\n", header);
 	// add body
 	for(auto k2v : key2val) {
-		ostrm << encode_string(k2v.first) << "=" << encode_string(k2v.second) << ";";
+		auto enc_key = k2v.first;
+		auto enc_val = k2v.second;
+
+		ostrm << enc_key << "=" << enc_val << ";";
+
+		SATAN_DEBUG("   encode: [%s] -> [%s]\n", enc_key.c_str(), enc_val.c_str());
+		checksum += 2 + enc_key.size() + enc_val.size();
 	}
+	SATAN_DEBUG("data2send[%d] =? checksum[%d] ?\n", data2send, checksum);
 
 	data2send += header_length; // add header length to the total data size
 }
@@ -364,7 +434,11 @@ void RemoteInterface::MessageHandler::do_read_body() {
 
 				try {
 					on_message_received(read_msg);
+				} catch (Message::NoSuchKey& e) {
+					SATAN_ERROR("do_read_body() caught an NoSuchKey exception: %s\n", e.keyname);
+					on_connection_dropped();
 				} catch (std::exception& e) {
+					SATAN_ERROR("do_read_body() caught an exception: %s\n", e.what());
 					on_connection_dropped();
 				}
 
@@ -1129,6 +1203,13 @@ RemoteInterface::RIMachine::RIMachine(const Factory *factory, const Message &ser
 	try {
 		parse_io(outputs, serialized.get_value("outputs"));
 	} catch(Message::NoSuchKey &e) { /* ignore empty inputs */ }
+
+	Serializer<std::vector<std::string> > deserializor;
+	controller_groups = deserializor.deserialize(serialized.get_value("ctrgroups"));
+	SATAN_DEBUG("Client, RIMachine::RIMachine(%s) - controller_groups [%s]:\n", name.c_str(), serialized.get_value("ctrgroups").c_str());
+	for(auto ctgr : controller_groups) {
+		SATAN_DEBUG("  ctr group: %s\n", ctgr.c_str());
+	}
 }
 
 RemoteInterface::RIMachine::RIMachine(int32_t new_obj_id, const Factory *factory) : BaseObject(new_obj_id, factory) {}
@@ -1891,6 +1972,11 @@ void RemoteInterface::RIMachine::serialize(std::shared_ptr<Message> &target) {
 			outputs_string << output << ":";
 		}
 		target->set_value("outputs", outputs_string.str());
+	}
+
+	{
+		Serializer<std::vector<std::string> > serializor;
+		target->set_value("ctrgroups", serializor.serialize(real_machine_ptr->get_controller_groups()));
 	}
 }
 

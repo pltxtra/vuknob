@@ -1,4 +1,11 @@
 /*
+ * VuKNOB
+ * (C) 2015 by Anton Persson
+ *
+ * http://www.vuknob.com/
+ *
+ * Based on SATAN:
+ *
  * SATAN, Signal Applications To Any Network
  * Copyright (C) 2003 by Anton Persson & Johan Thim
  * Copyright (C) 2005 by Anton Persson
@@ -50,19 +57,20 @@ using namespace std;
 
 #include "machine.hh"
 
+#include "controller_handler.hh"
+
 //#define __DO_SATAN_DEBUG
 #include "satan_debug.hh"
 
 KammoEventHandler_Declare(ControllerHandler,"showControlsContainer:cgroups");
 
 std::vector<KammoGUI::Widget *> erasable_widgets;
-
 class MyScale : public KammoGUI::Scale {
 public:
 	KammoGUI::Label *v_lbl;
 	Machine::Controller *ctr;
 	double min, max,step;
-	
+
 	MyScale(double _min,
 		double _max,
 		double _step,
@@ -82,7 +90,7 @@ public:
 	MyScale *scale;
 
 	MyBaseButton(MyScale *_scale) : scale(_scale) {}
-	
+
 	virtual void do_action() = 0;
 };
 
@@ -119,7 +127,7 @@ public:
 			args["id"] = (void *)value;
 
 			args["followup"] = new std::string("showControlsContainer");
-			
+
 			trigger_user_event(ue, args);
 		}
 	}
@@ -130,7 +138,7 @@ void process_value_changed(KammoGUI::Widget *wid) {
 	Machine::Controller *ctr = scl->ctr;
 
 	double value = scl->get_value();
-	
+
 	switch(ctr->get_type()) {
 
 	case Machine::Controller::c_sigid:
@@ -138,24 +146,24 @@ void process_value_changed(KammoGUI::Widget *wid) {
 	case Machine::Controller::c_int:
 	{
 		int val = value;
-		ctr->set_value(val);		
+		ctr->set_value(val);
 	}
 	break;
 
 	case Machine::Controller::c_float:
 	{
 		float val = value;
-		ctr->set_value(val);		
+		ctr->set_value(val);
 	}
 	break;
 
 	case Machine::Controller::c_bool:
 	{
 		bool val = value == 1.0 ? true : false;
-		ctr->set_value(val);		
+		ctr->set_value(val);
 	}
 	break;
-		
+
 	case Machine::Controller::c_string:
 	default:
 		return;
@@ -176,8 +184,8 @@ void process_value_changed(KammoGUI::Widget *wid) {
 		vstr << " : " << value;
 		break;
 	}
-	
-	scl->v_lbl->set_title(vstr.str());	
+
+	scl->v_lbl->set_title(vstr.str());
 }
 
 virtual void on_click(KammoGUI::Widget *wid) {
@@ -257,10 +265,10 @@ void add_scale(KammoGUI::Container *cnt,
 		vstr << " : " << value;
 		break;
 	}
-	v_lbl->set_title(vstr.str());	
+	v_lbl->set_title(vstr.str());
 
 	SATAN_DEBUG("min: %f, max: %f, value: %s\n", min, max, vstr.str().c_str());
-	
+
 	MyScale *scl =
 		new MyScale(min, max, step, ctr, v_lbl);
 	scl->set_fill(true);
@@ -280,8 +288,8 @@ void add_scale(KammoGUI::Container *cnt,
 	KammoGUI::Container *lbl_cnt = new KammoGUI::Container(true);
 	lbl_cnt->add(*lbl);
 	lbl_cnt->add(*v_lbl);
-	
-	KammoGUI::Container *int_cnt = new KammoGUI::Container(true);	
+
+	KammoGUI::Container *int_cnt = new KammoGUI::Container(true);
 	int_cnt->add(*less);
 	int_cnt->add(*scl);
 	int_cnt->add(*more);
@@ -304,12 +312,12 @@ void rebuild_controller_list(Machine *m, std::string group_name) {
 	std::vector<std::string> c_names;
 
 	SATAN_DEBUG("SHOW CONTROLLER GROUP: %s\n", group_name.c_str());
-	
+
 	if(group_name != "")
 		c_names = m->get_controller_names(group_name);
 	else
 		c_names = m->get_controller_names();
-	
+
 	std::set<std::string>::iterator k;
 
 	for(auto k : c_names) {
@@ -325,7 +333,7 @@ void rebuild_controller_list(Machine *m, std::string group_name) {
 			case Machine::Controller::c_float:
 			case Machine::Controller::c_bool:
 				add_scale(cnt,ctr);
-				break;				
+				break;
 			case Machine::Controller::c_string:
 				break;
 			default:
@@ -339,14 +347,14 @@ std::string refresh_groups(Machine *m) {
 	static KammoGUI::List *groups = NULL;
 	KammoGUI::get_widget((KammoGUI::Widget **)&groups, "cgroups");
 	groups->clear();
-	
+
 	std::string first_group = "";
-	
+
 	for(auto k : m->get_controller_groups()) {
 		std::vector<std::string> row_contents;
 
 		if(first_group == "") first_group = k;
-		
+
 		row_contents.clear();
 		row_contents.push_back(k);
 
@@ -356,7 +364,7 @@ std::string refresh_groups(Machine *m) {
 	return first_group;
 }
 
-void refresh_controllers(Machine *m, std::string first_group) {	
+void refresh_controllers(Machine *m, std::string first_group) {
 	static KammoGUI::List *groups = NULL;
 	KammoGUI::get_widget((KammoGUI::Widget **)&groups, "cgroups");
 
@@ -388,30 +396,26 @@ virtual void on_user_event(KammoGUI::UserEvent *ue, std::map<std::string, void *
 		char *m_name_c = (char *)args["machine_to_control"];
 		string m_name = m_name_c;
 		free(m_name_c);
-		
+
 		for(auto m : Machine::get_machine_set()) {
 			if(m->get_name() == m_name) {
 				data = m;
 			}
 		}
-	} else {
-		if(args.find("node_to_control") != args.end())
-			data = args["node_to_control"];
-	}		
+	}
 
 	std::string first_group = "";
-	
+
 	if(ue->get_id() == "showControlsContainer") {
 		if(data != NULL) {
 			current_machine = (Machine *)data;
 			first_group = refresh_groups(current_machine);
 		}
 	}
-	
+
 	if(current_machine != NULL) {
 		refresh_controllers(current_machine, first_group);
 	}
 }
 
 KammoEventHandler_Instance(ControllerHandler);
-

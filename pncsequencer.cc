@@ -82,13 +82,13 @@ PncHelpDisplay::PncHelpDisplay(
 			std::string(CanvasWidgetContext::svg_directory + "/pncseq_help_2.svg"));
 		btn_help_three_d   = KammoGUI::Canvas::SVGDefinition::from_file(
 			std::string(CanvasWidgetContext::svg_directory + "/pncseq_help_3.svg"));
-		
+
 		btn_help_one = new KammoGUI::Canvas::SVGBob(
 			__cnv, btn_help_one_d);
 		btn_help_two = new KammoGUI::Canvas::SVGBob(
-			__cnv, btn_help_two_d);			
+			__cnv, btn_help_two_d);
 		btn_help_three = new KammoGUI::Canvas::SVGBob(
-			__cnv, btn_help_three_d);			
+			__cnv, btn_help_three_d);
 	}
 }
 
@@ -165,7 +165,7 @@ PncLoopIndicator::PncLoopIndicator(
 	if(btn_loop_off_d == NULL) {
 			btn_loop_no_d   = KammoGUI::Canvas::SVGDefinition::from_file(
 				std::string(CanvasWidgetContext::svg_directory + "/loop_no.svg"));
-			
+
 			btn_loop_on_d   = KammoGUI::Canvas::SVGDefinition::from_file(
 				std::string(CanvasWidgetContext::svg_directory + "/loop_on.svg"));
 			btn_loop_on_b_d   = KammoGUI::Canvas::SVGDefinition::from_file(
@@ -174,7 +174,7 @@ PncLoopIndicator::PncLoopIndicator(
 				std::string(CanvasWidgetContext::svg_directory + "/loop_on_continue.svg"));
 			btn_loop_on_e_d   = KammoGUI::Canvas::SVGDefinition::from_file(
 				std::string(CanvasWidgetContext::svg_directory + "/loop_on_end.svg"));
-			
+
 			btn_loop_off_d   = KammoGUI::Canvas::SVGDefinition::from_file(
 				std::string(CanvasWidgetContext::svg_directory + "/loop_off.svg"));
 			btn_loop_off_b_d   = KammoGUI::Canvas::SVGDefinition::from_file(
@@ -186,7 +186,7 @@ PncLoopIndicator::PncLoopIndicator(
 
 			btn_loop_no = new KammoGUI::Canvas::SVGBob(
 				__cnv, btn_loop_no_d);
-			
+
 			btn_loop_on = new KammoGUI::Canvas::SVGBob(
 				__cnv, btn_loop_on_d);
 			btn_loop_on_b = new KammoGUI::Canvas::SVGBob(
@@ -269,7 +269,7 @@ void PncLoopIndicator::set_state(LoopState nstate) {
 }
 
 void PncLoopIndicator::set_value(const std::string &_value) {
-	value = _value;	
+	value = _value;
 }
 
 void PncLoopIndicator::set_loop_on(bool _do_loop) {
@@ -369,7 +369,7 @@ void PncSeqZone::set_callback_data(
 }
 
 void PncSeqZone::set_value(const std::string &_value) {
-	value = _value;	
+	value = _value;
 }
 
 void PncSeqZone::set_selected(bool _selected, bool _focus_left) {
@@ -424,7 +424,7 @@ void PncSeqZone::expose() {
 		}
 		return;
 	}
-	
+
 	if(show_mute)
 		__cnv->blit_SVGBob(selected ? btn_mute_on : btn_mute_off,
 			x1, y1);
@@ -438,7 +438,7 @@ void PncSeqZone::expose() {
 	if(do_shade) {
 		__cnv->blit_SVGBob(btn_shade,x1, y1);
 	}
-	
+
 	if(show_value || selected) {
 		static char symbolz[32];
 		snprintf(symbolz, 32, "      %2s", value.c_str());
@@ -456,7 +456,7 @@ void PncSeqZone::on_event(KammoGUI::canvasEvent_t ce, int x, int y) {
 		if(ue != NULL) {
 			static KammoGUI::UserEvent *callback_ue = NULL;
 			KammoGUI::get_widget((KammoGUI::Widget **)&callback_ue, "showComposeContainer");
-			
+
 			std::map<std::string, void *> args;
 			args["hint_match"] = strdup("generator");
 			args["callback_event"] = callback_ue;
@@ -464,13 +464,13 @@ void PncSeqZone::on_event(KammoGUI::canvasEvent_t ce, int x, int y) {
 		}
 		return;
 	}
-	
+
 	bool internal_events = true;
 
-	
+
 	if(on_event_cb != NULL) {
 		internal_events = on_event_cb(cbd, this, ce, x, y);
-	}	
+	}
 	if((!only_value) && internal_events && ce == KammoGUI::cvButtonRelease) {
 		if(show_mute) {
 			selected = !selected;
@@ -480,7 +480,7 @@ void PncSeqZone::on_event(KammoGUI::canvasEvent_t ce, int x, int y) {
 
 			selected = true;
 		}
-		
+
 		if(state_change) state_change(cbd, this, selected, focus_left);
 	}
 }
@@ -513,8 +513,8 @@ PncSequence::PncSequence(
 	{
 		seq_number_zone =
 			new PncSeqZone(
-				cwc,				
-				0.0, (float)column_nr * h,	
+				cwc,
+				0.0, (float)column_nr * h,
 				w, (float)column_nr * h + h,
 				true, true, false, "", 0x01);
 		seq_number_zone->set_callback_data(this, zone_state_change, zone_event);
@@ -546,7 +546,7 @@ PncSequenceFlingAnimation::PncSequenceFlingAnimation(
 	zone_size = _zone_size;
 	start_speed = speed;
 	duration = _duration;
-	
+
 	if(start_speed < 0)
 		deacc = -FLING_DEACCELERATION;
 	else
@@ -558,20 +558,20 @@ PncSequenceFlingAnimation::PncSequenceFlingAnimation(
 
 void PncSequenceFlingAnimation::new_frame(float progress) {
 	current_speed = start_speed - deacc * progress * duration;
-	
+
 	SATAN_DEBUG("new_frame, current speed: %f\n", current_speed);
 	float time_diff = (progress * duration) - last_time;
 	float pixels_change = time_diff * current_speed;
 
 	total_pixels_changed += pixels_change;
-	
+
 	float diff_f = total_pixels_changed / zone_size;
 	int diff = diff_f;
 	if(diff != 0 && scrolled != NULL) {
 		total_pixels_changed = 0.0f;
 		scrolled(cbd, diff);
 	}
-	
+
 	last_time = progress * duration;
 }
 
@@ -603,7 +603,7 @@ bool PncSequence::zone_event(void *cbd, PncSeqZone *psz, KammoGUI::canvasEvent_t
 	if(pnbc->fling_detector.on_touch_event(newStyle_event)) {
 		float speed_x, speed_y;
 		float abs_speed_x, abs_speed_y;
-		
+
 		pnbc->fling_detector.get_speed(speed_x, speed_y);
 		pnbc->fling_detector.get_absolute_speed(abs_speed_x, abs_speed_y);
 
@@ -612,7 +612,7 @@ bool PncSequence::zone_event(void *cbd, PncSeqZone *psz, KammoGUI::canvasEvent_t
 		float speed = 0.0f, abs_speed;
 		float zone_size = 10.0f;
 		void (*scrolled)(void *__cbd, int rel) = NULL;
-		
+
 		if(do_horizontal_fling) {
 			abs_speed = abs_speed_x;
 			speed = -speed_x; // horizontal scroll speed is in the oposite direction of the fling motion..
@@ -624,14 +624,14 @@ bool PncSequence::zone_event(void *cbd, PncSeqZone *psz, KammoGUI::canvasEvent_t
 			zone_size = pnbc->context->__height / (VERTICAL_ZONES);
 			scrolled = pnbc->vertical_scroll_cb;
 		}
-	
+
 		float fling_duration = abs_speed / FLING_DEACCELERATION;
-		
+
 		PncSequenceFlingAnimation *flinganim =
 			new PncSequenceFlingAnimation(speed, zone_size, fling_duration, scrolled, cbd);
 		pnbc->context->__cnv->start_animation(flinganim);
 	}
-	
+
 	if(ce == KammoGUI::cvButtonPress) {
 		pnbc->scroll_start_w = x;
 		pnbc->scroll_start_h = y;
@@ -640,11 +640,11 @@ bool PncSequence::zone_event(void *cbd, PncSeqZone *psz, KammoGUI::canvasEvent_t
 	}
 	if(ce == KammoGUI::cvButtonHold) {
 		pnbc->scrolling = false;
-		
+
 		if(!(pnbc->did_scroll)) {
 			int i = PncSequencer::sequence_row_offset;
 			int step = PncSequencer::sequence_step;
-			
+
 			std::map<int, PncSeqZone *>::iterator k;
 			for(k = pnbc->row.begin(); k != pnbc->row.end() && i < MAX_SEQUENCE_LENGTH; k++, i += step) {
 				int val = pnbc->mseq->get_loop_id_at(i);
@@ -666,11 +666,11 @@ bool PncSequence::zone_event(void *cbd, PncSeqZone *psz, KammoGUI::canvasEvent_t
 			float w = pnbc->context->__width / (HORIZONTAL_ZONES);
 			float diff_f = ((float)pnbc->scroll_start_w - x) / w;
 			int diff = diff_f;
-			
+
 			if(diff != 0) {
 				pnbc->did_scroll = true;
 				pnbc->scroll_start_w = x;
-				
+
 				if(pnbc->horizontal_scroll_cb != NULL)
 					pnbc->horizontal_scroll_cb(cbd, diff);
 			}
@@ -680,11 +680,11 @@ bool PncSequence::zone_event(void *cbd, PncSeqZone *psz, KammoGUI::canvasEvent_t
 			float h = pnbc->context->__height / (VERTICAL_ZONES);
 			float diff_f = ((float)pnbc->scroll_start_h - y) / h;
 			int diff = diff_f;
-			
+
 			if(diff != 0) {
 				pnbc->did_scroll = true;
 				pnbc->scroll_start_h = y;
-				
+
 				if(pnbc->vertical_scroll_cb != NULL)
 					pnbc->vertical_scroll_cb(cbd, diff);
 			}
@@ -731,7 +731,7 @@ void PncSequence::set_mode(zoneMode mode) {
 	bool hide = true;
 
 	if(mode == normalZone) hide = false;
-	
+
 	std::map<int, PncSeqZone *>::iterator i;
 
 	seq_number_zone->set_mode(mode);
@@ -743,7 +743,7 @@ void PncSequence::set_mode(zoneMode mode) {
 
 void PncSequence::set_machine_sequencer(const std::string &title, MachineSequencer *_mseq) {
 	mseq = _mseq;
-	
+
 	if(mseq == NULL) {
 		set_mode(hiddenZone);
 	} else {
@@ -757,8 +757,8 @@ void PncSequence::set_machine_sequencer(const std::string &title, MachineSequenc
 		int position_vector[row.size()];
 		int position_vector_length = row.size();
 		std::map<int, PncSeqZone *>::iterator k;
-		
-		/******* STEP 1 - fill in the vector with proper indexes *****/				
+
+		/******* STEP 1 - fill in the vector with proper indexes *****/
 		for(k = row.begin(), i = PncSequencer::sequence_row_offset, j = 0;
 		    k != row.end();
 		    k++, i += step, j++) {
@@ -767,8 +767,8 @@ void PncSequence::set_machine_sequencer(const std::string &title, MachineSequenc
 
 		/******* STEP 2 - Get the loop ids using the position vector *******/
 		mseq->get_loop_ids_at(position_vector, position_vector_length);
-		
-		/******* STEP 3 - update the PncSeqZone fields using the vector ****/		
+
+		/******* STEP 3 - update the PncSeqZone fields using the vector ****/
 		for(k = row.begin(), j = 0; k != row.end(); k++, j++) {
 			char bfr[5];
 			int val = position_vector[j];
@@ -779,7 +779,7 @@ void PncSequence::set_machine_sequencer(const std::string &title, MachineSequenc
 				snprintf(bfr, 5, "%01d %01d", val / 10, val % 10);
 				(*k).second->set_value(bfr);
 			}
-			(*k).second->set_mode(normalZone);			
+			(*k).second->set_mode(normalZone);
 		}
 	}
 }
@@ -806,12 +806,12 @@ void PncSequence::show_tracker() {
 		int step = PncSequencer::sequence_step;
 		int val = -1; // this is "no entry" - look in machine_sequencer.hh
 		std::map<int, PncSeqZone *>::iterator k;
-		
+
 		for(k = row.begin(); k != row.end() && i < MAX_SEQUENCE_LENGTH; k++, i += step) {
 			if((*k).second->get_selected())
 				val = mseq->get_loop_id_at(i);
 		}
-		
+
 		Tracker::show_tracker_for(mseq, val);
 	}
 }
@@ -824,9 +824,19 @@ void PncSequence::show_controls() {
 		Machine *node_to_control = mseq->get_machine();
 
 		if(node_to_control) {
-			std::map<std::string, void *> args;
-			args["node_to_control"] = node_to_control;
-			KammoGUI::EventHandler::trigger_user_event(ue, args);
+			auto name = strdup(node_to_control->get_name().c_str());
+			if(name) {
+				// show the ControlsContainer
+				static KammoGUI::UserEvent *ue = NULL;
+				KammoGUI::get_widget((KammoGUI::Widget **)&ue, "showControlsContainer");
+				if(ue != NULL) {
+					std::map<std::string, void *> args;
+					args["machine_to_control"] = name;
+					KammoGUI::EventHandler::trigger_user_event(ue, args);
+				} else {
+					free(name);
+				}
+			}
 		}
 	}
 }
@@ -853,9 +863,9 @@ void RowNumberColumn::loop_indicator_event(
 	RowNumberColumn *rnc = (RowNumberColumn *)cbd;
 
 	float w = rnc->context->__width / (HORIZONTAL_ZONES);
-	
+
 	switch(ce) {
-	
+
 	case KammoGUI::cvButtonPress:
 		SATAN_DEBUG("RNC button press. Just do tap = true\n");
 		rnc->just_do_tap = true;
@@ -865,11 +875,11 @@ void RowNumberColumn::loop_indicator_event(
 		case PncLoopIndicator::_on_b_:
 			rnc->loop_motion = _set_start_;
 			break;
-			
+
 		case PncLoopIndicator::_on_c_:
 			rnc->loop_motion = _move_loop_;
 			break;
-			
+
 		case PncLoopIndicator::_on_e_:
 		case PncLoopIndicator::_on_:
 			rnc->loop_motion = _set_length_;
@@ -879,9 +889,9 @@ void RowNumberColumn::loop_indicator_event(
 		default:
 			rnc->loop_motion = _ignore_motion_;
 			break;
-			
+
 		}
-		
+
 		break;
 
 	case KammoGUI::cvButtonHold:
@@ -896,7 +906,7 @@ void RowNumberColumn::loop_indicator_event(
 		Machine::jump_to(diff);
 	}
 		break;
-		
+
 	case KammoGUI::cvButtonRelease:
 		SATAN_DEBUG("RNC button release. Just do tap? = %s\n", rnc->just_do_tap ? "true" : "false");
 		if(rnc->just_do_tap) {
@@ -917,7 +927,7 @@ void RowNumberColumn::loop_indicator_event(
 		} else {
 		}
 		break;
-		
+
 	case KammoGUI::cvMotion:
 		SATAN_DEBUG("RNC motion. Just do tap = false\n");
 
@@ -942,7 +952,7 @@ void RowNumberColumn::loop_indicator_event(
 
 					loop_length /= PncSequencer::sequence_step;
 					loop_length *= PncSequencer::sequence_step;
-					
+
 					Machine::set_loop_start(loop_start);
 					Machine::set_loop_length(loop_length);
 					rnc->refresh();
@@ -959,7 +969,7 @@ void RowNumberColumn::loop_indicator_event(
 
 					loop_length /= PncSequencer::sequence_step;
 					loop_length *= PncSequencer::sequence_step;
-					
+
 					Machine::set_loop_start(loop_start);
 					Machine::set_loop_length(loop_length);
 					rnc->refresh();
@@ -975,7 +985,7 @@ void RowNumberColumn::loop_indicator_event(
 
 					loop_length /= PncSequencer::sequence_step;
 					loop_length *= PncSequencer::sequence_step;
-					
+
 					Machine::set_loop_start(loop_start);
 					Machine::set_loop_length(loop_length);
 					rnc->refresh();
@@ -1032,10 +1042,10 @@ void RowNumberColumn::refresh() {
 
 	do_loop = Machine::get_loop_state();
 	loop_start = Machine::get_loop_start();
-	loop_stop = loop_start + Machine::get_loop_length();	
+	loop_stop = loop_start + Machine::get_loop_length();
 
 	PncLoopIndicator::set_loop_on(do_loop);
-	
+
 	for(k = row.begin(), i = PncSequencer::sequence_row_offset;
 	    k != row.end();
 	    k++, i += PncSequencer::sequence_step) {
@@ -1059,7 +1069,7 @@ void RowNumberColumn::refresh() {
 		} else {
 			(*k).second->set_state(PncLoopIndicator::_no_);
 		}
-		
+
 		(*k).second->set_value(bfr);
 	}
 }
@@ -1097,14 +1107,14 @@ void PncSequencer::vertical_scroll(void *cbd, int valu) {
 		seq[diff]->select_row(sel_row, sel_hi);
 		zone_selected(seq[diff], seq[diff], sel_row, sel_hi);
 	}
-	
+
 	refresh_sequencers();
 	rnrcol->refresh();
 }
 
 void PncSequencer::horizontal_scroll(void *cbd, int valu) {
 	valu *= sequence_step;
-	
+
 	int old_of = sequence_row_offset;
 	sequence_row_offset += valu;
 	if(sequence_row_offset < 0) sequence_row_offset = 0;
@@ -1119,8 +1129,8 @@ void PncSequencer::horizontal_scroll(void *cbd, int valu) {
 		seq[sel_seq]->unselect_row(sel_row);
 		seq[sel_seq]->select_row(diff, sel_hi);
 		sel_row = diff;
-	}	
-	
+	}
+
 	refresh_sequencers();
 	rnrcol->refresh();
 }
@@ -1137,13 +1147,13 @@ void PncSequencer::zone_selected(void *cbd, PncSequence *pncs, int row, bool foc
 		sel_seq = found;
 		sel_row = row;
 	}
-	
+
 	sel_hi = focus_left;
 
-	if(mseqs.size() == 1) {		
+	if(mseqs.size() == 1) {
 		phd->set_help_type(PncHelpDisplay::_third_help);
 	}
-	
+
 	// user does NOT want to update sequence_step, but sequence DATA
 	sel_seq_step = false;
 	stz->set_selected(false, false);
@@ -1153,10 +1163,10 @@ void PncSequencer::zone_selected(void *cbd, PncSequence *pncs, int row, bool foc
 void PncSequencer::refresh_sequencers() {
 	if(sequencer_mode != spacing_selected)
 		sequencer_mode = no_selection;
-	
+
 	if(sequence_offset > (int)mseqs.size())
 		sequence_offset = mseqs.size();
-	
+
 	int k;
 
 	// first clear the columns (invisible)
@@ -1165,7 +1175,7 @@ void PncSequencer::refresh_sequencers() {
 	}
 
 	int help_degree = 1;
-	
+
 	// then enable the visible ones
 	std::map<std::string, MachineSequencer *>::iterator i;
 	for(i = mseqs.begin(), k = -sequence_offset;
@@ -1176,7 +1186,7 @@ void PncSequencer::refresh_sequencers() {
 			seq[k]->set_machine_sequencer((*i).first, (*i).second);
 			if(seq[k]->is_selected())
 				sequencer_mode = machine_selected;
-			
+
 		}
 		k++;
 	}
@@ -1195,12 +1205,12 @@ void PncSequencer::refresh_sequencers() {
 	} else {
 		phd->set_help_type(PncHelpDisplay::_no_help);
 	}
-	
+
 	set_row_playing_markers((void *)last_row_playing_marker);
 }
 
 void PncSequencer::machine_sequencer_set_changed(void *ignored) {
-	
+
 	mseqs = MachineSequencer::get_sequencers();
 
 	refresh_sequencers();
@@ -1236,14 +1246,14 @@ PncSequencer::SequencerMode PncSequencer::get_sequencer_mode() {
 
 void PncSequencer::send_keysum(bool button_down, KeySum ksum) {
 	if(button_down) return;
-	
+
 	int ns = sel_seq, nr = sel_row;
 
 	int kval = 0xF00; // 0xF00 == no value set!
 
 	// Observe! 0xf00 means that kval was NOT set
 	// Observe! 0x0f0 is a special code in this function only...(it means that we should unset the current value, to nothing)
-	
+
 	switch(ksum) {
 	case key_alternative:
 	case NO_KEY:
@@ -1253,14 +1263,14 @@ void PncSequencer::send_keysum(bool button_down, KeySum ksum) {
 	case key_blank:
 		kval = 0xf0;
 		break;
-		
+
 	case key_return:
 		return;
 		break;
 	case key_delete:
 		kval = 0xf0;
 		break;
-		
+
 	case key_left:
 		if(sel_hi) {
 			if(!(nr == 0 && sequence_row_offset == 0)) {
@@ -1270,7 +1280,7 @@ void PncSequencer::send_keysum(bool button_down, KeySum ksum) {
 		} else
 			sel_hi = true;
 		break;
-		
+
 	case key_right:
 		if(!sel_hi) {
 			nr++;
@@ -1282,7 +1292,7 @@ void PncSequencer::send_keysum(bool button_down, KeySum ksum) {
 	case key_up:
 		ns--;
 		break;
-		
+
 	case key_down:
 		ns++;
 		if(ns >= (int)mseqs.size()) ns = mseqs.size() - 1;
@@ -1304,7 +1314,7 @@ void PncSequencer::send_keysum(bool button_down, KeySum ksum) {
 	case key_d: kval = 0x0d; break;
 	case key_e: kval = 0x0e; break;
 	case key_f: kval = 0x0f; break;
-		
+
 		break;
 
 	case key_tracker:
@@ -1316,10 +1326,10 @@ void PncSequencer::send_keysum(bool button_down, KeySum ksum) {
 						(*k)->show_tracker();
 					}
 				}
-			}			
+			}
 		}
 		return;
-		
+
 	case key_control_editor:
 		{
 			if(sequencer_mode == machine_selected) {
@@ -1332,7 +1342,7 @@ void PncSequencer::send_keysum(bool button_down, KeySum ksum) {
 			}
 		}
 		return;
-		
+
 	case key_envelope_editor:
 		{
 			if(sequencer_mode == machine_selected) {
@@ -1345,7 +1355,7 @@ void PncSequencer::send_keysum(bool button_down, KeySum ksum) {
 			}
 		}
 		return;
-		
+
 	case key_connector_editor:
 		{
 			static KammoGUI::UserEvent *ue = NULL;
@@ -1354,7 +1364,7 @@ void PncSequencer::send_keysum(bool button_down, KeySum ksum) {
 				KammoGUI::EventHandler::trigger_user_event(ue);
 		}
 		return;
-		
+
 	}
 
 	if(sel_seq_step) {
@@ -1378,7 +1388,7 @@ void PncSequencer::send_keysum(bool button_down, KeySum ksum) {
 
 			sequence_step = value;
 			Machine::register_periodic(sequence_row_playing_changed, sequence_step);
-			
+
 			char bfr[9];
 			snprintf(bfr, 8, "%01d %01d", value / 10, value % 10);
 			stz->set_value(bfr);
@@ -1388,22 +1398,22 @@ void PncSequencer::send_keysum(bool button_down, KeySum ksum) {
 
 		return;
 	}
-	
+
 	// the key value was set
 	if(kval != 0xf00) {
 		nr++; // step forward
-		
+
 		MachineSequencer *msec = seq[sel_seq]->mseq;
 
 		if(msec != NULL) {
 			int position = sequence_row_offset + sel_row * sequence_step;
-			
+
 			int value = msec->get_loop_id_at(position);
 			if(kval == 0xf0) {
 				value = NOTE_NOT_SET;
 			} else {
 				if(value == NOTE_NOT_SET) value = 0x00;
-				
+
 				if(sel_hi) { // set high nibble
 					value %= 10;
 					value = value + kval * 10;
@@ -1412,7 +1422,7 @@ void PncSequencer::send_keysum(bool button_down, KeySum ksum) {
 					value = (value * 10) + kval;
 				}
 			}
-			
+
 			try {
 				msec->set_loop_id_at(position, value);
 			} catch(MachineSequencer::ParameterOutOfSpec poos) {
@@ -1445,7 +1455,7 @@ void PncSequencer::send_keysum(bool button_down, KeySum ksum) {
 
 	// OK, at this stage we should move the cursor.
 	// first we unselect the previous selection
-	if(sel_seq != ns || sel_row != nr) {		
+	if(sel_seq != ns || sel_row != nr) {
 		seq[sel_seq]->unselect_row(sel_row);
 	}
 	// then we select something new
@@ -1479,7 +1489,7 @@ void PncSequencer::init(CanvasWidgetContext *cwc) {
 		h_inch = KammoGUI::DisplayConfiguration::get_screen_height(KammoGUI::inches);
 
 		SATAN_DEBUG("w/h_inch: %f, %f\n", w_inch, h_inch);
-		
+
 		if(w_inch >= 4.0f)
 			HORIZONTAL_ZONES = 15;
 		else if(w_inch >= 3.0f)
@@ -1488,7 +1498,7 @@ void PncSequencer::init(CanvasWidgetContext *cwc) {
 			HORIZONTAL_ZONES = 7;
 		else
 			HORIZONTAL_ZONES = 5;
-		
+
 		if(h_inch >= 6.0f)
 			VERTICAL_ZONES = 18;
 		else if(h_inch >= 5.0f)
@@ -1498,7 +1508,7 @@ void PncSequencer::init(CanvasWidgetContext *cwc) {
 		else
 			VERTICAL_ZONES = 7;
 	}
-	
+
 	int k = 0;
 
 	// basic calculus
@@ -1513,7 +1523,7 @@ void PncSequencer::init(CanvasWidgetContext *cwc) {
 
 	// Row Number column
 	rnrcol = new RowNumberColumn(cwc, HORIZONTAL_ZONES - 1);
-	
+
 	// create sequence columns
 	for(k = 0; k < VERTICAL_ZONES - 1; k++) {
 		seq.push_back(
@@ -1527,7 +1537,7 @@ void PncSequencer::init(CanvasWidgetContext *cwc) {
 
 	int help_w = 6 < HORIZONTAL_ZONES ? 6 : HORIZONTAL_ZONES;
 	int help_h = 3;
-	
+
 	// show some helping phd
 	phd = new PncHelpDisplay(cwc, w, 2 * h, help_w * w, help_h * h, PncHelpDisplay::_first_help);
 	phd->ignore_events();
@@ -1554,7 +1564,7 @@ KammoEventHandler_Declare(PncSequencerHandler,"pncSequencer:refreshProject");
 virtual void on_init(KammoGUI::Widget *wid) {
 	if(wid->get_id() == "pncSequencer") {
 		((KammoGUI::Canvas *)wid)->set_bg_color(1.0f, 1.0f, 1.0f);
-	
+
 		CanvasWidgetContext *cwc =
 			new CanvasWidgetContext((KammoGUI::Canvas *)wid, 2.0f, 2.0f);
 		PncSequencer::init(cwc);

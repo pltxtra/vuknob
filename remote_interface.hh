@@ -58,7 +58,9 @@ protected:
 
 		class NoSuchKey : public std::runtime_error {
 		public:
-			NoSuchKey() : runtime_error("No such key in message.") {}
+			const char *keyname;
+
+			NoSuchKey(const char *_keyname) : runtime_error("No such key in message."), keyname(_keyname) {}
 			virtual ~NoSuchKey() {}
 		};
 
@@ -517,6 +519,7 @@ public:
 		std::multimap<int32_t, std::pair<std::string, std::string> > connection_data; // [source machine objid]->(output name, input name)
 		std::vector<std::string> inputs;
 		std::vector<std::string> outputs;
+		std::vector<std::string> controller_groups;
 
 		std::string name, sibling;
 		std::string type;

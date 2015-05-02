@@ -62,7 +62,7 @@ using namespace std;
 //#define __DO_SATAN_DEBUG
 #include "satan_debug.hh"
 
-KammoEventHandler_Declare(ControllerHandler,"showControlsContainer:cgroups");
+KammoEventHandler_Declare(ControllerHandlerOld,"showControlsContainer:cgroups");
 
 std::vector<KammoGUI::Widget *> erasable_widgets;
 class MyScale : public KammoGUI::Scale {
@@ -418,4 +418,4 @@ virtual void on_user_event(KammoGUI::UserEvent *ue, std::map<std::string, void *
 	}
 }
 
-KammoEventHandler_Instance(ControllerHandler);
+KammoEventHandler_Instance(ControllerHandlerOld);

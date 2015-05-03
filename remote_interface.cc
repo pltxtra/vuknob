@@ -1400,6 +1400,26 @@ std::vector<std::string> RemoteInterface::RIMachine::get_controller_groups() {
 	return controller_groups;
 }
 
+std::vector<std::string> RemoteInterface::RIMachine::get_controller_names(const std::string &group_name) {
+	std::vector<std::string> retval;
+
+	send_object_message(
+		[this, &group_name](std::shared_ptr<Message> &msg2send) {
+			msg2send->set_value("command", "get_ctrl_names");
+			msg2send->set_value("grname", group_name);
+		},
+
+		[this, &retval](const Message *reply_message) {
+			if(reply_message) {
+				Serializer<std::vector<std::string> > deserializor;
+				retval = deserializor.deserialize(reply_message->get_value("ctrlnames"));
+			}
+		}
+		);
+
+	return retval;
+}
+
 std::string RemoteInterface::RIMachine::get_name() {
 	std::lock_guard<std::mutex> lock_guard(base_object_mutex);
 	return name;
@@ -1830,6 +1850,22 @@ void RemoteInterface::RIMachine::process_message(Server *context, MessageHandler
 			// not a MachineSequencer
 			throw Context::FailureResponse("Not a MachineSequencer object.");
 		}
+	} else if(command == "get_ctrl_names") {
+		SATAN_DEBUG("Will send get_ctrl_names reply...\n");
+
+		auto group_name = msg.get_value("grname");
+
+		std::shared_ptr<Message> reply = context->acquire_reply(msg);
+		Serializer<std::vector<std::string> > serializor;
+
+		if(group_name == "") {
+			reply->set_value("ctrlnames", serializor.serialize(real_machine_ptr->get_controller_names()));
+		} else {
+			reply->set_value("ctrlnames", serializor.serialize(real_machine_ptr->get_controller_names(group_name)));
+		}
+
+		src->deliver_message(reply);
+		SATAN_DEBUG("Reply delivered...\n");
 	}
 }
 

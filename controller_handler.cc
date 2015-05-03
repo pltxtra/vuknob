@@ -308,21 +308,15 @@ void add_scale(KammoGUI::Container *cnt,
 	cnt->add(*int_cnt);
 }
 
-void rebuild_controller_list(Machine *m, std::string group_name) {
+void rebuild_controller_list(std::shared_ptr<RemoteInterface::RIMachine> ri_m, Machine *m, std::string group_name) {
 	static KammoGUI::Container *cnt = NULL;
 	KammoGUI::get_widget((KammoGUI::Widget **)&cnt, "controllerScroller");
+
 	cnt->clear();
 
-	std::vector<std::string> c_names;
+	SATAN_DEBUG("SHOW CONTROLLER GROUP (using RIMachine, partial): %s\n", group_name.c_str());
 
-	SATAN_DEBUG("SHOW CONTROLLER GROUP: %s\n", group_name.c_str());
-
-	if(group_name != "")
-		c_names = m->get_controller_names(group_name);
-	else
-		c_names = m->get_controller_names();
-
-	std::set<std::string>::iterator k;
+	auto c_names = ri_m->get_controller_names(group_name);
 
 	for(auto k : c_names) {
 		SATAN_DEBUG("   CONTROLLER: %s\n", k.c_str());
@@ -368,7 +362,7 @@ std::string refresh_groups(std::shared_ptr<RemoteInterface::RIMachine> m) {
 	return first_group;
 }
 
-void refresh_controllers(Machine *m, std::string first_group) {
+void refresh_controllers(std::shared_ptr<RemoteInterface::RIMachine> ri_m, Machine *m, std::string first_group) {
 	static KammoGUI::List *groups = NULL;
 	KammoGUI::get_widget((KammoGUI::Widget **)&groups, "cgroups");
 
@@ -379,7 +373,7 @@ void refresh_controllers(Machine *m, std::string first_group) {
 		// ignore
 	}
 
-	rebuild_controller_list(m , first_group);
+	rebuild_controller_list(ri_m, m , first_group);
 
 }
 
@@ -387,7 +381,7 @@ virtual void on_select_row(KammoGUI::Widget *widget, KammoGUI::List::iterator ro
 	if(widget->get_id() == "cgroups") {
 		std::string group_name = ((KammoGUI::List *)widget)->get_value(row, 0);
 		SATAN_DEBUG("--- SELECTED CONTROLLER GROUP: %s\n", group_name.c_str());
-		rebuild_controller_list(current_machine, group_name);
+		rebuild_controller_list(current_ri_machine, current_machine, group_name);
 	}
 }
 
@@ -421,7 +415,7 @@ virtual void on_user_event(KammoGUI::UserEvent *ue, std::map<std::string, void *
 	}
 
 	if(current_machine != NULL) {
-		refresh_controllers(current_machine, first_group);
+		refresh_controllers(current_ri_machine, current_machine, first_group);
 	}
 }
 

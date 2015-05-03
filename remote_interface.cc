@@ -1395,6 +1395,10 @@ void RemoteInterface::RIMachine::detach_input(std::shared_ptr<RIMachine> source_
 	}
 }
 
+std::vector<std::string> RemoteInterface::RIMachine::get_controller_groups() {
+	std::lock_guard<std::mutex> lock_guard(base_object_mutex);
+	return controller_groups;
+}
 
 std::string RemoteInterface::RIMachine::get_name() {
 	std::lock_guard<std::mutex> lock_guard(base_object_mutex);

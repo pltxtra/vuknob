@@ -59,10 +59,14 @@ using namespace std;
 
 #include "controller_handler.hh"
 
-//#define __DO_SATAN_DEBUG
+#define __DO_SATAN_DEBUG
 #include "satan_debug.hh"
 
 KammoEventHandler_Declare(ControllerHandlerOld,"showControlsContainer:cgroups");
+
+std::shared_ptr<ControllerHandler> chndl = std::make_shared<ControllerHandler>();
+Machine *current_machine = NULL;
+std::shared_ptr<RemoteInterface::RIMachine> current_ri_machine;
 
 std::vector<KammoGUI::Widget *> erasable_widgets;
 class MyScale : public KammoGUI::Scale {
@@ -343,7 +347,7 @@ void rebuild_controller_list(Machine *m, std::string group_name) {
 	}
 }
 
-std::string refresh_groups(Machine *m) {
+std::string refresh_groups(std::shared_ptr<RemoteInterface::RIMachine> m) {
 	static KammoGUI::List *groups = NULL;
 	KammoGUI::get_widget((KammoGUI::Widget **)&groups, "cgroups");
 	groups->clear();
@@ -379,8 +383,6 @@ void refresh_controllers(Machine *m, std::string first_group) {
 
 }
 
-Machine *current_machine = NULL;
-
 virtual void on_select_row(KammoGUI::Widget *widget, KammoGUI::List::iterator row) {
 	if(widget->get_id() == "cgroups") {
 		std::string group_name = ((KammoGUI::List *)widget)->get_value(row, 0);
@@ -402,6 +404,11 @@ virtual void on_user_event(KammoGUI::UserEvent *ue, std::map<std::string, void *
 				data = m;
 			}
 		}
+
+		current_ri_machine = chndl->get_machine_by_name(m_name);
+		if(current_ri_machine) {
+			SATAN_DEBUG("ControllerHandler got the RI Machine: %s\n", current_ri_machine->get_name().c_str());
+		}
 	}
 
 	std::string first_group = "";
@@ -409,7 +416,7 @@ virtual void on_user_event(KammoGUI::UserEvent *ue, std::map<std::string, void *
 	if(ue->get_id() == "showControlsContainer") {
 		if(data != NULL) {
 			current_machine = (Machine *)data;
-			first_group = refresh_groups(current_machine);
+			first_group = refresh_groups(current_ri_machine);
 		}
 	}
 
@@ -418,4 +425,38 @@ virtual void on_user_event(KammoGUI::UserEvent *ue, std::map<std::string, void *
 	}
 }
 
+virtual void on_init(KammoGUI::Widget *wid) {
+	if(wid->get_id() == "cgroups") {
+		RemoteInterface::Client::register_ri_machine_set_listener(chndl);
+	}
+}
+
 KammoEventHandler_Instance(ControllerHandlerOld);
+
+void ControllerHandler::ri_machine_registered(std::shared_ptr<RemoteInterface::RIMachine> ri_machine) {
+	KammoGUI::run_on_GUI_thread(
+		[this, ri_machine]() {
+			machines[ri_machine->get_name()] = ri_machine;
+		}
+		);
+}
+
+void ControllerHandler::ri_machine_unregistered(std::shared_ptr<RemoteInterface::RIMachine> ri_machine) {
+	KammoGUI::run_on_GUI_thread(
+		[this, ri_machine]() {
+			auto mch = machines.find(ri_machine->get_name());
+			if(mch != machines.end()) machines.erase(mch);
+		}
+		);
+}
+
+std::shared_ptr<RemoteInterface::RIMachine> ControllerHandler::get_machine_by_name(const std::string &name) {
+	std::shared_ptr<RemoteInterface::RIMachine> retval;
+
+	auto mch = machines.find(name);
+	if(mch != machines.end()) {
+		retval = (*mch).second;
+	}
+
+	return retval;
+}

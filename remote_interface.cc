@@ -194,15 +194,43 @@ private:
 	std::function<ElementT(const std::string &str)> string_to_element;
 };
 
-/*
+
 class ItemSerializer {
 private:
 	std::stringstream result_stream;
 
 public:
 
+	void serialize(const std::string &v) {
+		result_stream << "str;" << encode_string(v) << ";";
+	}
+
+	void serialize(bool v) {
+		result_stream << "bool;" << (v ? "true" : "false") << ";";
+	}
+
+	void serialize(int v) {
+		result_stream << "int;" << v << ";";
+	}
+
+	void serialize(unsigned int v) {
+		result_stream << "uint;" << v << ";";
+	}
+
+	void serialize(float v) {
+		result_stream << "float;" << v << ";";
+	}
+
+	void serialize(double v) {
+		result_stream << "double;" << v << ";";
+	}
+
 	template <class ContainerT>
 	void serialize(const ContainerT &elements);
+
+	std::string result() {
+		return encode_string(result_stream.str());
+	}
 };
 
 template <class ContainerT>
@@ -212,7 +240,26 @@ void ItemSerializer::serialize(const ContainerT &elements) {
 	for(auto element : elements) {
 		subser.serialize(element);
 	}
+
+	result_stream << "container;" << subser.result() << ";";
 }
+
+/*
+class ItemDeserializer {
+private:
+	std::istringstream is;
+
+	bool is_of_type(const std::string &type_identifier) {
+		std::string type;
+		std::getline(is, type, ';');
+
+		return type == type_identifier;
+	}
+
+public:
+	ItemDeserializer(const std::string input) : is(decode_string(input)) {}
+
+};
 */
 
 /***************************
@@ -1927,7 +1974,96 @@ void RemoteInterface::RIMachine::cleanup_stray_controllers() {
 }
 
 std::string RemoteInterface::RIMachine::serialize_controller(Machine::Controller *ctrl) {
-	return "";
+	ItemSerializer iser;
+
+	iser.serialize(ctrl->get_name());
+	iser.serialize(ctrl->get_title());
+
+	int type_i = (int)RIController::ric_int;
+	{
+		switch(ctrl->get_type()) {
+		case Machine::Controller::c_int:
+			type_i = (int)RIController::ric_int;
+			break;
+		case Machine::Controller::c_float:
+			type_i = (int)RIController::ric_float;
+			break;
+		case Machine::Controller::c_bool:
+			type_i = (int)RIController::ric_bool;
+			break;
+		case Machine::Controller::c_string:
+			type_i = (int)RIController::ric_string;
+			break;
+		case Machine::Controller::c_enum:
+			type_i = (int)RIController::ric_enum;
+			break;
+		case Machine::Controller::c_sigid:
+			type_i = (int)RIController::ric_sigid;
+			break;
+		}
+
+		iser.serialize(type_i);
+	}
+
+	switch(type_i) {
+	case RIController::ric_float: {
+		float min, max, step, value;
+		ctrl->get_min(min);
+		ctrl->get_max(max);
+		ctrl->get_step(step);
+		ctrl->get_value(value);
+
+		iser.serialize(min);
+		iser.serialize(max);
+		iser.serialize(step);
+		iser.serialize(value);
+	} break;
+
+	case RIController::ric_int:
+	case RIController::ric_enum:
+	case RIController::ric_sigid: {
+		int min, max, step, value;
+		ctrl->get_min(min);
+		ctrl->get_max(max);
+		ctrl->get_step(step);
+		ctrl->get_value(value);
+
+		iser.serialize(min);
+		iser.serialize(max);
+		iser.serialize(step);
+		iser.serialize(value);
+
+		if(type_i == RIController::ric_enum) {
+			std::vector<std::string> enum_names;
+			for(auto k = min; k < max; k += step) {
+				enum_names.push_back(ctrl->get_value_name(k));
+			}
+
+			iser.serialize(enum_names);
+		}
+	} break;
+
+	case RIController::ric_bool: {
+		bool value;
+		ctrl->get_value(value);
+		iser.serialize(value);
+	} break;
+
+	case RIController::ric_string: {
+		std::string value;
+		ctrl->get_value(value);
+		iser.serialize(value);
+	} break;
+
+	}
+
+	int coarse_controller = -1, fine_controller = -1;
+	(void) /*ignore return value */ ctrl->has_midi_controller(coarse_controller, fine_controller);
+
+	iser.serialize(coarse_controller);
+	iser.serialize(fine_controller);
+
+	return iser.result();
 }
 
 std::string RemoteInterface::RIMachine::process_get_ctrl_message(const std::string &ctrl_name, MessageHandler *src) {

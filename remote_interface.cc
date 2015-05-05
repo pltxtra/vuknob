@@ -194,6 +194,27 @@ private:
 	std::function<ElementT(const std::string &str)> string_to_element;
 };
 
+/*
+class ItemSerializer {
+private:
+	std::stringstream result_stream;
+
+public:
+
+	template <class ContainerT>
+	void serialize(const ContainerT &elements);
+};
+
+template <class ContainerT>
+void ItemSerializer::serialize(const ContainerT &elements) {
+	ItemSerializer subser;
+
+	for(auto element : elements) {
+		subser.serialize(element);
+	}
+}
+*/
+
 /***************************
  *
  *  Class RemoteInterface::Message
@@ -1214,7 +1235,6 @@ RemoteInterface::RIMachine::RIMachine(const Factory *factory, const Message &ser
 
 RemoteInterface::RIMachine::RIMachine(int32_t new_obj_id, const Factory *factory) : BaseObject(new_obj_id, factory) {}
 
-
 void RemoteInterface::RIMachine::parse_serialized_midi_ctrl_list(std::string serialized) {
 	std::stringstream is(serialized);
 
@@ -1413,6 +1433,24 @@ std::vector<std::string> RemoteInterface::RIMachine::get_controller_names(const 
 			if(reply_message) {
 				Serializer<std::vector<std::string> > deserializor;
 				retval = deserializor.deserialize(reply_message->get_value("ctrlnames"));
+			}
+		}
+		);
+
+	return retval;
+}
+
+auto RemoteInterface::RIMachine::get_controller(const std::string &controller_name) -> std::shared_ptr<RIController> {
+	std::shared_ptr<RIController> retval;
+
+	send_object_message(
+		[this, &controller_name](std::shared_ptr<Message> &msg2send) {
+			msg2send->set_value("command", "get_ctrl");
+			msg2send->set_value("ctrlname", controller_name);
+		},
+
+		[this, &retval](const Message *reply_message) {
+			if(reply_message) {
 			}
 		}
 		);
@@ -1866,7 +1904,58 @@ void RemoteInterface::RIMachine::process_message(Server *context, MessageHandler
 
 		src->deliver_message(reply);
 		SATAN_DEBUG("Reply delivered...\n");
+	} else if(command == "get_ctrl") {
+		SATAN_DEBUG("Will send get_ctrl reply...\n");
+
+		std::shared_ptr<Message> reply = context->acquire_reply(msg);
+		reply->set_value("ctrl", process_get_ctrl_message(msg.get_value("ctrlname"), src));
+		src->deliver_message(reply);
+
+		SATAN_DEBUG("Reply delivered...\n");
 	}
+}
+
+void RemoteInterface::RIMachine::cleanup_stray_controllers() {
+	auto c2cc = client2ctrl_container.begin();
+	while(c2cc != client2ctrl_container.end()) {
+		if(auto c = (*c2cc).first.lock()) { // if the c is still valid, JUST continue
+			c2cc++;
+		} else { // otherwise ERASE the container, THEN continue
+			c2cc = client2ctrl_container.erase(c2cc);
+		}
+	}
+}
+
+std::string RemoteInterface::RIMachine::serialize_controller(Machine::Controller *ctrl) {
+	return "";
+}
+
+std::string RemoteInterface::RIMachine::process_get_ctrl_message(const std::string &ctrl_name, MessageHandler *src) {
+	std::shared_ptr<ServerSideControllerContainer> sscc;
+	std::string retval;
+
+	auto src_sp = src->shared_from_this();
+
+	// first try to find the proper ServerSideControllerContainer, if none - create it
+	auto sscc_i = client2ctrl_container.find(src_sp);
+	if(sscc_i == client2ctrl_container.end()) {
+		sscc = std::make_shared<ServerSideControllerContainer>();
+		client2ctrl_container[src_sp] = sscc;
+	} else sscc = (*sscc_i).second;
+
+	// then we locate a free id
+	if(sscc) {
+		auto new_id = sscc->get_id();
+		auto ctrl = real_machine_ptr->get_controller(ctrl_name);
+
+		sscc->id2ctrl[new_id] = ctrl;
+
+		retval = serialize_controller(ctrl);
+	}
+
+	cleanup_stray_controllers();
+
+	return retval;
 }
 
 void RemoteInterface::RIMachine::process_attach_message(Context *context, const Message &msg) {

@@ -40,6 +40,8 @@
 #include <asio.hpp>
 #include <thread>
 
+#include "common.hh"
+
 #define RI_LOOP_NOT_SET -1
 
 class RemoteInterface {
@@ -421,8 +423,11 @@ public:
 					       const std::string dst_input) = 0;
 		};
 
-		class Controller {
+		class RIController {
+		private:
+			int ctrl_id;
 		public:
+
 			enum Type {
 				ric_int = 0,
 				ric_float = 1,
@@ -453,6 +458,8 @@ public:
 			void set_value(float &val);
 			void set_value(bool &val);
 			void set_value(std::string &val);
+
+			std::string serialize();
 		};
 
 		/// get a hint about what this machine is (for example, "effect" or "generator")
@@ -462,8 +469,8 @@ public:
 		std::vector<std::string> get_controller_groups();
 		/// Returns the set of all controller names in a given group
 		std::vector<std::string> get_controller_names(const std::string &group_name);
-		/// Return a Controller object
-		std::shared_ptr<Controller> get_controller(const std::string &controller_name);
+		/// Return a RIController object
+		std::shared_ptr<RIController> get_controller(const std::string &controller_name);
 
 		std::string get_name();
 		std::string get_sibling_name();
@@ -503,6 +510,18 @@ public:
 		virtual void on_delete(Client *context); // called on client side when it's about to be deleted
 
 	private:
+		class ServerSideControllerContainer : public IDAllocator {
+		public:
+			std::map<int32_t, Machine::Controller *> id2ctrl; // map Controller id to Machine::Controller
+
+			~ServerSideControllerContainer() {
+				for(auto i2ct : id2ctrl) {
+					delete i2ct.second;
+				}
+			}
+
+		};
+
 		class RIMachineFactory : public Factory {
 		public:
 			RIMachineFactory();
@@ -521,11 +540,26 @@ public:
 		std::vector<std::string> outputs;
 		std::vector<std::string> controller_groups;
 
+		// map a weak ptr representing the ClientAgent to a ServerSideControllerContainer
+		std::map<std::weak_ptr<MessageHandler>,
+			 std::shared_ptr<ServerSideControllerContainer>,
+			 std::owner_less<std::weak_ptr<MessageHandler> >
+			 > client2ctrl_container;
+
 		std::string name, sibling;
 		std::string type;
 		Machine *real_machine_ptr = nullptr;
 		double xpos, ypos;
 		std::set<std::string> midi_controllers;
+
+		// clean up Controller objects for disconnected clients
+		void cleanup_stray_controllers();
+
+		// serialize a Controller into a std::string
+		std::string serialize_controller(Machine::Controller *ctrl);
+
+		// returns a serialized controller representation
+ 		std::string process_get_ctrl_message(const std::string &ctrl_name, MessageHandler *src);
 
 		void process_attach_message(Context *context, const Message &msg);
 		void process_detach_message(Context *context, const Message &msg);

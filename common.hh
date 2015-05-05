@@ -17,6 +17,13 @@
  *
  */
 
+#ifndef COMMON_HH
+#define COMMON_HH
+
+#include <set>
+#include <stdint.h>
+#include <stdexcept>
+
 /***************************
  *
  * Useful macros and constants
@@ -30,6 +37,44 @@
 #ifdef ANDROID
 extern const char *KAMOFLAGE_ANDROID_ROOT_DIRECTORY;
 #endif
+
+class IDAllocator {
+private:
+	std::set<uint32_t> available_ids;
+
+	uint32_t total_amount;
+public:
+	class IDFreedTwice : public std::runtime_error {
+	public:
+		IDFreedTwice() : runtime_error("Tried to free an ID twice.") {}
+		virtual ~IDFreedTwice() {}
+	};
+
+	IDAllocator(uint32_t initial_size = 32) : total_amount(initial_size) {
+		for(uint32_t x = 0; x < initial_size; x++) {
+			available_ids.insert(x);
+		}
+	}
+
+	uint32_t get_id() {
+		uint32_t retval = total_amount;
+
+		if(available_ids.size() > 0) {
+			auto iter = available_ids.begin();
+			retval = *iter;
+			available_ids.erase(iter);
+		} else total_amount++;
+
+		return retval;
+	}
+
+	void free_id(uint32_t id) {
+		if(available_ids.find(id) != available_ids.end())
+			throw IDFreedTwice();
+
+		available_ids.insert(id);
+	}
+};
 
 /**************************
  *
@@ -45,14 +90,14 @@ extern const char *KAMOFLAGE_ANDROID_ROOT_DIRECTORY;
 #include <stdlib.h>
 
 namespace std {
-	
+
 	template <typename T>
 	inline string to_string(T value) {
 		ostringstream os ;
 		os << value ;
 		return os.str() ;
 	}
-	
+
 	inline long stol(const string &str) {
 		return atol(str.c_str());
 	}
@@ -63,3 +108,5 @@ namespace std {
 };
 
 #endif
+
+#endif // COMMON_HH

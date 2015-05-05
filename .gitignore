@@ -35,3 +35,5 @@ dynlib/testing123.mp3
 dynlib/vocoder.ogg
 dynlib/whistle.wav
 pathvariable.cc~
+*.png
+*~

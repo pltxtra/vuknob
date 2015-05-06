@@ -105,6 +105,18 @@ namespace std {
 	inline int stoi(const string &str) {
 		return atoi(str.c_str());
 	}
+
+	inline float stof(const string &str) {
+		return strtof(str.c_str(), 0);
+	}
+
+	inline double stod(const string &str) {
+		return strtod(str.c_str(), 0);
+	}
+
+	inline unsigned long stoul(const string &str) {
+		return strtoul(str.c_str(), 0, 0);
+	}
 };
 
 #endif

@@ -82,6 +82,9 @@ public class VuknobAndroidAudio {
 		known_devices.put("m7", __PLAYBACK_OPENSL_DIRECT);
 		// zeroflte (aka Galaxy S6) does not sound good in direct mode, so we set it to buffered mode.
 		known_devices.put("zeroflte", __PLAYBACK_OPENSL_BUFFERED);
+		// flounder (aka Nexus 9)
+		known_devices.put("flounder", __PLAYBACK_OPENSL_DIRECT);
+
 
 		/** IF THE DEVICE IS UNKNOWN; RETURN DEFAULT SETTING ****/
 		// Previousoly we would default to direct mode (the recommended mode by Google - that isn't working on Nexus 5 as of September 2014... go figure...)

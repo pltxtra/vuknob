@@ -147,54 +147,6 @@ static std::string encode_string(const std::string &uncoded) {
 	return output;
 }
 
-template <class ContainerT>
-class Serializer {
-public:
-	typedef typename ContainerT::value_type ElementT;
-
-	Serializer() {
-		element_to_string = [](ElementT e) -> std::string {
-			return e;
-		};
-
-		string_to_element = [](std::string str) -> ElementT {
-			return str;
-		};
-	}
-
-	std::string serialize(const ContainerT &elements) {
-		std::stringstream serialized;
-
-		for(auto element : elements) {
-			serialized << encode_string(element_to_string(element)) << ";";
-		}
-
-		return encode_string(serialized.str());
-	}
-
-	ContainerT deserialize(const std::string &serialized) {
-		ContainerT retval;
-
-		std::istringstream is(decode_string(serialized));
-
-		std::string val;
-
-		std::getline(is, val, ';');
-		while(!is.eof() && val != "") {
-			retval.push_back(string_to_element(decode_string(val)));
-
-			std::getline(is, val, ';');
-		}
-
-		return retval;
-	}
-
-private:
-	std::function<std::string(const ElementT &e)> element_to_string;
-	std::function<ElementT(const std::string &str)> string_to_element;
-};
-
-
 class ItemSerializer {
 private:
 	std::stringstream result_stream;
@@ -202,7 +154,7 @@ private:
 public:
 
 	void serialize(const std::string &v) {
-		result_stream << "str;" << encode_string(v) << ";";
+		result_stream << "string;" << encode_string(v) << ";";
 	}
 
 	void serialize(bool v) {
@@ -241,26 +193,127 @@ void ItemSerializer::serialize(const ContainerT &elements) {
 		subser.serialize(element);
 	}
 
-	result_stream << "container;" << subser.result() << ";";
+	result_stream << "container;" << encode_string(subser.result()) << ";";
 }
 
-/*
 class ItemDeserializer {
+public:
+	class UnexpectedTypeWhenDeserializing : public std::runtime_error {
+	public:
+		UnexpectedTypeWhenDeserializing() : runtime_error("Found unexpected type when trying to deserialize object.") {}
+		virtual ~UnexpectedTypeWhenDeserializing() {}
+	};
+
+	class UnexpectedEndWhenDeserializing : public std::runtime_error {
+	public:
+		UnexpectedEndWhenDeserializing() : runtime_error("Found unexpected end of string input when trying to deserialize object.") {}
+		virtual ~UnexpectedEndWhenDeserializing() {}
+	};
+
 private:
 	std::istringstream is;
 
-	bool is_of_type(const std::string &type_identifier) {
+	inline void verify_type(const std::string &type_identifier) {
+
 		std::string type;
 		std::getline(is, type, ';');
+		if(is.eof()) throw UnexpectedEndWhenDeserializing();
 
-		return type == type_identifier;
+		SATAN_DEBUG("verify_type(%s) (eof: %s) -> %s\n", type_identifier.c_str(), is.eof() ? "true" : "false", type.c_str());
+
+		if(type == type_identifier) return;
+
+		SATAN_DEBUG(" expected type [%s] but found [%s]\n", type_identifier.c_str(), type.c_str());
+
+		throw UnexpectedTypeWhenDeserializing();
 	}
 
-public:
-	ItemDeserializer(const std::string input) : is(decode_string(input)) {}
+	inline void get_string(std::string &val) {
 
+		std::getline(is, val, ';');
+		if(is.eof()) throw UnexpectedEndWhenDeserializing();
+
+		SATAN_DEBUG("get_string() (eof: %s)-> %s\n", is.eof() ? "true" : "false", val.c_str());
+	}
+
+#define __ITD_GET_STRING(name) std::string name; get_string(name);
+public:
+	ItemDeserializer(const std::string input) : is(decode_string(input)) {
+		SATAN_DEBUG("ItemDeserializer() -> %s\n", decode_string(input).c_str());
+	}
+
+	void deserialize(std::string &v) {
+		verify_type("string");
+
+		__ITD_GET_STRING(val_s);
+		v = decode_string(val_s);
+	}
+
+	void deserialize(bool &v) {
+		verify_type("bool");
+
+		__ITD_GET_STRING(val_s);
+		v = (val_s == "true") ? true : false;
+	}
+
+	void deserialize(int &v) {
+		verify_type("int");
+
+		__ITD_GET_STRING(val_s);
+		v = std::stoi(val_s);
+	}
+
+	void deserialize(unsigned int &v) {
+		verify_type("uint");
+
+		__ITD_GET_STRING(val_s);
+		v = (unsigned int)std::stoul(val_s);
+	}
+
+	void deserialize(float &v) {
+		verify_type("float");
+
+		__ITD_GET_STRING(val_s);
+		v = std::stof(val_s);
+	}
+
+	void deserialize(double &v) {
+		verify_type("double");
+
+		__ITD_GET_STRING(val_s);
+		v = std::stod(val_s);
+	}
+
+	template <class ContainerT>
+	void deserialize(ContainerT &elements);
+
+	bool eof() {
+		return is.eof();
+	}
 };
-*/
+
+template <class ContainerT>
+void ItemDeserializer::deserialize(ContainerT &elements) {
+	typedef typename ContainerT::value_type ElementT;
+
+	verify_type("container");
+
+	__ITD_GET_STRING(subserialized);
+
+	SATAN_DEBUG("Will deserialize container [%s]\n", decode_string(subserialized).c_str());
+
+	ItemDeserializer subdeser(decode_string(subserialized));
+
+	ElementT element;
+	while(!subdeser.eof()) {
+		try {
+			subdeser.deserialize(element);
+			elements.push_back(element);
+		} catch(UnexpectedEndWhenDeserializing& ignored) {
+			/* ignore - this indicates end of contained data */
+		}
+	}
+}
 
 /***************************
  *
@@ -1272,8 +1325,8 @@ RemoteInterface::RIMachine::RIMachine(const Factory *factory, const Message &ser
 		parse_io(outputs, serialized.get_value("outputs"));
 	} catch(Message::NoSuchKey &e) { /* ignore empty inputs */ }
 
-	Serializer<std::vector<std::string> > deserializor;
-	controller_groups = deserializor.deserialize(serialized.get_value("ctrgroups"));
+	ItemDeserializer deserializor(serialized.get_value("ctrgroups"));
+	deserializor.deserialize(controller_groups);
 	SATAN_DEBUG("Client, RIMachine::RIMachine(%s) - controller_groups [%s]:\n", name.c_str(), serialized.get_value("ctrgroups").c_str());
 	for(auto ctgr : controller_groups) {
 		SATAN_DEBUG("  ctr group: %s\n", ctgr.c_str());
@@ -1478,8 +1531,8 @@ std::vector<std::string> RemoteInterface::RIMachine::get_controller_names(const 
 
 		[this, &retval](const Message *reply_message) {
 			if(reply_message) {
-				Serializer<std::vector<std::string> > deserializor;
-				retval = deserializor.deserialize(reply_message->get_value("ctrlnames"));
+				ItemDeserializer deserializor(reply_message->get_value("ctrlnames"));
+				deserializor.deserialize(retval);
 			}
 		}
 		);
@@ -1941,13 +1994,14 @@ void RemoteInterface::RIMachine::process_message(Server *context, MessageHandler
 		auto group_name = msg.get_value("grname");
 
 		std::shared_ptr<Message> reply = context->acquire_reply(msg);
-		Serializer<std::vector<std::string> > serializor;
+		ItemSerializer serializor;
 
 		if(group_name == "") {
-			reply->set_value("ctrlnames", serializor.serialize(real_machine_ptr->get_controller_names()));
+			serializor.serialize(real_machine_ptr->get_controller_names());
 		} else {
-			reply->set_value("ctrlnames", serializor.serialize(real_machine_ptr->get_controller_names(group_name)));
+			serializor.serialize(real_machine_ptr->get_controller_names(group_name));
 		}
+		reply->set_value("ctrlnames", serializor.result());
 
 		src->deliver_message(reply);
 		SATAN_DEBUG("Reply delivered...\n");
@@ -2240,8 +2294,9 @@ void RemoteInterface::RIMachine::serialize(std::shared_ptr<Message> &target) {
 	}
 
 	{
-		Serializer<std::vector<std::string> > serializor;
-		target->set_value("ctrgroups", serializor.serialize(real_machine_ptr->get_controller_groups()));
+		ItemSerializer serializor;
+		serializor.serialize(real_machine_ptr->get_controller_groups());
+		target->set_value("ctrgroups", serializor.result());
 	}
 }
 

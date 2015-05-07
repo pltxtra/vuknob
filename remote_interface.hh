@@ -435,8 +435,11 @@ public:
 				ric_sigid = 5 // integer values map to sample bank index
 			};
 
-			RIController(Machine::Controller *ctrl);
-			RIController(const std::string serialized);
+			RIController(int ctrl_id, Machine::Controller *ctrl);
+			RIController(std::function<
+					     void(std::function<void(std::shared_ptr<Message> &msg_to_send)> )
+					     >  _send_obj_message,
+				     const std::string &serialized);
 
 			std::string get_name(); // name of the control
 			std::string get_title(); // user displayable title
@@ -460,11 +463,18 @@ public:
 			void set_value(bool &val);
 			void set_value(std::string &val);
 
-			std::string serialize_controller(Machine::Controller *ctrl);
+			std::string get_serialized_controller();
 		private:
+			std::function<
+			void(std::function<void(std::shared_ptr<Message> &msg_to_send)> )
+			>  send_obj_message;
+
+			template <class SerderClassT>
+			void serderize_controller(SerderClassT &serder); // serder is an either an ItemSerializer or ItemDeserializer object.
+
 			int ctrl_id = -1;
 
-			Type ct_type = ric_int;
+			int ct_type = ric_int; //using enum Type values, but need to be explicitly stored as an integer
 			std::string name, title;
 
 			struct data_f {

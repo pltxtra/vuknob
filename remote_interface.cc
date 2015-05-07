@@ -153,44 +153,57 @@ private:
 
 public:
 
-	void serialize(const std::string &v) {
+	void process(const std::string &v) {
 		result_stream << "string;" << encode_string(v) << ";";
 	}
 
-	void serialize(bool v) {
+	void process(bool v) {
 		result_stream << "bool;" << (v ? "true" : "false") << ";";
 	}
 
-	void serialize(int v) {
+	void process(int v) {
 		result_stream << "int;" << v << ";";
 	}
 
-	void serialize(unsigned int v) {
+	void process(unsigned int v) {
 		result_stream << "uint;" << v << ";";
 	}
 
-	void serialize(float v) {
+	void process(float v) {
 		result_stream << "float;" << v << ";";
 	}
 
-	void serialize(double v) {
+	void process(double v) {
 		result_stream << "double;" << v << ";";
 	}
 
+	template <typename U, typename V>
+	void process(const std::pair<U,V> &pair);
+
 	template <class ContainerT>
-	void serialize(const ContainerT &elements);
+	void process(const ContainerT &elements);
 
 	std::string result() {
 		return encode_string(result_stream.str());
 	}
 };
 
+template <typename U, typename V>
+void ItemSerializer::process(const std::pair<U,V> &pair) {
+	ItemSerializer subser;
+
+	subser.process(pair.first);
+	subser.process(pair.second);
+
+	result_stream << "pair;" << encode_string(subser.result()) << ";";
+}
+
 template <class ContainerT>
-void ItemSerializer::serialize(const ContainerT &elements) {
+void ItemSerializer::process(const ContainerT &elements) {
 	ItemSerializer subser;
 
 	for(auto element : elements) {
-		subser.serialize(element);
+		subser.process(element);
 	}
 
 	result_stream << "container;" << encode_string(subser.result()) << ";";
@@ -242,58 +255,99 @@ public:
 		SATAN_DEBUG("ItemDeserializer() -> %s\n", decode_string(input).c_str());
 	}
 
-	void deserialize(std::string &v) {
+	void process(std::string &v) {
 		verify_type("string");
 
 		__ITD_GET_STRING(val_s);
 		v = decode_string(val_s);
 	}
 
-	void deserialize(bool &v) {
+	void process(bool &v) {
 		verify_type("bool");
 
 		__ITD_GET_STRING(val_s);
 		v = (val_s == "true") ? true : false;
 	}
 
-	void deserialize(int &v) {
+	void process(int &v) {
 		verify_type("int");
 
 		__ITD_GET_STRING(val_s);
 		v = std::stoi(val_s);
 	}
 
-	void deserialize(unsigned int &v) {
+	void process(unsigned int &v) {
 		verify_type("uint");
 
 		__ITD_GET_STRING(val_s);
 		v = (unsigned int)std::stoul(val_s);
 	}
 
-	void deserialize(float &v) {
+	void process(float &v) {
 		verify_type("float");
 
 		__ITD_GET_STRING(val_s);
 		v = std::stof(val_s);
 	}
 
-	void deserialize(double &v) {
+	void process(double &v) {
 		verify_type("double");
 
 		__ITD_GET_STRING(val_s);
 		v = std::stod(val_s);
 	}
 
+	template <typename U, typename V>
+	void process(std::pair<U,V> &pair);
+
+	template <typename U, typename V>
+	void process(std::map<U,V> &pair);
+
 	template <class ContainerT>
-	void deserialize(ContainerT &elements);
+	void process(ContainerT &elements);
 
 	bool eof() {
 		return is.eof();
 	}
 };
 
+template <typename U, typename V>
+void ItemDeserializer::process(std::pair<U,V> &pair) {
+	verify_type("pair");
+
+	__ITD_GET_STRING(subserialized);
+
+	SATAN_DEBUG("Will deserialize pair [%s]\n", decode_string(subserialized).c_str());
+
+	ItemDeserializer subdeser(decode_string(subserialized));
+
+	subdeser.process(pair.first);
+	subdeser.process(pair.second);
+}
+
+template <typename U, typename V>
+void ItemDeserializer::process(std::map<U,V> &elements) {
+	verify_type("container");
+
+	__ITD_GET_STRING(subserialized);
+
+	SATAN_DEBUG("Will deserialize container [%s]\n", decode_string(subserialized).c_str());
+
+	ItemDeserializer subdeser(decode_string(subserialized));
+
+	std::pair<U,V> element;
+	while(!subdeser.eof()) {
+		try {
+			subdeser.process(element);
+			(void) elements.insert(elements.end(), element);
+		} catch(UnexpectedEndWhenDeserializing& ignored) {
+			/* ignore - this indicates end of contained data */
+		}
+	}
+}
+
 template <class ContainerT>
-void ItemDeserializer::deserialize(ContainerT &elements) {
+void ItemDeserializer::process(ContainerT &elements) {
 	typedef typename ContainerT::value_type ElementT;
 
 	verify_type("container");
@@ -307,8 +361,8 @@ void ItemDeserializer::deserialize(ContainerT &elements) {
 	ElementT element;
 	while(!subdeser.eof()) {
 		try {
-			subdeser.deserialize(element);
-			elements.push_back(element);
+			subdeser.process(element);
+			(void) elements.insert(elements.end(), element);
 		} catch(UnexpectedEndWhenDeserializing& ignored) {
 			/* ignore - this indicates end of contained data */
 		}
@@ -1274,7 +1328,7 @@ std::vector<std::weak_ptr<RemoteInterface::GlobalControlObject::PlaybackStateLis
  *
  ***************************/
 
-RemoteInterface::RIMachine::RIController::RIController(Machine::Controller *ctrl) {
+RemoteInterface::RIMachine::RIController::RIController(int _ctrl_id, Machine::Controller *ctrl) : ctrl_id(_ctrl_id) {
 	name = ctrl->get_name();
 	title = ctrl->get_title();
 
@@ -1324,49 +1378,61 @@ RemoteInterface::RIMachine::RIController::RIController(Machine::Controller *ctrl
 	(void) /*ignore return value */ ctrl->has_midi_controller(coarse_controller, fine_controller);
 }
 
-std::string RemoteInterface::RIMachine::RIController::serialize_controller(Machine::Controller *ctrl) {
+RemoteInterface::RIMachine::RIController::RIController(std::function<
+							       void(std::function<void(std::shared_ptr<Message> &msg_to_send)> )
+							       >  _send_obj_message,
+						       const std::string &serialized) : send_obj_message(_send_obj_message) {
+	ItemDeserializer ides(serialized);
+	serderize_controller(ides);
+}
+
+std::string RemoteInterface::RIMachine::RIController::get_serialized_controller() {
 	ItemSerializer iser;
+	serderize_controller(iser);
+	return iser.result();
+}
 
-	iser.serialize(ctrl->get_name());
-	iser.serialize(ctrl->get_title());
+template <class SerderClassT>
+void RemoteInterface::RIMachine::RIController::serderize_controller(SerderClassT& iserder) {
+	iserder.process(ctrl_id);
+	iserder.process(name);
+	iserder.process(title);
 
-	iser.serialize((int)ct_type);
+	iserder.process(ct_type);
 
 	switch(ct_type) {
 	case RIController::ric_float: {
-		iser.serialize(data.f.min);
-		iser.serialize(data.f.max);
-		iser.serialize(data.f.step);
-		iser.serialize(data.f.value);
+		iserder.process(data.f.min);
+		iserder.process(data.f.max);
+		iserder.process(data.f.step);
+		iserder.process(data.f.value);
 	} break;
 
 	case RIController::ric_int:
 	case RIController::ric_enum:
 	case RIController::ric_sigid: {
-		iser.serialize(data.i.min);
-		iser.serialize(data.i.max);
-		iser.serialize(data.i.step);
-		iser.serialize(data.i.value);
+		iserder.process(data.i.min);
+		iserder.process(data.i.max);
+		iserder.process(data.i.step);
+		iserder.process(data.i.value);
 
 		if(ct_type == RIController::ric_enum) {
-//			iser.serialize(enum_names);
+			iserder.process(enum_names);
 		}
 	} break;
 
 	case RIController::ric_bool: {
-		iser.serialize(bl_data);
+		iserder.process(bl_data);
 	} break;
 
 	case RIController::ric_string: {
-		iser.serialize(str_data);
+		iserder.process(str_data);
 	} break;
 
 	}
 
-	iser.serialize(coarse_controller);
-	iser.serialize(fine_controller);
-
-	return iser.result();
+	iserder.process(coarse_controller);
+	iserder.process(fine_controller);
 }
 
 /***************************
@@ -1427,7 +1493,7 @@ RemoteInterface::RIMachine::RIMachine(const Factory *factory, const Message &ser
 	} catch(Message::NoSuchKey &e) { /* ignore empty inputs */ }
 
 	ItemDeserializer deserializor(serialized.get_value("ctrgroups"));
-	deserializor.deserialize(controller_groups);
+	deserializor.process(controller_groups);
 	SATAN_DEBUG("Client, RIMachine::RIMachine(%s) - controller_groups [%s]:\n", name.c_str(), serialized.get_value("ctrgroups").c_str());
 	for(auto ctgr : controller_groups) {
 		SATAN_DEBUG("  ctr group: %s\n", ctgr.c_str());
@@ -1633,7 +1699,7 @@ std::vector<std::string> RemoteInterface::RIMachine::get_controller_names(const 
 		[this, &retval](const Message *reply_message) {
 			if(reply_message) {
 				ItemDeserializer deserializor(reply_message->get_value("ctrlnames"));
-				deserializor.deserialize(retval);
+				deserializor.process(retval);
 			}
 		}
 		);
@@ -1652,6 +1718,12 @@ auto RemoteInterface::RIMachine::get_controller(const std::string &controller_na
 
 		[this, &retval](const Message *reply_message) {
 			if(reply_message) {
+				retval = std::make_shared<RIController>(
+					[this](std::function<void(std::shared_ptr<Message> &)> fill_in_msg) {
+						send_object_message(fill_in_msg);
+					}
+					,
+					reply_message->get_value("ctrl"));
 			}
 		}
 		);
@@ -2098,9 +2170,9 @@ void RemoteInterface::RIMachine::process_message(Server *context, MessageHandler
 		ItemSerializer serializor;
 
 		if(group_name == "") {
-			serializor.serialize(real_machine_ptr->get_controller_names());
+			serializor.process(real_machine_ptr->get_controller_names());
 		} else {
-			serializor.serialize(real_machine_ptr->get_controller_names(group_name));
+			serializor.process(real_machine_ptr->get_controller_names(group_name));
 		}
 		reply->set_value("ctrlnames", serializor.result());
 
@@ -2148,7 +2220,8 @@ std::string RemoteInterface::RIMachine::process_get_ctrl_message(const std::stri
 
 		sscc->id2ctrl[new_id] = ctrl;
 
-//		retval = serialize_controller(ctrl);
+		RIController rico(new_id, ctrl);
+		retval = rico.get_serialized_controller();
 	}
 
 	cleanup_stray_controllers();
@@ -2303,7 +2376,7 @@ void RemoteInterface::RIMachine::serialize(std::shared_ptr<Message> &target) {
 
 	{
 		ItemSerializer serializor;
-		serializor.serialize(real_machine_ptr->get_controller_groups());
+		serializor.process(real_machine_ptr->get_controller_groups());
 		target->set_value("ctrgroups", serializor.result());
 	}
 }

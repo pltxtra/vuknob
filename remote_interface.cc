@@ -1270,6 +1270,107 @@ std::vector<std::weak_ptr<RemoteInterface::GlobalControlObject::PlaybackStateLis
 
 /***************************
  *
+ *  Class RemoteInterface::RIMachine::RIController
+ *
+ ***************************/
+
+RemoteInterface::RIMachine::RIController::RIController(Machine::Controller *ctrl) {
+	name = ctrl->get_name();
+	title = ctrl->get_title();
+
+	{
+		switch(ctrl->get_type()) {
+		case Machine::Controller::c_int:
+			ct_type = RIController::ric_int;
+			break;
+		case Machine::Controller::c_float:
+			ct_type = RIController::ric_float;
+			break;
+		case Machine::Controller::c_bool:
+			ct_type = RIController::ric_bool;
+			break;
+		case Machine::Controller::c_string:
+			ct_type = RIController::ric_string;
+			break;
+		case Machine::Controller::c_enum:
+			ct_type = RIController::ric_enum;
+			break;
+		case Machine::Controller::c_sigid:
+			ct_type = RIController::ric_sigid;
+			break;
+		}
+	}
+
+	ctrl->get_min(data.f.min);
+	ctrl->get_max(data.f.min);
+	ctrl->get_step(data.f.min);
+	ctrl->get_value(data.f.min);
+
+	ctrl->get_min(data.i.min);
+	ctrl->get_max(data.i.min);
+	ctrl->get_step(data.i.min);
+	ctrl->get_value(data.i.min);
+
+	if(ct_type == RIController::ric_enum) {
+		for(auto k = data.i.min; k < data.i.max; k += data.i.step) {
+			enum_names[k] = ctrl->get_value_name(k);
+		}
+
+	}
+
+	ctrl->get_value(str_data);
+	ctrl->get_value(bl_data);
+
+	(void) /*ignore return value */ ctrl->has_midi_controller(coarse_controller, fine_controller);
+}
+
+std::string RemoteInterface::RIMachine::RIController::serialize_controller(Machine::Controller *ctrl) {
+	ItemSerializer iser;
+
+	iser.serialize(ctrl->get_name());
+	iser.serialize(ctrl->get_title());
+
+	iser.serialize((int)ct_type);
+
+	switch(ct_type) {
+	case RIController::ric_float: {
+		iser.serialize(data.f.min);
+		iser.serialize(data.f.max);
+		iser.serialize(data.f.step);
+		iser.serialize(data.f.value);
+	} break;
+
+	case RIController::ric_int:
+	case RIController::ric_enum:
+	case RIController::ric_sigid: {
+		iser.serialize(data.i.min);
+		iser.serialize(data.i.max);
+		iser.serialize(data.i.step);
+		iser.serialize(data.i.value);
+
+		if(ct_type == RIController::ric_enum) {
+//			iser.serialize(enum_names);
+		}
+	} break;
+
+	case RIController::ric_bool: {
+		iser.serialize(bl_data);
+	} break;
+
+	case RIController::ric_string: {
+		iser.serialize(str_data);
+	} break;
+
+	}
+
+	iser.serialize(coarse_controller);
+	iser.serialize(fine_controller);
+
+	return iser.result();
+}
+
+/***************************
+ *
  *  Class RemoteInterface::RIMachine::RIMachineFactory
  *
  ***************************/
@@ -2027,99 +2128,6 @@ void RemoteInterface::RIMachine::cleanup_stray_controllers() {
 	}
 }
 
-std::string RemoteInterface::RIMachine::serialize_controller(Machine::Controller *ctrl) {
-	ItemSerializer iser;
-
-	iser.serialize(ctrl->get_name());
-	iser.serialize(ctrl->get_title());
-
-	int type_i = (int)RIController::ric_int;
-	{
-		switch(ctrl->get_type()) {
-		case Machine::Controller::c_int:
-			type_i = (int)RIController::ric_int;
-			break;
-		case Machine::Controller::c_float:
-			type_i = (int)RIController::ric_float;
-			break;
-		case Machine::Controller::c_bool:
-			type_i = (int)RIController::ric_bool;
-			break;
-		case Machine::Controller::c_string:
-			type_i = (int)RIController::ric_string;
-			break;
-		case Machine::Controller::c_enum:
-			type_i = (int)RIController::ric_enum;
-			break;
-		case Machine::Controller::c_sigid:
-			type_i = (int)RIController::ric_sigid;
-			break;
-		}
-
-		iser.serialize(type_i);
-	}
-
-	switch(type_i) {
-	case RIController::ric_float: {
-		float min, max, step, value;
-		ctrl->get_min(min);
-		ctrl->get_max(max);
-		ctrl->get_step(step);
-		ctrl->get_value(value);
-
-		iser.serialize(min);
-		iser.serialize(max);
-		iser.serialize(step);
-		iser.serialize(value);
-	} break;
-
-	case RIController::ric_int:
-	case RIController::ric_enum:
-	case RIController::ric_sigid: {
-		int min, max, step, value;
-		ctrl->get_min(min);
-		ctrl->get_max(max);
-		ctrl->get_step(step);
-		ctrl->get_value(value);
-
-		iser.serialize(min);
-		iser.serialize(max);
-		iser.serialize(step);
-		iser.serialize(value);
-
-		if(type_i == RIController::ric_enum) {
-			std::vector<std::string> enum_names;
-			for(auto k = min; k < max; k += step) {
-				enum_names.push_back(ctrl->get_value_name(k));
-			}
-
-			iser.serialize(enum_names);
-		}
-	} break;
-
-	case RIController::ric_bool: {
-		bool value;
-		ctrl->get_value(value);
-		iser.serialize(value);
-	} break;
-
-	case RIController::ric_string: {
-		std::string value;
-		ctrl->get_value(value);
-		iser.serialize(value);
-	} break;
-
-	}
-
-	int coarse_controller = -1, fine_controller = -1;
-	(void) /*ignore return value */ ctrl->has_midi_controller(coarse_controller, fine_controller);
-
-	iser.serialize(coarse_controller);
-	iser.serialize(fine_controller);
-
-	return iser.result();
-}
-
 std::string RemoteInterface::RIMachine::process_get_ctrl_message(const std::string &ctrl_name, MessageHandler *src) {
 	std::shared_ptr<ServerSideControllerContainer> sscc;
 	std::string retval;
@@ -2140,7 +2148,7 @@ std::string RemoteInterface::RIMachine::process_get_ctrl_message(const std::stri
 
 		sscc->id2ctrl[new_id] = ctrl;
 
-		retval = serialize_controller(ctrl);
+//		retval = serialize_controller(ctrl);
 	}
 
 	cleanup_stray_controllers();

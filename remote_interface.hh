@@ -424,8 +424,6 @@ public:
 		};
 
 		class RIController {
-		private:
-			int ctrl_id;
 		public:
 
 			enum Type {
@@ -436,6 +434,9 @@ public:
 				ric_enum = 4, // integer values map to a name
 				ric_sigid = 5 // integer values map to sample bank index
 			};
+
+			RIController(Machine::Controller *ctrl);
+			RIController(const std::string serialized);
 
 			std::string get_name(); // name of the control
 			std::string get_title(); // user displayable title
@@ -459,7 +460,30 @@ public:
 			void set_value(bool &val);
 			void set_value(std::string &val);
 
-			std::string serialize();
+			std::string serialize_controller(Machine::Controller *ctrl);
+		private:
+			int ctrl_id = -1;
+
+			Type ct_type = ric_int;
+			std::string name, title;
+
+			struct data_f {
+				float min, max, step, value;
+			};
+			struct data_i {
+				int min, max, step, value;
+			};
+			union {
+				data_f f;
+				data_i i;
+			} data;
+
+			std::string str_data = "";
+			bool bl_data = false;
+
+			std::map<int, std::string> enum_names;
+
+			int coarse_controller = -1, fine_controller = -1;
 		};
 
 		/// get a hint about what this machine is (for example, "effect" or "generator")

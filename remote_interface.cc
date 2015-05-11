@@ -1435,6 +1435,88 @@ void RemoteInterface::RIMachine::RIController::serderize_controller(SerderClassT
 	iserder.process(fine_controller);
 }
 
+std::string RemoteInterface::RIMachine::RIController::get_name() {
+	return name;
+}
+
+std::string RemoteInterface::RIMachine::RIController::get_title() {
+	return title;
+}
+
+void RemoteInterface::RIMachine::RIController::get_min(float &val) {
+	val = data.f.min;
+}
+
+void RemoteInterface::RIMachine::RIController::get_max(float &val) {
+	val = data.f.max;
+}
+
+void RemoteInterface::RIMachine::RIController::get_step(float &val) {
+	val = data.f.step;
+}
+
+void RemoteInterface::RIMachine::RIController::get_min(int &val) {
+	val = data.i.min;
+}
+
+void RemoteInterface::RIMachine::RIController::get_max(int &val) {
+	val = data.i.max;
+}
+
+void RemoteInterface::RIMachine::RIController::get_step(int &val) {
+	val = data.i.step;
+}
+
+void RemoteInterface::RIMachine::RIController::get_value(int &val) {
+	val = data.i.value;
+}
+
+void RemoteInterface::RIMachine::RIController::get_value(float &val) {
+	val = data.f.value;
+}
+
+void RemoteInterface::RIMachine::RIController::get_value(bool &val) {
+	val = bl_data;
+}
+
+void RemoteInterface::RIMachine::RIController::get_value(std::string &val) {
+	val = str_data;
+}
+
+std::string RemoteInterface::RIMachine::RIController::get_value_name(int val) {
+	auto enam = enum_names.find(val);
+
+	if(enam != enum_names.end())
+		return (*enam).second;
+
+	return "";
+}
+
+void RemoteInterface::RIMachine::RIController::set_value(int val) {
+	data.i.value = val;
+}
+
+void RemoteInterface::RIMachine::RIController::set_value(float val) {
+	data.f.value = val;
+}
+
+void RemoteInterface::RIMachine::RIController::set_value(bool val) {
+	bl_data = val;
+}
+
+void RemoteInterface::RIMachine::RIController::set_value(const std::string &val) {
+	str_data = val;
+}
+
+bool RemoteInterface::RIMachine::RIController::has_midi_controller(int &__coarse_controller, int &__fine_controller) {
+	if(coarse_controller == -1 && fine_controller == -1) return false;
+
+	__coarse_controller = coarse_controller;
+	__fine_controller = fine_controller;
+
+	return true;
+}
+
 /***************************
  *
  *  Class RemoteInterface::RIMachine::RIMachineFactory

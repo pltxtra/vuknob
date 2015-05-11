@@ -456,12 +456,14 @@ public:
 			void get_value(bool &val);
 			void get_value(std::string &val);
 
-			std::string get_value_name(const int &val);
+			std::string get_value_name(int val);
 
-			void set_value(int &val);
-			void set_value(float &val);
-			void set_value(bool &val);
-			void set_value(std::string &val);
+			void set_value(int val);
+			void set_value(float val);
+			void set_value(bool val);
+			void set_value(const std::string &val);
+
+			bool has_midi_controller(int &coarse_controller, int &fine_controller);
 
 			std::string get_serialized_controller();
 		private:

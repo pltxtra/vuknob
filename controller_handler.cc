@@ -43,8 +43,6 @@ using namespace std;
 #error "CAN'T FIND config.h"
 #endif
 
-#include "machine.hh"
-
 #include <kamogui.hh>
 #include <fstream>
 
@@ -54,8 +52,6 @@ using namespace std;
 #include <dirent.h>
 #include <errno.h>
 #include <sys/time.h>
-
-#include "machine.hh"
 
 #include "controller_handler.hh"
 
@@ -72,20 +68,16 @@ std::vector<KammoGUI::Widget *> erasable_widgets;
 class MyScale : public KammoGUI::Scale {
 public:
 	KammoGUI::Label *v_lbl;
-	Machine::Controller *ctr;
+	std::shared_ptr<RemoteInterface::RIMachine::RIController> ctr;
 	double min, max,step;
 
 	MyScale(double _min,
 		double _max,
 		double _step,
-		Machine::Controller *_ctr,
+		std::shared_ptr<RemoteInterface::RIMachine::RIController> _ctr,
 		KammoGUI::Label *_v_lbl) :
 		KammoGUI::Scale(true, _min, _max, _step), v_lbl(_v_lbl),
 		ctr(_ctr), min(_min), max(_max), step(_step) {
-	}
-
-	~MyScale() {
-		delete ctr;
 	}
 };
 
@@ -139,36 +131,36 @@ public:
 
 void process_value_changed(KammoGUI::Widget *wid) {
 	MyScale *scl = (MyScale *)wid;
-	Machine::Controller *ctr = scl->ctr;
+	auto ctr = scl->ctr;
 
 	double value = scl->get_value();
 
 	switch(ctr->get_type()) {
 
-	case Machine::Controller::c_sigid:
-	case Machine::Controller::c_enum:
-	case Machine::Controller::c_int:
+	case RemoteInterface::RIMachine::RIController::ric_sigid:
+	case RemoteInterface::RIMachine::RIController::ric_enum:
+	case RemoteInterface::RIMachine::RIController::ric_int:
 	{
 		int val = value;
 		ctr->set_value(val);
 	}
 	break;
 
-	case Machine::Controller::c_float:
+	case RemoteInterface::RIMachine::RIController::ric_float:
 	{
 		float val = value;
 		ctr->set_value(val);
 	}
 	break;
 
-	case Machine::Controller::c_bool:
+	case RemoteInterface::RIMachine::RIController::ric_bool:
 	{
 		bool val = value == 1.0 ? true : false;
 		ctr->set_value(val);
 	}
 	break;
 
-	case Machine::Controller::c_string:
+	case RemoteInterface::RIMachine::RIController::ric_string:
 	default:
 		return;
 	}
@@ -176,14 +168,14 @@ void process_value_changed(KammoGUI::Widget *wid) {
 	std::ostringstream vstr;
 
 	switch(ctr->get_type()) {
-	case Machine::Controller::c_enum:
-	case Machine::Controller::c_sigid:
+	case RemoteInterface::RIMachine::RIController::ric_enum:
+	case RemoteInterface::RIMachine::RIController::ric_sigid:
 		vstr << " : " << ctr->get_value_name((int)value);
 		break;
-	case Machine::Controller::c_int:
-	case Machine::Controller::c_float:
-	case Machine::Controller::c_bool:
-	case Machine::Controller::c_string:
+	case RemoteInterface::RIMachine::RIController::ric_int:
+	case RemoteInterface::RIMachine::RIController::ric_float:
+	case RemoteInterface::RIMachine::RIController::ric_bool:
+	case RemoteInterface::RIMachine::RIController::ric_string:
 	default:
 		vstr << " : " << value;
 		break;
@@ -204,13 +196,13 @@ virtual void on_value_changed(KammoGUI::Widget *wid) {
 }
 
 void add_scale(KammoGUI::Container *cnt,
-	       Machine::Controller *ctr) {
+	       std::shared_ptr<RemoteInterface::RIMachine::RIController> ctr) {
 	double min, max, step, value;
 	switch(ctr->get_type()) {
 
-	case Machine::Controller::c_sigid:
-	case Machine::Controller::c_enum:
-	case Machine::Controller::c_int:
+	case RemoteInterface::RIMachine::RIController::ric_sigid:
+	case RemoteInterface::RIMachine::RIController::ric_enum:
+	case RemoteInterface::RIMachine::RIController::ric_int:
 	{
 		int _min; ctr->get_min(_min);
 		int _max; ctr->get_max(_max);
@@ -222,7 +214,7 @@ void add_scale(KammoGUI::Container *cnt,
 	}
 	break;
 
-	case Machine::Controller::c_float:
+	case RemoteInterface::RIMachine::RIController::ric_float:
 	{
 		float _min; ctr->get_min(_min);
 		float _max; ctr->get_max(_max);
@@ -235,7 +227,7 @@ void add_scale(KammoGUI::Container *cnt,
 	}
 	break;
 
-	case Machine::Controller::c_bool:
+	case RemoteInterface::RIMachine::RIController::ric_bool:
 	{
 		bool _val; ctr->get_value(_val);
 		min = 0.0;
@@ -245,7 +237,7 @@ void add_scale(KammoGUI::Container *cnt,
 	}
 	break;
 
-	case Machine::Controller::c_string:
+	case RemoteInterface::RIMachine::RIController::ric_string:
 	default:
 		return;
 	}
@@ -257,14 +249,14 @@ void add_scale(KammoGUI::Container *cnt,
 	std::ostringstream vstr;
 
 	switch(ctr->get_type()) {
-	case Machine::Controller::c_enum:
-	case Machine::Controller::c_sigid:
+	case RemoteInterface::RIMachine::RIController::ric_enum:
+	case RemoteInterface::RIMachine::RIController::ric_sigid:
 		vstr << " : " << ctr->get_value_name((int)value);
 		break;
-	case Machine::Controller::c_int:
-	case Machine::Controller::c_float:
-	case Machine::Controller::c_bool:
-	case Machine::Controller::c_string:
+	case RemoteInterface::RIMachine::RIController::ric_int:
+	case RemoteInterface::RIMachine::RIController::ric_float:
+	case RemoteInterface::RIMachine::RIController::ric_bool:
+	case RemoteInterface::RIMachine::RIController::ric_string:
 	default:
 		vstr << " : " << value;
 		break;
@@ -298,7 +290,7 @@ void add_scale(KammoGUI::Container *cnt,
 	int_cnt->add(*scl);
 	int_cnt->add(*more);
 
-	if(ctr->get_type() == Machine::Controller::c_sigid) {
+	if(ctr->get_type() == RemoteInterface::RIMachine::RIController::ric_sigid) {
 		MySampleButton *smb = new MySampleButton(scl);
 		smb->attach_event_handler(this);
 		smb->set_title("LOAD");
@@ -321,18 +313,17 @@ void rebuild_controller_list(std::shared_ptr<RemoteInterface::RIMachine> ri_m, M
 	for(auto k : c_names) {
 		SATAN_DEBUG("   CONTROLLER: %s\n", k.c_str());
 		try {
-			Machine::Controller *ctr =
-				m->get_controller(k);
+			auto ctr = ri_m->get_controller(k);
 
 			switch(ctr->get_type()) {
-			case Machine::Controller::c_sigid:
-			case Machine::Controller::c_enum:
-			case Machine::Controller::c_int:
-			case Machine::Controller::c_float:
-			case Machine::Controller::c_bool:
+			case RemoteInterface::RIMachine::RIController::ric_sigid:
+			case RemoteInterface::RIMachine::RIController::ric_enum:
+			case RemoteInterface::RIMachine::RIController::ric_int:
+			case RemoteInterface::RIMachine::RIController::ric_float:
+			case RemoteInterface::RIMachine::RIController::ric_bool:
 				add_scale(cnt,ctr);
 				break;
-			case Machine::Controller::c_string:
+			case RemoteInterface::RIMachine::RIController::ric_string:
 				break;
 			default:
 				break;

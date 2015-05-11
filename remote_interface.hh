@@ -444,6 +444,8 @@ public:
 			std::string get_name(); // name of the control
 			std::string get_title(); // user displayable title
 
+			Type get_type();
+
 			void get_min(float &val);
 			void get_max(float &val);
 			void get_step(float &val);

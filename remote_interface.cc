@@ -1443,6 +1443,10 @@ std::string RemoteInterface::RIMachine::RIController::get_title() {
 	return title;
 }
 
+auto RemoteInterface::RIMachine::RIController::get_type() -> Type {
+	return (Type)ct_type;
+}
+
 void RemoteInterface::RIMachine::RIController::get_min(float &val) {
 	val = data.f.min;
 }

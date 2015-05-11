@@ -1,25 +1,59 @@
 # vuknob
 Digital Audio Workstation
 
-# Developers
+# Pre-reqs, 1 of 3
 
-libvorbis.tar.gz contains precompiled android port of libvorbis and libogg... it is needed to link the Android version of satan.
+libogg and libvorbis need to be compiled. Reference the NDK documentation for full documentation on how to setup and use a stand-alone toolchain.
 
+Here's a quick example:
 
-libogg and libvorbis can be compiled, if you properly setup a stand-alone toolchain, according to the NDK documentation:
+$NDK_PATH/build/tools/make-standalone-toolchain.sh --platform=android-8 --toolchain=arm-linux-androideabi-4.9 --install-dir=$PWD/standalone-toolchain-4.9
+export PATH=$PWD/standalone-toolchain-4.9/bin:$PATH
+export CC=arm-linux-androideabi-gcc
+export CXX=arm-linux-androideabi-g++
+mkdir -p vuknob_dependencies
 
-export SYSROOT=$NDK/platforms/android-L/arch-arm/
-export CC="$NDK/toolchains/arm-linux-androideabi-4.9/prebuilt/linux-x86/bin/arm-linux-androideabi-gcc --sysroot=$SYSROOT"
-export CXX="$NDK/toolchains/arm-linux-androideabi-4.9/prebuilt/linux-x86/bin/arm-linux-androideabi-g++ --sysroot=$SYSROOT"
+cd vuknob_dependencies
+wget http://downloads.xiph.org/releases/ogg/libogg-1.3.2.tar.gz
+wget http://downloads.xiph.org/releases/vorbis/libvorbis-1.3.5.tar.gz
+tar -xf libogg-1.3.2.tar.gz
+tar -xf libvorbis-1.3.5.tar.gz
 
-Then libogg should be compiled first, then libvorbis.
+export TARGET_DIR=$PWD
 
-For example compile libvorbis-1.3.4.tar.gz, for Android by first running configure like this:
-
-$ ./configure --with-sysroot=/home/apersson/MyWork/Source/Android/android-ndk-r10b/platforms/android-8/arch-arm --enable-shared=no --prefix=/home/apersson/MyWork/Source/Android/libvorbis_new --host=arm-linux --with-ogg-includes=../include/
-
-then run:
+cd libogg-1.3.2
+./configure --enable-shared=no --prefix=$TARGET_DIR --host=arm-linux
 make
 make install
 
-the resulting files will be in .../libvorbis_new/libs
+cd $TARGET_DIR/libvorbis-1.3.5
+./configure --enable-shared=no --prefix=$TARGET_DIR --host=arm-linux
+make
+make install
+
+# Pre-reqs, 2 of 3
+
+To build vuKNOB you will also need to make a branch of kamoflage and libsvg-android:
+
+cd <vuknob path>
+export VUKNOB_ROOT_PATH=$pwd
+export TMP_DIR=`mktemp`
+
+cd $TMP_DIR
+bzr branch lp:~pltxtra/kamoflage/android
+mv android $VUKNOB_ROOT_PATH/../kamoflage_bzr
+
+cd $TMP_DIR
+bzr branch lp:libsvg-android
+mv libsvg-android $VUKNOB_ROOT_PATH/../
+
+rm -rf $TMP_DIR
+
+# Pre-reqs, 3 of 3
+
+You need to have libasio to build vuknob. Unpack the latest stable (tested with 1.10.2) in the parent directory to where you have vuknob.
+
+cd <vuknob path>
+cd ..
+tar -xf <path-to-asio-archive>
+ln -s <asio directory> ./asio

@@ -42,6 +42,7 @@ include $(CLEAR_VARS)
 LOCAL_CPP_EXTENSION := .cc
 
 LOCAL_MODULE    := kamoflage
+DEPENDENCY_DIRECTORY := ../../vuknob_dependencies
 
 ifeq ($(TARGET_ARCH_ABI),armeabi-v7a)
 #        LOCAL_ARM_NEON  := true
@@ -54,8 +55,8 @@ else
 endif # TARGET_ARCH_ABI == armeabi-v7a
 
 #  -DKAMOFLAGE_ANDROID_ROOT_DIRECTORY=\"/data/data/com.holidaystudios.vuknob\"
-LOCAL_CFLAGS += -DLIBSVG_EXPAT -DCONFIG_DIR=\"/\" -Ijni/libexpat/ -Ijni/libexpat/expat/ -Ijni/libpng/ -Ijni/libjpeg/ -Ijni/libsvg/ -I../../asio-1.10.2/include -DHAVE_CONFIG_H -DHAVE_EXPAT_CONFIG_H -Ijni/libkamoflage/ -Wall -I../../libvorbis_new/include/ -DDEFAULT_PROJECT_SAVE_PATH=\"/mnt/sdcard/vuknob/Projects\" -DDEFAULT_SATAN_ROOT=\"/mnt/sdcard/vuknob\" -DDEFAULT_EXPORT_PATH=\"/mnt/sdcard/vuknob/Export\"  #-D__DO_TIME_MEASURE
-LOCAL_CPPFLAGS += -DASIO_STANDALONE -std=c++11 
+LOCAL_CFLAGS += -DLIBSVG_EXPAT -DCONFIG_DIR=\"/\" -Ijni/libexpat/ -Ijni/libexpat/expat/ -Ijni/libpng/ -Ijni/libjpeg/ -Ijni/libsvg/ -I../../asio/include -DHAVE_CONFIG_H -DHAVE_EXPAT_CONFIG_H -Ijni/libkamoflage/ -Wall -I$(DEPENDENCY_DIRECTORY)/include/ -DDEFAULT_PROJECT_SAVE_PATH=\"/mnt/sdcard/vuknob/Projects\" -DDEFAULT_SATAN_ROOT=\"/mnt/sdcard/vuknob\" -DDEFAULT_EXPORT_PATH=\"/mnt/sdcard/vuknob/Export\"  #-D__DO_TIME_MEASURE
+LOCAL_CPPFLAGS += -DASIO_STANDALONE -std=c++11
 
 # libjpeg stuff
 LIBJPEG_SOURCES = libjpeg/jaricom.c libjpeg/jcapimin.c libjpeg/jcapistd.c libjpeg/jcarith.c \
@@ -143,7 +144,7 @@ kiss_fft.c kiss_fftr.c
 
 #  kamoflage/satan stuff
 LOCAL_STATIC_LIBRARIES := cpufeatures
-LOCAL_LDLIBS += -ldl -llog ../../libvorbis_new/lib/libvorbis.a ../../libvorbis_new/lib/libogg.a ../../libvorbis_new/lib/libvorbisenc.a
+LOCAL_LDLIBS += -ldl -llog $(DEPENDENCY_DIRECTORY)/lib/libvorbis.a $(DEPENDENCY_DIRECTORY)/lib/libogg.a $(DEPENDENCY_DIRECTORY)/lib/libvorbisenc.a
 LOCAL_SRC_FILES := \
 $(LIBJPEG_SOURCES) $(LIBPNG_SOURCES) $(ZLIB_SOURCES) $(LIBEXPAT_SOURCES) $(LIBSVG_SOURCES) $(LIBSVG_ANDROID_SOURCES)  $(LIBKAMOFLAGE_SOURCES) $(JNGLDRUM_SOURCES) $(KISS_FFT_SOURCES) \
 satan.cc \
@@ -192,7 +193,7 @@ connector.cc connector.hh \
 remote_interface.cc remote_interface.hh \
 corner_button.cc corner_button.hh \
 connection_list.cc connection_list.hh \
-time_measure.cc 
+time_measure.cc
 
 LOCAL_SHARED_LIBRARIES := libpathvariable
 

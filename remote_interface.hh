@@ -425,6 +425,11 @@ public:
 
 		class RIController {
 		public:
+			class NoSuchEnumValue : public std::runtime_error {
+			public:
+				NoSuchEnumValue() : runtime_error("No such enum value in RIController.") {}
+				virtual ~NoSuchEnumValue() {}
+			};
 
 			enum Type {
 				ric_int = 0,

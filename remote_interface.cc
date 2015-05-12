@@ -1490,10 +1490,10 @@ void RemoteInterface::RIMachine::RIController::get_value(std::string &val) {
 std::string RemoteInterface::RIMachine::RIController::get_value_name(int val) {
 	auto enam = enum_names.find(val);
 
-	if(enam != enum_names.end())
-		return (*enam).second;
+	if(enam == enum_names.end())
+		throw NoSuchEnumValue();
 
-	return "";
+	return (*enam).second;
 }
 
 void RemoteInterface::RIMachine::RIController::set_value(int val) {

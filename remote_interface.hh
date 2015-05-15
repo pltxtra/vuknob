@@ -633,7 +633,6 @@ public:
 
 		std::map<std::string, std::string> handle2hint;
 
-		std::thread t1;
 		asio::ip::tcp::resolver resolver;
 		asio::ip::udp::resolver udp_resolver;
 		std::function<void()> disconnect_callback;

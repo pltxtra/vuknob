@@ -2708,9 +2708,9 @@ void RemoteInterface::Client::start_client(const std::string &server_host,
 	try {
 		client = std::shared_ptr<Client>(new Client(server_host, server_port, disconnect_callback, failure_response_callback));
 
-		client->t1 = std::thread([]() {
+		client->io_thread = std::thread([]() {
 				client->io_service.run();
-				}
+			}
 			);
 	} catch (std::exception& e) {
 		SATAN_ERROR("exception caught: %s\n", e.what());
@@ -2721,17 +2721,16 @@ void RemoteInterface::Client::disconnect() {
 	std::lock_guard<std::mutex> lock_guard(client_mutex);
 	if(client) {
 		client->io_service.post(
-		[]()
-		{
-			try {
-				client->my_socket.close();
-			} catch(std::exception &exp) {
-			}
-			client->io_service.stop();
-		});
+			[]()
+			{
+				try {
+					client->my_socket.close();
+				} catch(std::exception &exp) {
+				}
+				client->io_service.stop();
+			});
 
 		client->io_thread.join();
-
 		client.reset();
 	}
 }

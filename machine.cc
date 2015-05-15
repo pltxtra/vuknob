@@ -73,40 +73,45 @@ Machine::Controller::Controller(
 	name = _name;
 	title = _title;
 	ptr = _ptr;
-	
+
 	min_i = -32768;
 	min_f = 0.0;
 	if(min != "") {
 		if(tp == c_int || tp == c_enum) {
 			std::string strng = min;
 			std::istringstream st(strng);
-			st >> min_i; 
+			st >> min_i;
 		} else if(tp == c_float) {
 			std::string strng = min;
 			std::istringstream st(strng);
-			st >> min_f; 
-		}		
+			st >> min_f;
+		}
 	}
-	
+
 	max_i = 32767;
 	max_f = 1.0;
 	if(max != "") {
 		if(tp == c_int || tp == c_enum) {
 			std::string strng = max;
 			std::istringstream st(strng);
-			st >> max_i; 
+			st >> max_i;
 		} else if(tp == c_float) {
 			std::string strng = max;
 			std::istringstream st(strng);
-			st >> max_f; 
+			st >> max_f;
 		}
 	}
 	step_f = (max_f - min_f) / 10.0;
+	step_i = 1;
 	if(step != "") {
 		if(tp == c_float) {
 			std::string strng = step;
 			std::istringstream st(strng);
-			st >> step_f; 
+			st >> step_f;
+		} else {
+			std::string strng = step;
+			std::istringstream st(strng);
+			st >> step_i;
 		}
 	}
 
@@ -127,7 +132,7 @@ void Machine::Controller::set_midi_controller(int _coarse, int _fine) {
 	   _coarse == _fine)
 		throw jException("Trying to set illegal MIDI controller values.",
 				 jException::sanity_error);
-	
+
 	has_midi_ctrl = true;
 
 	coarse_controller = _coarse;
@@ -175,7 +180,7 @@ void Machine::Controller::internal_get_value(int *val) {
 }
 
 void Machine::Controller::internal_get_value(float *val) {
-	if(float_is_FTYPE) 
+	if(float_is_FTYPE)
 		*val = FTYPEtof(*((FTYPE *)ptr));
 	else
 		*val = *((float *)ptr);
@@ -188,11 +193,11 @@ void Machine::Controller::internal_get_value(bool *val) {
 }
 
 void Machine::Controller::internal_get_value(std::string *val) {
-	*val = *((char *)ptr);	
+	*val = *((char *)ptr);
 }
 
 void Machine::Controller::internal_set_value(int *val) {
-	if((*val) >= min_i && (*val) <= max_i) 
+	if((*val) >= min_i && (*val) <= max_i)
 		*((int *)ptr) = *val;
 }
 
@@ -287,7 +292,7 @@ std::string Machine::Controller::get_value_name(const int &val) {
 		std::ostringstream vstr;
 
 		vstr << "[" << val << "] ";
-		
+
 		StaticSignal *ssig = StaticSignal::get_signal(val);
 
 		if(ssig) {
@@ -296,8 +301,8 @@ std::string Machine::Controller::get_value_name(const int &val) {
 			vstr << "no file loaded";
 		}
 		return vstr.str();
-	}	
-	
+	}
+
 	SATAN_DEBUG("get_value_name for %d\n", val);
 	if(enumnames.find(val) == enumnames.end())
 		throw jException("Value out of range for enum.", jException::sanity_error);
@@ -338,7 +343,7 @@ bool Machine::Controller::has_midi_controller(int &_coarse, int &_fine) {
 	if(has_midi_ctrl) {
 		if(coarse_controller < 0 || coarse_controller > 127)
 			throw jException("BUG! Midi controller erronous!", jException::sanity_error);
-	
+
 		_coarse = coarse_controller;
 		if(fine_controller >= 0 && fine_controller < 128)
 			_fine = fine_controller;
@@ -377,10 +382,10 @@ void Machine::internal_attach_input(Machine *m,
 	if(  /* if this logic is true, the signals can not
 	      * be connected
 	      */
-		
+
 		((*des).second.dimension !=
 		 s->get_dimension())
-		
+
 		||
 
 		// new check for MACHINE_PROJECT_INTERFACE_LEVEL >= 2
@@ -397,7 +402,7 @@ void Machine::internal_attach_input(Machine *m,
 
 			)
 		)
-		
+
 		) {
 		throw jException(
 			std::string("The signal type of output [") +
@@ -415,7 +420,7 @@ void Machine::internal_attach_input(Machine *m,
 		throw jException("Connection would create a loop.\n",
 				 jException::sanity_error);
 	}
-	
+
 	// attach signal to input
 	std::map<std::string, Signal *>::iterator k;
 	k = input.find(input_name);
@@ -424,7 +429,7 @@ void Machine::internal_attach_input(Machine *m,
 	else
 		(*k).second->link(this, s);
 	s->attach(this);
-	
+
 	// increase dependant count
 	std::map<Machine *, int>::iterator i;
 	i = dependant.find(m);
@@ -451,7 +456,7 @@ void Machine::internal_detach_input(Machine *m,
 	// is m valid?
 	if(m == NULL)
 		throw jException("Source machine pointer is NULL.", jException::sanity_error);
-	
+
 	// find output on m
 	Signal *s = m->get_output(output_name);
 	if(s == NULL)
@@ -468,17 +473,17 @@ void Machine::internal_detach_input(Machine *m,
 	k = input.find(input_name);
 	if(k == input.end())
 		// no output attached at this input
-		throw jException(std::string("[") + input_name + "]: Nothing attached to input", jException::sanity_error);		
+		throw jException(std::string("[") + input_name + "]: Nothing attached to input", jException::sanity_error);
 	else {
 		s->detach(this);
-		
+
 		Signal *head = (*k).second->unlink(this, s);
 		if(head != NULL)
 			input[(*k).first] = head;
 		else
 			input.erase(k);
 	}
-	
+
 	// decrease dependant count
 	std::map<Machine *, int>::iterator i;
 	i = dependant.find(m);
@@ -497,14 +502,14 @@ void Machine::internal_detach_input(Machine *m,
 	{
 		Machine *source_machine = m;
 		Machine *destination_machine = this;
-		
+
 		broadcast_detach(source_machine, destination_machine, output_name, input_name);
 	}
 }
 
 typedef struct {
 	Machine *thiz;
-	std::string result; 
+	std::string result;
 } CALL_internal_get_base_xml_description_t;
 __MACHINE_OPERATION_CALLBACK Machine::CALL_internal_get_base_xml_description(void *p) {
 	CALL_internal_get_base_xml_description_t *input =
@@ -524,7 +529,7 @@ std::string Machine::internal_get_base_xml_description() {
 	result += get_descriptive_xml();
 
 	result += get_controller_xml();
-	
+
 	result += "\n</machine>\n";
 
 	return result;
@@ -532,7 +537,7 @@ std::string Machine::internal_get_base_xml_description() {
 
 typedef struct {
 	Machine *thiz;
-	std::string result; 
+	std::string result;
 } CALL_internal_get_connection_xml_t;
 __MACHINE_OPERATION_CALLBACK Machine::CALL_internal_get_connection_xml(void *p) {
 	CALL_internal_get_connection_xml_t *input =
@@ -545,7 +550,7 @@ std::string Machine::internal_get_connection_xml() {
 		ic;
 	std::multimap<std::string, std::pair<Machine *, std::string> >
 		incons = internal_get_input_connections();
-	
+
 	std::string result;
 
 	result  = "<connections name=\"";
@@ -563,13 +568,13 @@ std::string Machine::internal_get_connection_xml() {
 	}
 
 	result += "</connections>\n";
-	
+
 	return result;
 }
 
 typedef struct {
 	Machine *thiz;
-	std::multimap<std::string, std::pair<Machine *, std::string> >  result;	
+	std::multimap<std::string, std::pair<Machine *, std::string> >  result;
 } CALL_internal_get_input_connections_t;
 __MACHINE_OPERATION_CALLBACK Machine::CALL_internal_get_input_connections(void *p) {
 	CALL_internal_get_input_connections_t *input =
@@ -592,7 +597,7 @@ std::multimap<std::string, std::pair<Machine *, std::string> > Machine::internal
 		while(crnt != NULL) {
 			pr.first = crnt->get_originator();
 			pr.second = crnt->get_name();
-			
+
 			retval.insert(std::pair<std::string, std::pair<Machine *, std::string> >
 				      (name,pr));
 
@@ -766,7 +771,7 @@ std::multimap<std::string, std::pair<Machine *, std::string> > Machine::get_inpu
 	CALL_internal_get_input_connections_t param = {
 		.thiz = this
 	};
-	machine_operation_enqueue(CALL_internal_get_input_connections, &param, true);	
+	machine_operation_enqueue(CALL_internal_get_input_connections, &param, true);
 	return param.result;
 }
 
@@ -789,7 +794,7 @@ std::vector<std::string> Machine::get_output_names() {
 int Machine::get_input_index(const std::string &inp) {
 	CALL_internal_get_input_index_t param = {
 		.thiz = this,
-		.inp = inp		
+		.inp = inp
 	};
 	machine_operation_enqueue(CALL_internal_get_input_index, &param, true);
 	return param.result;
@@ -798,7 +803,7 @@ int Machine::get_input_index(const std::string &inp) {
 int Machine::get_output_index(const std::string &out) {
 	CALL_internal_get_output_index_t param = {
 		.thiz = this,
-		.out = out		
+		.out = out
 	};
 	machine_operation_enqueue(CALL_internal_get_output_index, &param, true);
 	return param.result;
@@ -817,7 +822,7 @@ std::string Machine::get_name() {
 
 void Machine::set_name(const std::string &nm) {
 	if(nm.find('=') == std:: string::npos) throw ParameterOutOfSpec();
-	
+
 	CALL_internal_set_name_t param = {
 		.thiz = this,
 		.nm = nm
@@ -861,13 +866,13 @@ public:
 	void wait() {
 		(void) synch_queue.wait_for_event(); // ignore result since we already know it to be equal to *this
 	}
-	
+
 	void trigger() {
 		triggered = true;
 		synch_queue.push_event(this);
 	}
-	
-	virtual void dummy_event_function() {}	
+
+	virtual void dummy_event_function() {}
 };
 
 class MachineOperation {
@@ -902,15 +907,15 @@ void Machine::machine_operation_enqueue(std::function<void(void *data)> callback
 		// it and the actual write to the queue.
 		MachineOperation mo;
 		MachineOperationSynchObject synch_object;
-		
+
 		mo.callback = callback;
 		mo.callback_data = callback_data;
 		mo.synch_object = do_sync ? (&synch_object) : NULL;
-						
+
 		machine_operation_queue.enqueue(mo);
 
 		Machine::unlock_machine_space();
-		
+
 		if(do_sync) {
 			SATAN_DEBUG("do_sync -- wait for sync_object %p\n", &synch_object);
 			synch_object.wait();
@@ -930,7 +935,7 @@ void Machine::machine_operation_enqueue(std::function<void(void *data)> callback
 // operation ONLY called by audio playback thread
 void Machine::machine_operation_dequeue() {
 	MachineOperation mo;
-	
+
 	bool d;
 	int kount = 50; // limit the processing to 50 operations per call to this function
 	while(kount > 0 && ((d = machine_operation_queue.try_dequeue(mo)) == true)) {
@@ -979,7 +984,7 @@ void Machine::activate_low_latency_mode() {
 
 	machine_execution_thread = gettid();
 	low_latency_mode = true;
-	
+
 	Machine::unlock_machine_space();
 }
 
@@ -989,7 +994,7 @@ void Machine::deactivate_low_latency_mode() {
 	low_latency_mode = false;
 	machine_operation_dequeue();
 	machine_execution_thread = 0;
-	
+
 	Machine::unlock_machine_space();
 }
 
@@ -1031,7 +1036,7 @@ void Machine::render_chain() {
 
 // Registers this machine instance as the sink of the machine network
 void Machine::register_this_sink(Machine *m) {
-	internal_register_sink(m);	
+	internal_register_sink(m);
 }
 
 // Fills this sink...
@@ -1055,14 +1060,14 @@ int Machine::fill_this_sink(
 
 		// In low latency mode we use the machine operation queue for synchronization
 		/* then we dequeue currently waiting machine_operation tasks */
-		machine_operation_dequeue();		
-		
+		machine_operation_dequeue();
+
 	} else {
 		// If not in low latency mode, we use the machine space lock
 		Machine::lock_machine_space();
 		/* then we fill the sink */
 		try {
-			retval = internal_fill_sink(fill_sink_callback, callback_data);			
+			retval = internal_fill_sink(fill_sink_callback, callback_data);
 		} catch(...) {
 			Machine::unlock_machine_space();
 		}
@@ -1098,8 +1103,8 @@ void Machine::setup_machine() {
 	    i++) {
 		output[(*i).first] = Signal::SignalFactory::create_signal((*i).second.channels, this, (*i).first, (Dimension)(*i).second.dimension);
 	}
-	
-	if(base_name_is_name) 
+
+	if(base_name_is_name)
 		name = base_name; // set default name from basename
 	else {
 		std::ostringstream stream;
@@ -1107,9 +1112,9 @@ void Machine::setup_machine() {
 		name = stream.str();
 	}
 
-	Machine::internal_register_machine(this);       
+	Machine::internal_register_machine(this);
 	SATAN_DEBUG("  machine [%p] name set to ] %s [\n", this, name.c_str());
-	
+
 }
 
 Machine::Machine() {
@@ -1196,7 +1201,7 @@ void Machine::setup_using_xml(const KXMLDoc &mxml) {
 		} \
 		n = n->get_next(this); \
 	}
- 
+
 void Machine::premix(Signal *s, Signal *n) {
 	int cmax_s, cmax_n, c_n, c_s;
 	int i, max_i;
@@ -1210,10 +1215,10 @@ void Machine::premix(Signal *s, Signal *n) {
 
 	out_32 = (int32_t *)s->get_buffer();
 	out_16 = (int16_t *)out_32;
-	out_8 = (int8_t *)out_16; 
-	out_fl = (float *)out_16; 
-	out_fx = (fp8p24_t *)out_16; 
-	
+	out_8 = (int8_t *)out_16;
+	out_fl = (float *)out_16;
+	out_fx = (fp8p24_t *)out_16;
+
 	switch(res) {
 	case _MAX_R:
 		// ignore 'em
@@ -1237,7 +1242,7 @@ void Machine::premix(Signal *s, Signal *n) {
 		/* ignore */
 		break;
 	}
-	
+
 }
 
 void Machine::destroy_tightly_attached_machines() {
@@ -1279,7 +1284,7 @@ void Machine::execute() {
 		    i++) {
 			if((*i).second != NULL)
 				(*i).second->clear_buffer();
-		}		
+		}
 	}
 //	STOP_TIME_MEASURE((*tmes_A), "buffers cleared");
 //	START_TIME_MEASURE((*tmes_B));
@@ -1291,7 +1296,7 @@ void Machine::execute() {
 			if(premixed_input.find((*i).first) ==
 			   premixed_input.end()) {
 				Signal *s = (*i).second;
-				
+
 				premixed_input[(*i).first] =
 					Signal::SignalFactory::create_signal(
 						input_descriptor[(*i).first].channels, //s->get_channels(),
@@ -1317,7 +1322,7 @@ void Machine::execute() {
 		jInformer::inform(std::string("Caught an exception when trying to execute dynlib machine [") + name + "]");
 		throw;
 	}
-	STOP_TIME_MEASURE((*tmes_C), "fill_buffers");	
+	STOP_TIME_MEASURE((*tmes_C), "fill_buffers");
 }
 
 Machine::Controller *Machine::create_controller(
@@ -1367,7 +1372,7 @@ void Machine::detach_all_inputs(Machine *m) {
 			while(head) {
 				broadcast_detach(head->get_originator(), this,
 						 head->get_name(), (*k).first);
-				
+
 				decr_dep_count(dependant, head->get_originator());
 				head->detach(this);
 				head = head->unlink(this, head);
@@ -1380,7 +1385,7 @@ void Machine::detach_all_inputs(Machine *m) {
 				if(o == m) {
 					broadcast_detach(o, this,
 							 s->get_name(), (*k).first);
-					
+
 					decr_dep_count(dependant, s->get_originator());
 					s->detach(this);
 					head = head->unlink(this, s);
@@ -1410,7 +1415,7 @@ void Machine::detach_all_outputs() {
 		    l != attached.end();
 		    l++) {
 			(*l)->detach_all_inputs(this);
-		}		
+		}
 	}
 	recalculate_render_chain();
 }
@@ -1444,13 +1449,13 @@ int Machine::get_samples_per_tick_shuffle(Dimension d) {
 
 std::string Machine::get_controller_xml() {
 	std::ostringstream result;
-	
+
 	for(auto k : internal_get_controller_names()) {
 		Controller *c =
 			internal_get_controller(k);
 		std::string name = KXMLDoc::escaped_string(c->get_name());
 		result << "<controller name=\""
-		       << name 
+		       << name
 		       << "\" value=\"";
 		switch(c->get_type()) {
 		case Controller::c_enum:
@@ -1478,9 +1483,9 @@ bool Machine::find_machine_in_graph(Machine *m) {
 	if(m == this) {
 		return true;
 	}
-	
+
 	std::map<Machine *, int>::iterator i;
-	
+
 	i = dependant.find(m);
 	if(i != dependant.end()) {
 		return true;
@@ -1563,7 +1568,7 @@ extern jThread::Monitor *SIMPLE_JTHREAD_DEBUG_MUTX;
 void Machine::broadcast_attach(Machine *source_machine, Machine *destination_machine,
 			       const std::string &output_name, const std::string &input_name) {
 	for(auto w_mlist : machine_set_listeners) {
-		
+
 		std::shared_ptr<MachineSetListener> mlist = w_mlist.lock();
 		if(mlist) {
 			Machine::run_async_function(
@@ -1581,7 +1586,7 @@ void Machine::broadcast_attach(Machine *source_machine, Machine *destination_mac
 void Machine::broadcast_detach(Machine *source_machine, Machine *destination_machine,
 			       const std::string &output_name, const std::string &input_name) {
 	for(auto w_mlist : machine_set_listeners) {
-		
+
 		std::shared_ptr<MachineSetListener> mlist = w_mlist.lock();
 		if(mlist) {
 			Machine::run_async_function(
@@ -1604,7 +1609,7 @@ void Machine::internal_register_sink(Machine *s) {
 			Machine::unlock_machine_space();
 			throw jException("Multiple sinks not allowed.", jException::sanity_error);
 		}
-		
+
 		sink = s;
 
 		Machine::unlock_machine_space();
@@ -1613,12 +1618,12 @@ void Machine::internal_register_sink(Machine *s) {
 
 void Machine::internal_unregister_sink(Machine *s) {
 	Machine::lock_machine_space();
-	
+
 	if(sink != s) {
 		Machine::unlock_machine_space();
 		throw jException("Sink not registered.", jException::sanity_error);
 	}
-	
+
 	sink = NULL;
 	top_render_chain = NULL;
 
@@ -1636,9 +1641,9 @@ void Machine::internal_register_machine(Machine *m) {
 
 	machine_set.push_back(m);
 
-	m->has_been_deregistered = false;	
+	m->has_been_deregistered = false;
 	m->reference_counter = 1 + machine_set_listeners.size();
-	
+
 	for(auto w_mlist : machine_set_listeners) {
 		std::shared_ptr<MachineSetListener> mlist = w_mlist.lock();
 		if(mlist) {
@@ -1653,21 +1658,21 @@ void Machine::internal_register_machine(Machine *m) {
 
 void Machine::internal_deregister_machine(Machine *m) {
 	// notify listeners that the machine is no longer in use
-	for(auto w_mlist : machine_set_listeners) { 
+	for(auto w_mlist : machine_set_listeners) {
 		std::shared_ptr<MachineSetListener> mlist = w_mlist.lock();
-		
-		if(mlist) { 
+
+		if(mlist) {
 			Machine::run_async_function(
 				[mlist, m]() {
 					mlist->machine_unregistered(m);
 				}
 				);
-		}		
+		}
 	}
 
 	{ // remove the machine from our internal set.
 		std::vector<Machine *>::iterator i;
-		
+
 		for(i = machine_set.begin(); i != machine_set.end(); i++) {
 			if((*i) == m) {
 				m->has_been_deregistered = true;
@@ -1682,7 +1687,7 @@ void Machine::internal_deregister_machine(Machine *m) {
 			}
 		}
 	}
-	
+
 	throw jException("Trying to deregister unknown machine.", jException::sanity_error);
 }
 
@@ -1692,7 +1697,7 @@ void Machine::internal_dereference_machine(Machine *m) {
 	if(m->reference_counter <= 0) {
 		SATAN_DEBUG(" Machine %p will be deleted.\n", m);
 
-		delete m;		
+		delete m;
 	}
 }
 
@@ -1700,11 +1705,11 @@ void Machine::calculate_samples_per_tick() {
 	int d;
 	int samples, frequency; Resolution resolution;
 	int samples_per_tick, samples_per_tick_shuffle;
-	
+
 	for(d = 0; d < _MAX_D; d++) {
 		Signal::get_defaults((Dimension)d, samples, resolution, frequency);
 		samples_per_tick = frequency * 60 / (__bpm * __lpb * MACHINE_TICKS_PER_LINE);
-		
+
 		__samples_per_tick[d] = samples_per_tick;
 
 		// calculate shuffle offset
@@ -1729,7 +1734,7 @@ void Machine::calculate_next_tick_at_and_sequence_position() {
 		int sptf = __samples_per_tick_shuffle[d];
 
 		bool even_line = ((__next_sequence_position % 2) == 0) ? true : false;
-		
+
 		while(nta < samples) {
 
 			// only do this synchronization during the midi dimension
@@ -1743,10 +1748,10 @@ void Machine::calculate_next_tick_at_and_sequence_position() {
 
 				if(__current_tick == 0) {
 					__next_sequence_position += 1;
-					
+
 					if(__do_loop && __next_sequence_position >= __loop_stop)
 						__next_sequence_position = __loop_start;
-					
+
 					even_line = ((__next_sequence_position % 2) == 0) ? true : false;
 				}
 			}
@@ -1763,7 +1768,7 @@ void Machine::calculate_next_tick_at_and_sequence_position() {
 void Machine::trigger_periodic_functions() {
 	std::vector<std::pair<__MACHINE_PERIODIC_CALLBACK_F, int> >::iterator
 		periodic_callback;
-		
+
 	for(periodic_callback  = periodic_callback_set.begin();
 	    periodic_callback != periodic_callback_set.end();
 	    periodic_callback++) {
@@ -1800,7 +1805,7 @@ int Machine::internal_fill_sink(int (*fill_sink_callback)(int status, void *cbd)
 	if(!is_playing) {
 		if(was_playing) {
 			retval = fill_sink_callback(_sinkPaused, callback_data);
-		} 
+		}
 		was_playing = false;
 		return retval;
 	}
@@ -1808,11 +1813,11 @@ int Machine::internal_fill_sink(int (*fill_sink_callback)(int status, void *cbd)
 	if(!was_playing) {
 		was_playing = true;
 
-		retval = fill_sink_callback(_sinkResumed, callback_data);		
+		retval = fill_sink_callback(_sinkResumed, callback_data);
 
 		return retval;
 	}
-	
+
 	if(sink) {
 		try {
 			calculate_samples_per_tick();
@@ -1830,16 +1835,16 @@ int Machine::internal_fill_sink(int (*fill_sink_callback)(int status, void *cbd)
 			throw;
 		}
 	}
-	
+
 	retval = fill_sink_callback(is_recording ? _sinkRecord : _sinkJustPlay, callback_data);
-	
+
 	return retval;
 }
 
 void Machine::internal_disconnect_and_destroy(Machine *m) {
 	if(m->detach_and_destroy()) {
 		m->destroy_tightly_attached_machines();
-		
+
 		// deregister machine
 		Machine::internal_deregister_machine(m);
 	}
@@ -1889,7 +1894,7 @@ void Machine::internal_get_rec_fname(std::string *rval) {
 
 Machine *Machine::internal_get_by_name(const std::string &name) {
 	Machine *m = NULL;
-	
+
 	static std::vector<Machine *>::iterator i;
 
 	for(i = machine_set.begin(); i != machine_set.end(); i++) {
@@ -1912,13 +1917,13 @@ void Machine::prepare_baseline() {
 	// start the async oeprations thread if it does not yet exist
 	if(async_ops == NULL) {
 		async_ops = AsyncOperations::start_async_operations_thread();
-	}	
+	}
 }
 
 void Machine::register_periodic(__MACHINE_PERIODIC_CALLBACK_F callback_function,
 				int interval_in_playback_positions) {
 	std::pair<__MACHINE_PERIODIC_CALLBACK_F, int> _newval;
-	
+
 	_newval.first = callback_function;
 	_newval.second = interval_in_playback_positions;
 
@@ -1936,11 +1941,11 @@ void Machine::register_periodic(__MACHINE_PERIODIC_CALLBACK_F callback_function,
 					periodic_callback_set.push_back(newval);
 					return;
 				}
-				
+
 			}
-			
+
 			// if we are here, the function was not found, so we just add it
-			periodic_callback_set.push_back(newval);			
+			periodic_callback_set.push_back(newval);
 		},
 		&_newval, true);
 }
@@ -1987,7 +1992,7 @@ std::vector<Machine *> Machine::get_machine_set() {
 
 void Machine::jump_to(int _position) {
 	Machine::machine_operation_enqueue(
-		[] (void *d) {			
+		[] (void *d) {
 			int position = *((int *)d);
 
 			reset_all_machines();
@@ -2063,7 +2068,7 @@ void Machine::set_loop_state(bool do_loop) {
 }
 
 void Machine::set_loop_start(int line) {
-	if(line < 0) throw ParameterOutOfSpec();	
+	if(line < 0) throw ParameterOutOfSpec();
 	Machine::machine_operation_enqueue(
 		[] (void *d) {
 			__loop_start = *((int *)d);
@@ -2090,7 +2095,7 @@ void Machine::set_bpm(int bpm) {
 }
 
 void Machine::set_lpb(int lpb) {
-	if(lpb < 2 || lpb > 24) throw ParameterOutOfSpec();	
+	if(lpb < 2 || lpb > 24) throw ParameterOutOfSpec();
 	Machine::machine_operation_enqueue(
 		[] (void *d) {
 			__lpb = (*((int *)d));
@@ -2170,7 +2175,7 @@ void Machine::play() {
 void Machine::stop() {
 	Machine::machine_operation_enqueue(
 		[] (void *d) {
-			is_playing = false;			
+			is_playing = false;
 			reset_all_machines();
 		},
 		NULL, true);
@@ -2200,7 +2205,7 @@ void Machine::disconnect_and_destroy(Machine *m) {
 
 void Machine::destroy_all_machines() {
 	std::vector<std::string> machine_names;
-        
+
 	// we cannot directly use this set to disconnect and destroy
 	// all machines, because disconnect_and_destroy() might destroy
 	// tightly coupled machines resulting in invalid pointers in this
@@ -2209,7 +2214,7 @@ void Machine::destroy_all_machines() {
 	for(auto m : Machine::get_machine_set()) {
 		machine_names.push_back(m->get_name());
 	}
-	
+
 	// then we use the names to find the machines in the set
 	// if a machine in the set was destroyed (because it was tightly connected)
 	// we will get a NULL pointer, then we just skip that and go to the next

@@ -1355,21 +1355,22 @@ RemoteInterface::RIMachine::RIController::RIController(int _ctrl_id, Machine::Co
 		}
 	}
 
-	ctrl->get_min(data.f.min);
-	ctrl->get_max(data.f.min);
-	ctrl->get_step(data.f.min);
-	ctrl->get_value(data.f.min);
+        if(ct_type ==  RIController::ric_float) {
+		ctrl->get_min(data.f.min);
+		ctrl->get_max(data.f.max);
+		ctrl->get_step(data.f.step);
+		ctrl->get_value(data.f.value);
+	} else {
+		ctrl->get_min(data.i.min);
+		ctrl->get_max(data.i.max);
+		ctrl->get_step(data.i.step);
+		ctrl->get_value(data.i.value);
 
-	ctrl->get_min(data.i.min);
-	ctrl->get_max(data.i.min);
-	ctrl->get_step(data.i.min);
-	ctrl->get_value(data.i.min);
-
-	if(ct_type == RIController::ric_enum) {
-		for(auto k = data.i.min; k < data.i.max; k += data.i.step) {
-			enum_names[k] = ctrl->get_value_name(k);
+		if(ct_type == RIController::ric_enum) {
+			for(auto k = data.i.min; k <= data.i.max; k += data.i.step) {
+				enum_names[k] = ctrl->get_value_name(k);
+			}
 		}
-
 	}
 
 	ctrl->get_value(str_data);
@@ -2113,7 +2114,6 @@ void RemoteInterface::RIMachine::process_message(Server *context, MessageHandler
 			}
 			mseq->get_pad()->enqueue_event(finger, pevt, xp, yp);
 		}
-
 	} else if(command == "deleteme") {
 		Machine::disconnect_and_destroy(real_machine_ptr);
 	} else if(command == "setpos") {

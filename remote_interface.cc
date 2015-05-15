@@ -1499,18 +1499,50 @@ std::string RemoteInterface::RIMachine::RIController::get_value_name(int val) {
 
 void RemoteInterface::RIMachine::RIController::set_value(int val) {
 	data.i.value = val;
+	auto crid = ctrl_id;
+	send_obj_message(
+		[crid, val](std::shared_ptr<Message> &msg_to_send) {
+			msg_to_send->set_value("command", "setctrval");
+			msg_to_send->set_value("ctrl_id", std::to_string(crid));
+			msg_to_send->set_value("value", std::to_string(val));
+		}
+		);
 }
 
 void RemoteInterface::RIMachine::RIController::set_value(float val) {
 	data.f.value = val;
+	auto crid = ctrl_id;
+	send_obj_message(
+		[crid, val](std::shared_ptr<Message> &msg_to_send) {
+			msg_to_send->set_value("command", "setctrval");
+			msg_to_send->set_value("ctrl_id", std::to_string(crid));
+			msg_to_send->set_value("value", std::to_string(val));
+		}
+		);
 }
 
 void RemoteInterface::RIMachine::RIController::set_value(bool val) {
 	bl_data = val;
+	auto crid = ctrl_id;
+	send_obj_message(
+		[crid, val](std::shared_ptr<Message> &msg_to_send) {
+			msg_to_send->set_value("command", "setctrval");
+			msg_to_send->set_value("ctrl_id", std::to_string(crid));
+			msg_to_send->set_value("value", val ? "true" : "false");
+		}
+		);
 }
 
 void RemoteInterface::RIMachine::RIController::set_value(const std::string &val) {
 	str_data = val;
+	auto crid = ctrl_id;
+	send_obj_message(
+		[crid, val](std::shared_ptr<Message> &msg_to_send) {
+			msg_to_send->set_value("command", "setctrval");
+			msg_to_send->set_value("ctrl_id", std::to_string(crid));
+			msg_to_send->set_value("value", val);
+		}
+		);
 }
 
 bool RemoteInterface::RIMachine::RIController::has_midi_controller(int &__coarse_controller, int &__fine_controller) {
@@ -2114,6 +2146,9 @@ void RemoteInterface::RIMachine::process_message(Server *context, MessageHandler
 			}
 			mseq->get_pad()->enqueue_event(finger, pevt, xp, yp);
 		}
+	} else if(command == "setctrval") {
+		SATAN_DEBUG("Server will now process a setctrlval message.\n");
+		process_setctrl_val_message(src, msg);
 	} else if(command == "deleteme") {
 		Machine::disconnect_and_destroy(real_machine_ptr);
 	} else if(command == "setpos") {
@@ -2303,7 +2338,7 @@ std::string RemoteInterface::RIMachine::process_get_ctrl_message(const std::stri
 	if(sscc) {
 		auto new_id = sscc->get_id();
 		auto ctrl = real_machine_ptr->get_controller(ctrl_name);
-
+		SATAN_DEBUG("ServerSide created Machine::Controller with ptr %p\n", ctrl);
 		sscc->id2ctrl[new_id] = ctrl;
 
 		RIController rico(new_id, ctrl);
@@ -2313,6 +2348,48 @@ std::string RemoteInterface::RIMachine::process_get_ctrl_message(const std::stri
 	cleanup_stray_controllers();
 
 	return retval;
+}
+
+void RemoteInterface::RIMachine::process_setctrl_val_message(MessageHandler *src, const Message &msg) {
+	auto c2cc = client2ctrl_container.find(src->shared_from_this());
+	if(c2cc != client2ctrl_container.end()) {
+		auto sscc = (*c2cc).second;
+		int ctrl_id = std::stoi(msg.get_value("ctrl_id"));
+
+		auto ctrl_iterator = sscc->id2ctrl.find(ctrl_id);
+		if(ctrl_iterator != sscc->id2ctrl.end()) {
+			auto ctrl = (*ctrl_iterator).second;
+			SATAN_DEBUG("ServerSide, setctrl val, found previously created Machine::Control with ptr %p\n", ctrl);
+			switch(ctrl->get_type()) {
+			case Machine::Controller::c_float:
+			{
+				float val = std::stof(msg.get_value("value"));
+				ctrl->set_value(val);
+			}
+				break;
+			case Machine::Controller::c_bool:
+			{
+				bool val = (msg.get_value("value") == "true") ? true : false;
+				ctrl->set_value(val);
+			}
+				break;
+			case Machine::Controller::c_string:
+			{
+				std::string val = msg.get_value("value");
+				ctrl->set_value(val);
+			}
+				break;
+			case Machine::Controller::c_int:
+			case Machine::Controller::c_enum:
+			case Machine::Controller::c_sigid:
+			{
+				int val = std::stoi(msg.get_value("value"));
+				ctrl->set_value(val);
+			}
+				break;
+			}
+		}
+	}
 }
 
 void RemoteInterface::RIMachine::process_attach_message(Context *context, const Message &msg) {

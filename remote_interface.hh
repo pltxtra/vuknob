@@ -604,6 +604,8 @@ public:
 		// returns a serialized controller representation
  		std::string process_get_ctrl_message(const std::string &ctrl_name, MessageHandler *src);
 
+		void process_setctrl_val_message(MessageHandler *src, const Message &msg);
+
 		void process_attach_message(Context *context, const Message &msg);
 		void process_detach_message(Context *context, const Message &msg);
 

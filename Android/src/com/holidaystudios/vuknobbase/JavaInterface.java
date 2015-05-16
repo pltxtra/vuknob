@@ -68,31 +68,31 @@ public class JavaInterface {
 		File targetFile;
 		RandomAccessFile target;
 		byte[] buffer;
-		
+
 		/**
 		 * Creates a new audio recording at the given path
 		 */
 		public AudioRecorder(String _path) throws IOException {
 			String path = _path;
-			
+
 			minBufferSize = AudioRecord.getMinBufferSize(
 				44100,
 				android.media.AudioFormat.CHANNEL_IN_MONO,
 				android.media.AudioFormat.ENCODING_PCM_16BIT);
 			minBufferSize *= 2;
-			
+
 			ar = new AudioRecord(
 				android.media.MediaRecorder.AudioSource.MIC,
 				44100,
 				android.media.AudioFormat.CHANNEL_IN_MONO,
 				android.media.AudioFormat.ENCODING_PCM_16BIT,
 				minBufferSize);
-			
+
 			String state = android.os.Environment.getExternalStorageState();
 			if(!state.equals(android.os.Environment.MEDIA_MOUNTED))  {
 				throw new IOException("SD Card is not mounted.  It is " + state + ".");
 			}
-			
+
 			// make sure the directory we plan to store the recording in exists
 			File directory = new File(path).getParentFile();
 			if (!directory.exists() && !directory.mkdirs()) {
@@ -102,7 +102,7 @@ public class JavaInterface {
 			targetFile = new File(path);
 			targetFile.createNewFile();
 			target = new RandomAccessFile(targetFile, "rw");
-			
+
 			buffer = new byte[minBufferSize];
 
 			write_wav_header(0);
@@ -173,7 +173,7 @@ public class JavaInterface {
 						max_limit -= minBufferSize;
 					} catch(IOException e) {
 						// error - perhaps disk is full
-						max_limit = 0;						
+						max_limit = 0;
 					}
 				} else {
 					do_record = false;
@@ -194,7 +194,7 @@ public class JavaInterface {
 			}
 			// end of the line
 		}
-		
+
 		public void begin_record() {
 			do_record = true;
 			start();
@@ -230,30 +230,33 @@ public class JavaInterface {
 			ard = null;
 		}
 	}
-	
+
 	private static Activity creator;
-	private static NsdHelper nsd_helper;	
+	private static NsdHelper nsd_helper;
 
 	public static native void SetupInterface(String installation_identifier);
 	public static native void AddService(String service_name, String host, int port);
-	
+
 	public static void SetupNativeJavaInterface(Activity _creator) {
 		creator = _creator;
 
-		nsd_helper = new NsdHelper(creator);
-		nsd_helper.initializeNsd();
+		if (android.os.Build.VERSION.SDK_INT >= 17) {
+			nsd_helper = new NsdHelper(creator);
+			nsd_helper.initializeNsd();
+		}
 
 		SetupInterface(Installation.id(_creator));
 	}
 
 	public static void tearDown() {
-		nsd_helper.tearDown();
+		if(nsd_helper != null)
+			nsd_helper.tearDown();
 	}
 
 	public static String CallTarFunction(Vector<String> argvec) {
 		String argv[] = new String[argvec.size()];
 		argvec.toArray(argv);
-	
+
 		Log.v("SATAN", "Calling taring");
 		tar app = new tar();
 		try {
@@ -271,7 +274,7 @@ public class JavaInterface {
 		File audio = new File(path_to_file);
 
 		if(!audio.exists()) return false;
-		
+
 		Intent intent = new Intent(Intent.ACTION_SEND).setType("audio/*");
 		intent.putExtra(Intent.EXTRA_STREAM, Uri.fromFile(audio));
 		creator.startActivity(Intent.createChooser(intent, "Share to"));
@@ -280,21 +283,26 @@ public class JavaInterface {
 	}
 
 	public static void AnnounceService(int port) {
-		nsd_helper.registerService(port);
+		if(nsd_helper != null)
+			nsd_helper.registerService(port);
 	}
 
 	public static void TakedownService() {
-		nsd_helper.tearDown();
+		if(nsd_helper != null)
+			nsd_helper.tearDown();
 	}
 
 	public static void DiscoverServices() {
-		nsd_helper.discoverServices();
+		if(nsd_helper != null)
+			nsd_helper.discoverServices();
 	}
 
 	public static void ListServices() {
-		for(android.net.nsd.NsdServiceInfo service : nsd_helper.get_discovery_set()) {
-			Log.v("SATAN", "JAVA - calling AddService(" + service.getServiceName() + ", " + service.getHost().getHostAddress() + ", " + String.valueOf(service.getPort()) + ") ...\n");
-			AddService(service.getServiceName(), service.getHost().getHostAddress(), service.getPort());
+		if(nsd_helper != null) {
+			for(android.net.nsd.NsdServiceInfo service : nsd_helper.get_discovery_set()) {
+				Log.v("SATAN", "JAVA - calling AddService(" + service.getServiceName() + ", " + service.getHost().getHostAddress() + ", " + String.valueOf(service.getPort()) + ") ...\n");
+				AddService(service.getServiceName(), service.getHost().getHostAddress(), service.getPort());
+			}
 		}
 	}
 
@@ -314,29 +322,29 @@ public class JavaInterface {
 
 		preview_samples_left -= samples_to_play;
 		preview_index += samples_to_play;
-		
+
 		if(preview_samples_left <= 0) return false;
 
 		return true;
 	}
-	
+
 	public static void Preview16BitWavStop() {
 		at.stop();
 		at.release();
 	}
-	
+
 	public static void Preview16BitWavStart(int channels, int samples, int frequency, short[] data) {
 		// we ignore frequency, currently
 		int sampleRate = AudioTrack.getNativeOutputSampleRate(AudioManager.STREAM_MUSIC);
-		
+
 		int channel_mode = channels == 2 ? AudioFormat.CHANNEL_OUT_STEREO : AudioFormat.CHANNEL_OUT_MONO;
 
 		int bfsize = 0;
 		int minBufferSize = AudioTrack.getMinBufferSize(
 			sampleRate,
 			channel_mode,
-			AudioFormat.ENCODING_PCM_16BIT);		
-		
+			AudioFormat.ENCODING_PCM_16BIT);
+
 		at = new AudioTrack(
 			AudioManager.STREAM_MUSIC,
 			sampleRate,
@@ -345,18 +353,17 @@ public class JavaInterface {
 			minBufferSize,
 			AudioTrack.MODE_STREAM
 			);
-		
+
 		preview_data = data;
 		preview_buffer_size = minBufferSize / 2; // we want it in samples, not bytes
 		empty_preview_data = new short[preview_buffer_size];
 		int k;
 		for(k = 0; k < preview_buffer_size; k++) empty_preview_data[k] = 0;
 		preview_index = 0;
-		preview_samples_left = samples * channels; // we want number of samples for all channels 
-		
-		
+		preview_samples_left = samples * channels; // we want number of samples for all channels
+
+
 		at.play();
 
 	}
 }
-

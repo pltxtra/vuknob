@@ -49,7 +49,7 @@ using namespace std;
 #include "android_java_interface.hh"
 #endif
 
-#define __DO_SATAN_DEBUG
+//#define __DO_SATAN_DEBUG
 #include "satan_debug.hh"
 
 #include "common.hh"
@@ -64,7 +64,7 @@ LogoScreen::ThumpAnimation *LogoScreen::ThumpAnimation::active = NULL;
 LogoScreen::ThumpAnimation::~ThumpAnimation() {
 	active = NULL;
 }
-	
+
 LogoScreen::ThumpAnimation::ThumpAnimation(double *_thump_offset, float duration) :
 	KammoGUI::Animation(duration),
 	thump_offset(_thump_offset) {}
@@ -96,7 +96,7 @@ void LogoScreen::on_resize() {
 
 	int pixel_w, pixel_h;
 	get_canvas_size(pixel_w, pixel_h);
-	
+
 	float canvas_w_inches, canvas_h_inches;
 	get_canvas_size_inches(canvas_w_inches, canvas_h_inches);
 
@@ -110,8 +110,8 @@ void LogoScreen::on_resize() {
 	// if larger than the canvas pixel size, then limit it
 	finger_width = finger_width < pixel_w ? finger_width : pixel_w;
 	finger_height = finger_height < pixel_h ? finger_height : pixel_h;
-	
-	// calculate scaling factor	
+
+	// calculate scaling factor
 	double scaling_w = (finger_width) / (double)document_size.width;
 	double scaling_h = (finger_height) / (double)document_size.height;
 
@@ -120,24 +120,24 @@ void LogoScreen::on_resize() {
 	// calculate translation
 	double translate_x = (pixel_w - document_size.width * scaling) / 2.0;
 	double translate_y = (pixel_h - document_size.height * scaling) / 2.0;
-	
+
 	// initiate transform_m
 	transform_m.init_identity();
 	transform_m.translate(translate_x, translate_y);
-	transform_m.scale(scaling, scaling);	
+	transform_m.scale(scaling, scaling);
 }
 
 void LogoScreen::on_render() {
 	{ /* process thump */
 		KammoGUI::SVGCanvas::SVGMatrix logo_base_t;
 		KammoGUI::SVGCanvas::SVGMatrix logo_thump_t;
-		
+
 		logo_thump_t.translate(-250.0, -200.0);
 		logo_thump_t.scale(1.0 + 0.1 * thump_offset,
 				   1.0 + 0.1 * thump_offset
 			);
 		logo_thump_t.translate(250.0, 200.0);
-		
+
 		if(!logo_base_got) {
 			knobBody_element->get_transform(knob_base_t);
 			logo_base_got = true;
@@ -209,11 +209,11 @@ void LogoScreen::element_on_event(KammoGUI::SVGCanvas::SVGDocument *source,
 				ctx->selected_port = RemoteInterface::Server::start_server();
 				ctx->selected_server = "localhost";
 			}
-			
+
 			// connect to the selected server
 			RemoteInterface::Client::start_client(ctx->selected_server, ctx->selected_port,
 							      remote_interface_disconnected, failure_response);
-			
+
 			// just show main UI
 			static KammoGUI::UserEvent *ue = NULL;
 			KammoGUI::get_widget((KammoGUI::Widget **)&ue, "showMainUIContainer");
@@ -234,7 +234,7 @@ static void yes(void *ignored) {
 
 static void no(void *ignored) {
 	// do not do anything
-	SATAN_DEBUG("NO   unique ID: %s\n", __ANDROID_installation_id.c_str());	
+	SATAN_DEBUG("NO   unique ID: %s\n", __ANDROID_installation_id.c_str());
 }
 
 static void ask_question(void *ignored) {
@@ -253,11 +253,12 @@ LogoScreen::LogoScreen(bool hide_network_element, KammoGUI::SVGCanvas *cnvs, std
 
 	network_element = new KammoGUI::SVGCanvas::ElementReference(this, "network");
 	network_element->set_event_handler(element_on_event);
+	SATAN_DEBUG("LogoScreen::LogoScreen() - hide_network_element = %s\n", hide_network_element ? "true" : "false");
 	if(hide_network_element) network_element->set_display("none");
-	
+
 	knobBody_element = new KammoGUI::SVGCanvas::ElementReference(this, "knobBody");
 	knobBody_element->set_event_handler(element_on_event);
-	
+
 #ifdef ANDROID
 //	KammoGUI::run_on_GUI_thread(ask_question, NULL);
 #endif
@@ -273,8 +274,10 @@ LogoScreen::LogoScreen(bool hide_network_element, KammoGUI::SVGCanvas *cnvs, std
 KammoEventHandler_Declare(LogoScreenHandler,"logoScreen:logoScreenOld");
 
 virtual void on_init(KammoGUI::Widget *wid) {
-	KammoGUI::SVGCanvas *cnvs = (KammoGUI::SVGCanvas *)wid;		
+	KammoGUI::SVGCanvas *cnvs = (KammoGUI::SVGCanvas *)wid;
 	cnvs->set_bg_color(1.0, 0.631373, 0.137254);
+
+	SATAN_DEBUG("init LogoScreen - id: %s\n", wid->get_id().c_str());
 
 	if(wid->get_id() == "logoScreen") {
 		(void)new LogoScreen(false, cnvs, std::string(SVGLoader::get_svg_directory() + "/logoScreen.svg"));

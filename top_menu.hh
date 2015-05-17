@@ -68,10 +68,11 @@ private:
 	static void sequence_row_playing_changed(int row);
 
 	int w;
-	bool show_pulse;
+	bool no_compose_mode = false;
+	bool show_pulse = false;
 	bool is_playing = false, is_recording = false;
 public:
-	TopMenu(CanvasWidgetContext *cwc);
+	TopMenu(bool no_compose_mode, CanvasWidgetContext *cwc);
 
 	virtual void resized();
 	virtual void expose();
@@ -79,7 +80,7 @@ public:
 
 	static void new_view_enabled(KammoGUI::Widget *w);
 
-	static void setup(KammoGUI::Canvas *cnv);
+	static void setup(bool no_compose_mode, KammoGUI::Canvas *cnv);
 
 	// RemoteInterface::GlobalControlObject::PlaybackStateListener
 	virtual void playback_state_changed(bool is_playing) override;

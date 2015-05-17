@@ -60,8 +60,9 @@ using namespace std;
 
 std::shared_ptr<TopMenu> TopMenu::top_menu;
 
-TopMenu::TopMenu(CanvasWidgetContext *cwc) :
-	CanvasWidget(cwc, 0.0, 0.0, 1.0, 1.0, 0xff), current_selection(selected_none), show_pulse(false) {
+TopMenu::TopMenu(bool _no_compose_mode, CanvasWidgetContext *cwc) :
+	CanvasWidget(cwc, 0.0, 0.0, 1.0, 1.0, 0xff), current_selection(selected_none), no_compose_mode(_no_compose_mode),
+	show_pulse(false) {
 
 	bt_rewind_d   = KammoGUI::Canvas::SVGDefinition::from_file(
 		std::string(CanvasWidgetContext::svg_directory + "/TopMenu-Rewind.svg"));
@@ -79,9 +80,11 @@ TopMenu::TopMenu(CanvasWidgetContext *cwc) :
 	bt_project_sel_d   = KammoGUI::Canvas::SVGDefinition::from_file(
 		std::string(CanvasWidgetContext::svg_directory + "/TopMenu-Project-Selected.svg"));
 	bt_compose_d   = KammoGUI::Canvas::SVGDefinition::from_file(
-		std::string(CanvasWidgetContext::svg_directory + "/TopMenu-Compose.svg"));
+		std::string(CanvasWidgetContext::svg_directory + (no_compose_mode ? "/TopMenu-Connector.svg" : "/TopMenu-Compose.svg")
+			));
 	bt_compose_sel_d   = KammoGUI::Canvas::SVGDefinition::from_file(
-		std::string(CanvasWidgetContext::svg_directory + "/TopMenu-Compose-Selected.svg"));
+		std::string(CanvasWidgetContext::svg_directory + (no_compose_mode ? "/TopMenu-Connector-Selected.svg" : "/TopMenu-Compose-Selected.svg")
+			));
 	bt_jam_d   = KammoGUI::Canvas::SVGDefinition::from_file(
 		std::string(CanvasWidgetContext::svg_directory + "/TopMenu-Jam.svg"));
 	bt_jam_sel_d   = KammoGUI::Canvas::SVGDefinition::from_file(
@@ -138,7 +141,11 @@ void TopMenu::new_view_enabled(KammoGUI::Widget *new_view) {
 	static KammoGUI::Widget *jam_widget = NULL;
 
 	KammoGUI::get_widget((KammoGUI::Widget **)&project_widget, "projectContainer");
-	KammoGUI::get_widget((KammoGUI::Widget **)&compose_widget, "sequence_container");
+	if(top_menu->no_compose_mode) {
+		KammoGUI::get_widget((KammoGUI::Widget **)&compose_widget, "connector_container");
+	} else {
+		KammoGUI::get_widget((KammoGUI::Widget **)&compose_widget, "sequence_container");
+	}
 	KammoGUI::get_widget((KammoGUI::Widget **)&jam_widget, "livePad2");
 
 	if(new_view == project_widget) {
@@ -208,7 +215,11 @@ void TopMenu::on_event(KammoGUI::canvasEvent_t ce, int x, int y) {
 	} else if(x > (x2 - 2 * w)) {
 		// compose
 		static KammoGUI::UserEvent *ue = NULL;
-		KammoGUI::get_widget((KammoGUI::Widget **)&ue, "showComposeContainer");
+		if(no_compose_mode) {
+			KammoGUI::get_widget((KammoGUI::Widget **)&ue, "showConnector_container");
+		} else {
+			KammoGUI::get_widget((KammoGUI::Widget **)&ue, "showComposeContainer");
+		}
 		if(ue != NULL) {
 			std::map<std::string, void *> args;
 			KammoGUI::EventHandler::trigger_user_event(ue, args);
@@ -237,7 +248,7 @@ void TopMenu::sequence_row_playing_changed(int row) {
 	KammoGUI::run_on_GUI_thread(run_play_pulse_marker, (void *)row);
 }
 
-void TopMenu::setup(KammoGUI::Canvas *cnvs) {
+void TopMenu::setup(bool _no_compose_mode, KammoGUI::Canvas *cnvs) {
 	float w_inch = KammoGUI::DisplayConfiguration::get_screen_width(KammoGUI::inches);
 
 	float min_h = w_inch / 6.0f;
@@ -246,7 +257,7 @@ void TopMenu::setup(KammoGUI::Canvas *cnvs) {
 	CanvasWidgetContext *cwc =
 		new CanvasWidgetContext(cnvs, w_inch, min_h);
 	cnvs->set_bg_color(0.9f, 0.9f, 0.9f);
-	top_menu = std::make_shared<TopMenu>(cwc);
+	top_menu = std::make_shared<TopMenu>(_no_compose_mode, cwc);
 
 	cwc->enable_events();
 
@@ -278,15 +289,13 @@ void TopMenu::recording_state_changed(bool _is_recording) {
  *
  ***************************/
 
-KammoEventHandler_Declare(TopMenuHandler,"topMenu:modeTabs");
+KammoEventHandler_Declare(TopMenuHandler,"topMenuNoCompose:topMenu:modeTabs");
 
 virtual void on_init(KammoGUI::Widget *wid) {
 	if(wid->get_id() == "topMenu") {
-		try {
-			TopMenu::setup((KammoGUI::Canvas *)wid);
-		} catch(...) {
-			SATAN_DEBUG("Caught an exception in on_init() for \"TopMenu\" \n"); fflush(0);
-		}
+		TopMenu::setup(false, (KammoGUI::Canvas *)wid);
+	} else if(wid->get_id() == "topMenuNoCompose") {
+		TopMenu::setup(true, (KammoGUI::Canvas *)wid);
 	}
 }
 

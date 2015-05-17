@@ -24,11 +24,11 @@
   <userevent id="showProjectContainer" viewtrigger="projectContainer" />
   <userevent id="showLivePadContainer" viewtrigger="livepad_container" />
   <userevent id="showLivePad2" viewtrigger="livePad2" />
-  
+
   <userevent id="showAdvancedFileRequester" viewtrigger="AdvancedFileRequester" />
 
   <userevent id="showMainUIContainer" viewtrigger="mainUIContainer" />
-  
+
   <window align="vertical" title="Satan" id="MainWindow" fullscreen="true" >
     <tabs id="topTaps" title="topT" expand="true" hidetabs="true" fill="true" >
 
@@ -37,7 +37,7 @@
       </container>
 
       <container id="mainUIContainer" title="mainContain" align="vertical" exapnd="true" fill="true" >
-	<canvas title="TopMenu" id="topMenu" expand="false" fill="false" />
+	<canvas title="TopMenu" id="topMenuNoCompose" expand="false" fill="false" />
 
 	<tabs id="modeTabs" title="ModeT" expand="true" hidetabs="true" fill="true">
 
@@ -60,15 +60,15 @@
 	      <container id="whistleUIStartRight" align="horizontal" expand="true" fill="true" />
 	    </container>
 	    <container id="whistleUIStartBottom" align="horizontal" expand="true" fill="true" />
-	    
+
 	  </container>
 
 	  <container id="whistleStopUI" title="WHISTLE" align="vertical" expand="true" fill="true" scrollable="false" >
 	    <container id="whistleUIStop" align="horizontal" expand="false" fill="false" >
 	      <button id="whistleStop" title="STOP" expand="true" fill="true" viewtrigger="whistleProgramUI" />
-	    </container>		  
+	    </container>
 	  </container>
-	  
+
 	  <container id="whistleProgramUI" title="WHISTLE" align="vertical" expand="true" fill="true" scrollable="false" >
 	    <list title="Machines" id="whistleMachineSelector" expand="false" fill="false" isdropdown="true" >
 	      <column title="Machine" />
@@ -80,7 +80,7 @@
 
 	    <button id="whistleConvert" title="To Sequencer" expand="true" fill="true" />
 	  </container>
-	  
+
 	  <container id="aboutSATAN" title="ABOUT" align="vertical" expand="true" fill="true" scrollable="false" >
 	    <button id="aboutLicense" title="LICENSE" expand="false" fill="false" viewtrigger="aboutLICENSE"/>
 	    <container id="aboutSATANList" title="ABOUT" align="vertical" expand="true" fill="true" scrollable="false" >
@@ -102,8 +102,8 @@
 	      <label id="acknowledge4" title="" />
 	      <label id="acknowledge5" title="Vorbis code (C) 2002-2008 Xiph.org Foundation" />
 	      <label id="acknowledge6" title="KISS FFT (C) 2003-2004 by Mark Borgerding" />
-	      
-	      
+
+
 	    </container>
 	  </container>
 
@@ -143,7 +143,7 @@
 		  <button title="+" id="increaseShuffle" expand="false" fill="false" />
 		</container>
 	      </container>
-	      
+
 	      <container id="loadSaveNewContainer" align="horizontal" expand="false" fill="false" >
 		<button id="NEW_PROJECT_BT" title="NEW" expand="true" fill="true" />
 		<button id="LOAD_PROJECT_BT" title="LOAD" expand="true" fill="true" />
@@ -174,28 +174,28 @@
 
 	      <container id="saveUI_mainContainerFillLeft" expand="true" fill="true" align="horizontal">
 	      </container>
-	      
+
 	      <container id="saveUI_mainContainer" expand="true" fill="true" align="vertical">
 		<container id="saveUI_titleContainer" expand="false" fill="false" align="vertical">
 		  <label id="saveUI_titleLabel" title="Title:" expand="false" fill="false" />
 		  <entry id="saveUI_titleEntry" title="" expand="false" fill="false" />
 		</container>
-		
+
 		<container id="saveUI_artistContainer" expand="false" fill="false" align="vertical">
 		  <label id="saveUI_artistLabel" title="Artist:" expand="false" fill="false" />
 		  <entry id="saveUI_artistEntry" title="" expand="false" fill="false" />
 		</container>
-		
+
 		<container id="saveUI_genreContainer" expand="false" fill="false" align="vertical">
 		  <label id="saveUI_genreLabel" title="Genre:" expand="false" fill="false" />
 		  <entry id="saveUI_genreEntry" title="" expand="false" fill="false" />
 		</container>
-		
+
 		<container id="saveUI_saveButtonContainer" expand="false" fill="false" align="vertical">
 		  <button id="saveUI_saveButton" title="SAVE NOW" expand="false" fill="false" />
 		</container>
 	      </container>
-	      
+
 	      <container id="saveUI_mainContainerFillRight" expand="true" fill="true" align="horizontal">
 	      </container>
 
@@ -230,7 +230,7 @@
 	    <button id="ExportWav2Vorbis" title="WAV to ogg" />
 	    <button id="ShareOgg" title="Share Ogg" />
 	  </container>
-	  
+
 	  <container id="machineTypeListScroller" align="vertical" expand="true" fill="true" >
 	    <list title="Machine Type" id="MachineType" expand="true" fill="true">
 	      <column title="Machine" />
@@ -259,21 +259,21 @@
 	  <container title="Equipment" id="connector_container" align="vertical" expand="true" fill="true" >
 	    <svgcanvas id="connector" title="Connector" expand="true" fill="true" />
 	  </container>
-	  
+
 	  <container title="Knobs&amp;Sliders" id="ControlsContainer" align="vertical" expand="true" fill="true" >
 	    <list title="Controllers" id="cgroups" expand="false" fill="false" isdropdown="true" >
 	      <column title="Group" />
 	    </list>
-	    <container id="controllerScroller" align="vertical" expand="true" fill="true" scrollable="true" />		
+	    <container id="controllerScroller" align="vertical" expand="true" fill="true" scrollable="true" />
 	  </container>
 
 	  <container title="Samples" id="SamplesListContainer" align="vertical" expand="true" fill="true" scrollable="true" />
-	  
+
 	  <container title="Samples Directories" id="SamplesDirectoriesContainerMaster" align="vertical" expand="true" fill="true">
 	    <container title="Samples Directories" id="SamplesDirectoriesContainer" align="vertical" expand="true" fill="true" scrollable="true" />
 	    <button title="ADD NEW DIRECTORY" id="samDirs_Add" />
 	  </container>
-	  
+
 	  <container title="Samples Directory" id="SamplesDirectoryContainerMaster" align="vertical" expand="true" fill="true">
 	    <container title="" id="samEd_RetCanContainer" expand="false" fill="false" >
 	      <button title="Return..." id="samEd_Return" expand="true" fill="true" />

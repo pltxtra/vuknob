@@ -117,53 +117,24 @@
 	    <label id="license7" title="" />
 	  </container>
 
-	  <container id="projectContainer" title="Project" align="vertical" expand="true" fill="true">
-	    <container id="projectContainerTop" align="vertical" expand="true" fill="true">
-	      <container id="bpmContainer" align="horizontal" expand="false" fill="false" >
-		<label title="BPM: 120" id="scaleBPMlabel" expand="false" fill="false" />
-		<container id="bpmScaleContainer" align="horizontal" expand="true" fill="true" >
-		  <button title="-" id="decreaseBPM" expand="false" fill="false" />
-		  <scale title="BPM" id="scaleBPM" expand="true" fill="true" min="20" max="200" inc="1" />
-		  <button title="+" id="increaseBPM" expand="false" fill="false" />
-		</container>
-	      </container>
-	      <container id="lpbContainer" align="horizontal" expand="false" fill="false"  >
-		<label title="LPB: 4" id="scaleLPBlabel" expand="false" fill="false" />
-		<container id="lpbScaleContainer" align="horizontal" expand="true" fill="true" >
-		  <button title="-" id="decreaseLPB" expand="false" fill="false" />
-		  <scale title="LPB" id="scaleLPB" expand="true" fill="true" min="2" max="24" inc="1" />
-		  <button title="+" id="increaseLPB" expand="false" fill="false" />
-		</container>
-	      </container>
-	      <container id="ShuffleContainer" align="horizontal" expand="false" fill="false"  >
-		<label title="Shuffle: 0" id="scaleShufflelabel" expand="false" fill="false" />
-		<container id="shuffleScaleContainer" align="horizontal" expand="true" fill="true" >
-		  <button title="-" id="decreaseShuffle" expand="false" fill="false" />
-		  <scale title="Shuffle" id="scaleShuffle" expand="true" fill="true" min="0" max="100" inc="1" />
-		  <button title="+" id="increaseShuffle" expand="false" fill="false" />
-		</container>
-	      </container>
-
-	      <container id="loadSaveNewContainer" align="horizontal" expand="false" fill="false" >
-		<button id="NEW_PROJECT_BT" title="NEW" expand="true" fill="true" />
-		<button id="LOAD_PROJECT_BT" title="LOAD" expand="true" fill="true" />
-	      </container>
-	      <container id="projectExportContainer" align="horizontal" expand="false" fill="false" >
-		<button id="SAVE_PROJECT_BT" title="SAVE" viewtrigger="SaveUI" expand="true" fill="true" />
-		<button id="showExportUI" title="EXPORT" viewtrigger="ExporterGUI" expand="true" fill="true" />
-	      </container>
-	      <button id="showSamplesUI" title="SAMPLES" viewtrigger="SamplesListContainer" expand="false" fill="true" />
-	    </container>
+	  <container id="hiddenStuff">
+	    <label title="BPM: 120" id="scaleBPMlabel" expand="false" fill="false" />
+	    <scale title="BPM" id="scaleBPM" expand="true" fill="true" min="20" max="200" inc="1" />
+	    <label title="LPB: 4" id="scaleLPBlabel" expand="false" fill="false" />
+	    <scale title="LPB" id="scaleLPB" expand="true" fill="true" min="2" max="24" inc="1" />
+	    <label title="Shuffle: 0" id="scaleShufflelabel" expand="false" fill="false" />
+	    <scale title="Shuffle" id="scaleShuffle" expand="true" fill="true" min="0" max="100" inc="1" />
 	    <label id="YouGottaSayYesToAnotherExcess" title="" expand="true" fill="true" />
+	  </container>
+
+	  <container id="projectContainer" title="Project"
+		     align="vertical" expand="true" fill="true">
+	    <label id="prjC_top" title="" expand="true" fill="true" />
 	    <container id="QUITNABOUT" expand="false" fill="false" align="horizontal" >
 	      <button id="quitnow" title="QUIT" expand="true" fill="true" />
 	      <button id="aboutus" title="ABOUT" expand="true" fill="true" viewtrigger="aboutSATAN"/>
-	      <button id="loadTutorial2" title="TUTORIAL" expand="true" fill="true"
-		      exturi="http://youtu.be/9gI_gUIh3DY" />
 	    </container>
-	    <container id="demoLoadContainer" expand="false" fill="false" align="horizontal" >
-	      <button id="loadExample2" title="LOAD DEMO" expand="true" fill="true" />
-	    </container>
+	    <label id="prjC_bottom" title="" expand="true" fill="true" />
 	  </container>
 
 	  <container title="Save Project" id="SaveUI" align="vertical" expand="true" fill="true" >

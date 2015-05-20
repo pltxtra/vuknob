@@ -215,10 +215,20 @@ void LogoScreen::element_on_event(KammoGUI::SVGCanvas::SVGDocument *source,
 							      remote_interface_disconnected, failure_response);
 
 			// just show main UI
-			static KammoGUI::UserEvent *ue = NULL;
-			KammoGUI::get_widget((KammoGUI::Widget **)&ue, "showMainUIContainer");
-			if(ue != NULL)
-				KammoGUI::EventHandler::trigger_user_event(ue);
+			{
+				static KammoGUI::UserEvent *ue = NULL;
+				KammoGUI::get_widget((KammoGUI::Widget **)&ue, "showMainUIContainer");
+				if(ue != NULL)
+					KammoGUI::EventHandler::trigger_user_event(ue);
+			}
+
+			// if we should start with the JAM view, skip to that directly
+			if(ctx->start_with_jam_view) {
+				static KammoGUI::UserEvent *uej = NULL;
+				KammoGUI::get_widget((KammoGUI::Widget **)&uej, "showLivePad2");
+				if(uej != NULL)
+					KammoGUI::EventHandler::trigger_user_event(uej);
+			}
 		}
 	}
 }
@@ -246,6 +256,8 @@ static void ask_question(void *ignored) {
 #endif
 
 LogoScreen::LogoScreen(bool hide_network_element, KammoGUI::SVGCanvas *cnvs, std::string fname) : SVGDocument(fname, cnvs), logo_base_got(false), server_list(cnvs) {
+	start_with_jam_view = !hide_network_element;
+
 	google_element = new KammoGUI::SVGCanvas::ElementReference(this, "google");
 	google_element->set_event_handler(element_on_event);
 	start_element = new KammoGUI::SVGCanvas::ElementReference(this, "start");

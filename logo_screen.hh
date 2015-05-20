@@ -45,21 +45,22 @@ private:
 	public:
 		// animate the thump_offset double
 		static ThumpAnimation *start_thump(double *_thump_offset, float duration);
-		
+
 		~ThumpAnimation();
-		
+
 		virtual void new_frame(float progress);
 		virtual void on_touch_event();
 	};
 
+	bool start_with_jam_view = false;
 	bool thump_in_progress = false;
 	double thump_offset = 0.0;
-	
+
 	bool logo_base_got = false;
 	KammoGUI::SVGCanvas::SVGMatrix knob_base_t;
 
 	KammoGUI::SVGCanvas::SVGMatrix transform_m;
-	
+
 	KammoGUI::SVGCanvas::ElementReference *knobBody_element;
 	KammoGUI::SVGCanvas::ElementReference *google_element;
 	KammoGUI::SVGCanvas::ElementReference *start_element;
@@ -67,9 +68,9 @@ private:
 
 	std::string selected_server = "localhost";
 	int selected_port = -1;
-	
+
 	ListView server_list;
-	
+
 	static void element_on_event(KammoGUI::SVGCanvas::SVGDocument *source, KammoGUI::SVGCanvas::ElementReference *e_ref,
 				     const KammoGUI::SVGCanvas::MotionEvent &event);
 public:

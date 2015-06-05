@@ -62,6 +62,7 @@
 #define __FCT_HANDLELIST		"HandleList"
 #define __FCT_GLOBALCONTROLOBJECT	"GloCtrlObj"
 #define __FCT_RIMACHINE			"RIMachine"
+#define __FCT_SAMPLEBANK	        "SampleBank"
 
 #define __VUKNOB_PROTOCOL_VERSION__ 2
 
@@ -1324,6 +1325,117 @@ std::vector<std::weak_ptr<RemoteInterface::GlobalControlObject::PlaybackStateLis
 
 /***************************
  *
+ *  Class RemoteInterface::SampleBank::SampleBankFactory
+ *
+ ***************************/
+
+RemoteInterface::SampleBank::SampleBankFactory::SampleBankFactory() : Factory(__FCT_SAMPLEBANK) {}
+
+std::shared_ptr<RemoteInterface::BaseObject> RemoteInterface::SampleBank::SampleBankFactory::create(const Message &serialized) {
+	std::lock_guard<std::mutex> lock_guard(clientside_samplebanks_mutex);
+
+	std::shared_ptr<SampleBank> sb = std::make_shared<SampleBank>(this, serialized);
+	clientside_samplebanks[sb->get_name()] = sb;
+	return sb;
+}
+
+std::shared_ptr<RemoteInterface::BaseObject> RemoteInterface::SampleBank::SampleBankFactory::create(int32_t new_obj_id) {
+	return std::make_shared<SampleBank>(new_obj_id, this);
+}
+
+/***************************
+ *
+ *  Class RemoteInterface::SampleBank
+ *
+ ***************************/
+
+// client side
+RemoteInterface::SampleBank::SampleBank(const Factory *factory, const Message &serialized) : BaseObject(factory, serialized) {
+	bank_name = serialized.get_value("bank_name");
+
+	{
+		ItemDeserializer ides(serialized.get_value("content"));
+		serderize_samplebank(ides);
+	}
+}
+
+// server side
+RemoteInterface::SampleBank::SampleBank(int32_t new_obj_id, const Factory *factory) : BaseObject(new_obj_id, factory) {
+	bank_name = "<global>";
+	// currently we only support the global sample bank (that's the only one availble at this time)
+	sample_names = Machine::StaticSignalLoader::get_all_signal_names();
+}
+
+template <class SerderClassT>
+void RemoteInterface::SampleBank::serderize_samplebank(SerderClassT& iserder) {
+	iserder.process(sample_names);
+}
+
+std::string RemoteInterface::SampleBank::get_name() {
+	return bank_name;
+}
+
+std::string RemoteInterface::SampleBank::get_sample_name(int bank_index) {
+	auto itr = sample_names.find(bank_index);
+
+	if(itr == sample_names.end()) {
+		throw NoSampleLoaded();
+	}
+
+	return (*itr).second;
+}
+
+void RemoteInterface::SampleBank::post_constructor_client() {}
+void RemoteInterface::SampleBank::process_message(Server *context, MessageHandler *src, const Message &msg) {}
+void RemoteInterface::SampleBank::process_message(Client *context, const Message &msg) {}
+
+void RemoteInterface::SampleBank::serialize(std::shared_ptr<Message> &target) {
+	target->set_value("bank_name", bank_name);
+
+	{
+		ItemSerializer iser;
+		serderize_samplebank(iser);
+		target->set_value("content", iser.result());
+	}
+}
+
+void RemoteInterface::SampleBank::on_delete(Client *context) {
+	std::lock_guard<std::mutex> lock_guard(clientside_samplebanks_mutex);
+
+	auto itr = clientside_samplebanks.begin();
+	while(itr != clientside_samplebanks.end()) {
+		auto sb_shr = std::dynamic_pointer_cast<SampleBank>(shared_from_this());
+		if((*itr).second.lock() == sb_shr) {
+			// just delete us from the map and return
+			(void) clientside_samplebanks.erase(itr);
+			return;
+		}
+	}
+}
+
+auto RemoteInterface::SampleBank::get_bank(const std::string _name) -> std::shared_ptr<SampleBank> {
+	std::lock_guard<std::mutex> lock_guard(clientside_samplebanks_mutex);
+
+	std::string name = "<global>"; // default to <global>
+	if(name != "") name = _name; // but if _name is not empty then we set name to _name
+
+	auto itr = clientside_samplebanks.find(name);
+	if(itr != clientside_samplebanks.end()) {
+		auto sb_locked = (*itr).second.lock();
+		if(sb_locked)
+			return sb_locked;
+	}
+
+	std::shared_ptr<SampleBank> empty;
+	return empty;
+}
+
+std::map<std::string, std::weak_ptr<RemoteInterface::SampleBank> >RemoteInterface::SampleBank::clientside_samplebanks;
+std::mutex RemoteInterface::SampleBank::clientside_samplebanks_mutex;
+RemoteInterface::SampleBank::SampleBankFactory  RemoteInterface::SampleBank::samplebank_factory;
+
+/***************************
+ *
  *  Class RemoteInterface::RIMachine::RIController
  *
  ***************************/
@@ -1489,6 +1601,19 @@ void RemoteInterface::RIMachine::RIController::get_value(std::string &val) {
 }
 
 std::string RemoteInterface::RIMachine::RIController::get_value_name(int val) {
+	if(ct_type == RIController::ric_sigid) {
+		std::string retval = "no file loaded";
+
+		auto global_sb = SampleBank::get_bank("");
+		if(global_sb) {
+			try {
+				retval = global_sb->get_sample_name(val);
+			} catch(SampleBank::NoSampleLoaded &e) { /* ignore */ }
+		}
+
+		return retval;
+	}
+
 	auto enam = enum_names.find(val);
 
 	if(enam == enum_names.end())
@@ -3147,6 +3272,12 @@ void RemoteInterface::Server::create_service_objects() {
 	}
 	{ // create global control object
 		create_object_from_factory(__FCT_GLOBALCONTROLOBJECT, [](std::shared_ptr<BaseObject> new_obj){});
+	}
+	{ // create global sample bank
+		create_object_from_factory(__FCT_SAMPLEBANK,
+					   [](std::shared_ptr<BaseObject> new_obj){
+					   }
+			);
 	}
 	{ // register us as a machine set listener
 		Machine::register_machine_set_listener(shared_from_this());

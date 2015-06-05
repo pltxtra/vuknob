@@ -372,6 +372,48 @@ public:
 		std::vector<std::string> scale_names;
 	};
 
+	class SampleBank : public BaseObject {
+	private:
+		class SampleBankFactory : public Factory {
+		public:
+			SampleBankFactory();
+
+			virtual std::shared_ptr<BaseObject> create(const Message &serialized) override;
+			virtual std::shared_ptr<BaseObject> create(int32_t new_obj_id) override;
+		};
+		static SampleBankFactory samplebank_factory;
+
+		std::map<int, std::string> sample_names;
+		std::string bank_name;
+
+		static std::mutex clientside_samplebanks_mutex;
+		static std::map<std::string, std::weak_ptr<SampleBank> > clientside_samplebanks;
+
+		template <class SerderClassT>
+		void serderize_samplebank(SerderClassT &serder); // serder is an either an ItemSerializer or ItemDeserializer object.
+
+	public:
+		class NoSampleLoaded : public std::runtime_error {
+		public:
+			NoSampleLoaded() : runtime_error("No sample loaded at that position in the bank.") {}
+			virtual ~NoSampleLoaded() {}
+		};
+
+		SampleBank(const Factory *factory, const Message &serialized); // create client side HandleList
+		SampleBank(int32_t new_obj_id, const Factory *factory); // create server side HandleList
+
+		std::string get_name();
+		std::string get_sample_name(int bank_index);
+
+		virtual void post_constructor_client() override;
+		virtual void process_message(Server *context, MessageHandler *src, const Message &msg) override;
+		virtual void process_message(Client *context, const Message &msg) override;
+		virtual void serialize(std::shared_ptr<Message> &target) override;
+		virtual void on_delete(Client *context) override;
+
+		static std::shared_ptr<SampleBank> get_bank(const std::string name); // empty string or "<global>" => global SampleBank
+	};
+
 	class RIMachine : public BaseObject {
 	public:
 		enum PadEvent_t {

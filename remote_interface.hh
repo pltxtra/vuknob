@@ -221,6 +221,7 @@ protected:
 					 std::function<void(const Message *reply_message)> reply_received_callback);
 
 		inline bool is_server_side() { return __is_server_side; }
+		inline bool is_client_side() { return !__is_server_side; }
 
 	public:
 		class ObjectType {
@@ -399,11 +400,19 @@ public:
 			virtual ~NoSampleLoaded() {}
 		};
 
+		class NoSuchSampleBank : public std::runtime_error {
+		public:
+			NoSuchSampleBank() : runtime_error("No sample bank that is matching the queried name exists.") {}
+			virtual ~NoSuchSampleBank() {}
+		};
+
 		SampleBank(const Factory *factory, const Message &serialized); // create client side HandleList
 		SampleBank(int32_t new_obj_id, const Factory *factory); // create server side HandleList
 
 		std::string get_name();
 		std::string get_sample_name(int bank_index);
+
+		void load_sample(int bank_index, const std::string &serverside_file_path);
 
 		virtual void post_constructor_client() override;
 		virtual void process_message(Server *context, MessageHandler *src, const Message &msg) override;

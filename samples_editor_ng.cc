@@ -54,6 +54,7 @@ using namespace std;
 #include "signal.hh"
 #include "advanced_file_request_ui.hh"
 #include "common.hh"
+#include "remote_interface.hh"
 
 #include <jngldrum/jinformer.hh>
 
@@ -71,46 +72,46 @@ private:
 	void parse_file_entry(const KXMLDoc &xml) {
 		int id;
 		KXML_GET_NUMBER(xml, "id", id, 0);
-		
+
 		std::string name;
 		name = xml.get_attr("name");
 
 		filenames[id] = name;
 	}
-	
+
 	void parse_xml(const KXMLDoc &xml) {
 		name = xml.get_attr("name");
 		path = xml.get_attr("path");
-		
+
 		// Parse entries
 		int k, k_max = 0;
 		try {
 			k_max = xml["file"].get_count();
 		} catch(jException e) { k_max = 0;}
-		
+
 		for(k = 0; k < k_max; k++) {
 			parse_file_entry(xml["file"][k]);
 		}
 	}
-	
+
 	void write_xml(std::ostream &output) {
 		output << "<directory name=\"" << name << "\" path=\"" << path << "\" >\n";
 
 		std::map<int, std::string>::iterator f;
 
 		for(f = filenames.begin(); f != filenames.end(); f++) {
-			output << "    <file id=\"" << (*f).first << "\" name=\"" << (*f).second << "\" />";			
+			output << "    <file id=\"" << (*f).first << "\" name=\"" << (*f).second << "\" />";
 		}
 		output << "</directory>\n";
 	}
 
 	static void parse_directories(const KXMLDoc &xml, std::map<std::string, SamplesDirectory *> *dirs) {
 		unsigned int x, max;
-		
+
 		try {
 			max = xml["directory"].get_count();
 		} catch(jException e) { max = 0;}
-		
+
 		for(x = 0; x < max ; x++) {
 			SamplesDirectory *new_dir = new SamplesDirectory();
 			new_dir->parse_xml(xml["directory"][x]);
@@ -140,20 +141,20 @@ private:
 		}
 
 		std::sort(files.begin(), files.end());
-		
+
 		std::vector<std::string>::iterator k;
 
 		bool one_file_found = false;
-		
+
 		int i = 0;
 		// we scan each file and identify those we understand...
 		for(k  = files.begin();
 		    k != files.end();
 		    k++, i++) {
 			std::string pth = path + "/" + (*k);
-			
+
 			SATAN_DEBUG_("Validating sample at path: %s\n", pth.c_str());
-			
+
 			if(Machine::StaticSignalLoader::is_valid(pth)) {
 				SATAN_DEBUG_("Sample found VALID.\n");
 				filenames[i] = (*k);
@@ -166,20 +167,20 @@ private:
 		if(one_file_found) {
 			return true;
 		}
-		
+
 		return false;
 	}
 
 	static void scan_for_dirs_recursive(std::string path) {
 		DIR *d = opendir(path.c_str());
 		struct dirent *ent = NULL;
-		
+
 		if(d == NULL) {
 			throw jException("Bad directory.", jException::sanity_error);
 		}
-		
+
 		std::vector<std::string> dirs;
-		
+
 		while((ent = readdir(d)) != NULL) {
 			if(ent->d_type == DT_DIR) {
 				std::string ndir = ent->d_name;
@@ -188,30 +189,30 @@ private:
 				}
 			}
 		}
-		
+
 		std::sort(dirs.begin(), dirs.end());
-		
+
 		std::vector<std::string>::iterator k;
-		
+
 		// first we add the directories
 		for(k  = dirs.begin();
 		    k != dirs.end();
 		    k++) {
 			if((*k) != ".") {
 				std::string dirpath = path + "/" + (*k);
-				
+
 				SamplesDirectory *sdir = SamplesDirectory::scan((*k), dirpath);
-				
-				
+
+
 				if(sdir != NULL) {
 					add_directory(dirpath, sdir);
 				}
-				
+
 				scan_for_dirs_recursive(dirpath);
 			}
 		}
 	}
-	
+
 	static void save_samples_directory_file() {
 		fstream file;
 		file.open(SAMPLES_DIRECTORY_FILE.c_str(),
@@ -226,12 +227,12 @@ private:
 			    k++) {
 				(*k).second->write_xml(file);
 			}
-			
+
 			file << "</samplesdirectoryfile>\n";
 		}
 		file.close();
 	}
-	
+
 	static std::map<std::string, SamplesDirectory *> directories;
 public:
 	std::string name;
@@ -248,10 +249,10 @@ public:
 		directories[dirpath] = sdir;
 		SamplesDirectory::save_samples_directory_file();
 	}
-	
+
 	static void remove_directory(SamplesDirectory *sdir) {
 		std::map<std::string, SamplesDirectory *>::iterator k;
-		
+
 		for(k  = directories.begin();
 		    k != directories.end();
 		    k++) {
@@ -263,7 +264,7 @@ public:
 
 		save_samples_directory_file();
 	}
-	
+
 	static bool load_samples_directory_file() {
 		fstream file;
 		file.open(SAMPLES_DIRECTORY_FILE.c_str(), fstream::in);
@@ -273,7 +274,7 @@ public:
 
 			try {
 				file >> docu;
-				
+
 				if(docu.get_name() == "samplesdirectoryfile") {
 					parse_directories(docu, &directories);
 				}
@@ -282,7 +283,7 @@ public:
 			} catch(...) {
 				jInformer::inform("Failed to load samples directory file, for unknown reasons...");
 			}
-			
+
 			return true;
 		}
 
@@ -307,7 +308,7 @@ public:
 
 		return retdir;
 	}
-	
+
 	static void create_default_directories_list() {
 		/* only create this list on Android for now
 		 * a PC user, for example, will not
@@ -326,7 +327,7 @@ public:
 	static std::map<std::string, SamplesDirectory *>::iterator begin() {
 		return directories.begin();
 	}
-	
+
 	static std::map<std::string, SamplesDirectory *>::iterator end() {
 		return directories.end();
 	}
@@ -350,11 +351,11 @@ void refresh_row(int row, std::function<std::string(int row)> callback) {
 	} catch (...) {
 		// ignore error (this should mean that no signal was in slot row)
 	}
-	
+
 	static char bfr[128];
 	snprintf(bfr, 128, "%02d : %s", row, name.c_str());
-	
-	if(srows.find(row) != srows.end()) {		
+
+	if(srows.find(row) != srows.end()) {
 		srows[row]->set_title(bfr);
 		return;
 	}
@@ -368,17 +369,17 @@ void add_sample_row(KammoGUI::Container *cnt, int row, std::map<int, std::string
 		lbl->set_title("dummy");
 		lbl->set_expand(true);
 		lbl->set_fill(true);
-		
+
 		MyButton *btn = new MyButton(row);
 		btn->attach_event_handler(this);
 		btn->set_title("load");
-		
+
 		KammoGUI::Container *sub_cnt = new KammoGUI::Container(true);
 		sub_cnt->add(*lbl);
 		sub_cnt->add(*btn);
-		
+
 		cnt->add(*sub_cnt);
-		
+
 		srows[row] = lbl;
 	}
 	refresh_row(row,
@@ -396,7 +397,7 @@ virtual void on_click(KammoGUI::Widget *wid) {
 //		rebuild_samples_list();
 		return;
 	}
-	
+
 	MyButton *mbu = (MyButton *)wid;
 	int *id = new int();
 
@@ -421,7 +422,7 @@ void rebuild_samples_list() {
 	int k;
 
 	auto samples_map = Machine::StaticSignalLoader::get_all_signal_names();
-	
+
 	for(k = 0; k < MAX_STATIC_SIGNALS; k++) {
 		add_sample_row(cnt, k, samples_map);
 	}
@@ -462,7 +463,7 @@ static void dirSelector_select(void *id_void, const std::string &dirpath) {
 	SamplesDirectory *sdir = SamplesDirectory::scan(
 		dirpath.substr(dirpath.find_last_of('/') + 1, dirpath.size()),
 		dirpath);
-		
+
 	if(sdir != NULL) {
 		SamplesDirectory::add_directory(dirpath, sdir);
 	}
@@ -482,7 +483,7 @@ static void dirSelector_select(void *id_void, const std::string &dirpath) {
 static void dirSelector_cancel(void *id_void) {
 	int *id = (int *)id_void;
 	delete id; // we don't care at this time, so we just delete it
-	
+
 	static KammoGUI::UserEvent *ue = NULL;
 	KammoGUI::get_widget((KammoGUI::Widget **)&ue, "showSamplesDirectories");
 	if(ue != NULL)
@@ -492,16 +493,16 @@ static void dirSelector_cancel(void *id_void) {
 virtual void on_click(KammoGUI::Widget *wid) {
 	// do stuff here
 	SATAN_DEBUG("on_click() -> %s\n", wid->get_id().c_str());
-	
-	if(wid->get_id() == "samDirs_Add") {		
+
+	if(wid->get_id() == "samDirs_Add") {
 		// add new directory
 		int *id = new int();
-		
+
 		if(id == NULL)
 			return;
-		
+
 		*id = current_static_signal_index;
-		
+
 		advancedFileRequestUI_getFile(
 			"/",
 			dirSelector_select,
@@ -509,7 +510,7 @@ virtual void on_click(KammoGUI::Widget *wid) {
 			id);
 	} else {
 		MyButton *mbu = (MyButton *)wid;
-	
+
 		// show directory contents
 		static KammoGUI::UserEvent *ue = NULL;
 		KammoGUI::get_widget((KammoGUI::Widget **)&ue, "showSamplesDirectory");
@@ -527,7 +528,7 @@ void add_directory_row(KammoGUI::Container *cnt, SamplesDirectory *sdir) {
 
 	lbl->set_title(sdir->name);
 	lbl->set_fill(true); lbl->set_expand(true);
-	
+
 	MyButton *btn = new MyButton(sdir);
 	btn->attach_event_handler(this);
 	btn->set_title(">");
@@ -551,18 +552,18 @@ void rebuild_directories_list(int current_static_signal_index) {
 	    k++) {
 		(*k).second->working_on_signal_index = current_static_signal_index;
 		add_directory_row(cnt, (*k).second);
-	}	
+	}
 }
 
 virtual void on_user_event(KammoGUI::UserEvent *ue, std::map<std::string, void *> args) {
 	static int index = -1;
-	
+
 	int *id = (int *)NULL;
 
 	if(args.find("id") != args.end())
 		id = (int *)args["id"];
-	
-	if(id != NULL) {	
+
+	if(id != NULL) {
 		index = *id; delete id;
 		current_static_signal_index = index;
 	}
@@ -622,9 +623,9 @@ virtual void on_click(KammoGUI::Widget *wid) {
 
 		return;
 	} else if(wid->get_id() == "samEd_Remove") {
-		if(current_sdir) 
+		if(current_sdir)
 			SamplesDirectory::remove_directory(current_sdir);
-		
+
 		static KammoGUI::UserEvent *ue = NULL;
 		KammoGUI::get_widget((KammoGUI::Widget **)&ue, "showSamplesDirectories");
 		if(ue != NULL)
@@ -632,7 +633,7 @@ virtual void on_click(KammoGUI::Widget *wid) {
 
 		return;
 	}
-	
+
 	MyButton *mbu = dynamic_cast<MyButton*>(wid);
 
 	if(mbu) {
@@ -640,9 +641,12 @@ virtual void on_click(KammoGUI::Widget *wid) {
 		if(mbu->preview_action) {
 			Machine::StaticSignalLoader::preview_signal(mbu->path);
 		} else {
-			Machine::StaticSignalLoader::load_signal(mbu->sdir->working_on_signal_index, mbu->path);
+			auto sbank = RemoteInterface::SampleBank::get_bank(""); // get global
+			sbank->load_sample(mbu->sdir->working_on_signal_index, mbu->path);
+			//Machine::StaticSignalLoader::load_signal(mbu->sdir->working_on_signal_index, mbu->path);
+
 			refresh_row(mbu->sdir->working_on_signal_index, Machine::StaticSignalLoader::get_signal_name_for_slot);
-			
+
 			static KammoGUI::UserEvent *ue = NULL;
 			KammoGUI::get_widget((KammoGUI::Widget **)&ue, mbu->followup_action);
 			if(ue != NULL)
@@ -657,7 +661,7 @@ void add_sample_row(KammoGUI::Container *cnt, SamplesDirectory *sdir,
 
 	lbl->set_title(name);
 	lbl->set_fill(true); lbl->set_expand(true);
-	
+
 	MyButton *btn_load = new MyButton(sdir, path, false, followup_action);
 	btn_load->attach_event_handler(this);
 	btn_load->set_title("load");
@@ -684,7 +688,7 @@ void rebuild_directory_list(SamplesDirectory *sdir, const std::string &followup_
 	std::map<int, std::string>::iterator k;
 
 	sdir->refresh();
-	
+
 	for(k  = sdir->filenames.begin();
 	    k != sdir->filenames.end();
 	    k++) {
@@ -694,12 +698,12 @@ void rebuild_directory_list(SamplesDirectory *sdir, const std::string &followup_
 		add_sample_row(cnt, sdir, pth, (*k).second, followup_action);
 	}
 
-	
+
 }
 
 virtual void on_user_event(KammoGUI::UserEvent *ue, std::map<std::string, void *> args) {
 	SamplesDirectory *sdir = NULL;
-	
+
 	if(args.find("sdir") != args.end())
 		sdir = (SamplesDirectory *)(args["sdir"]);
 
@@ -711,7 +715,7 @@ virtual void on_user_event(KammoGUI::UserEvent *ue, std::map<std::string, void *
 		followup_action = *temp;
 		delete temp;
 	}
-       	
+
 	rebuild_directory_list(sdir, followup_action);
 }
 

@@ -39,7 +39,7 @@
 #include "machine_sequencer.hh"
 #include "common.hh"
 
-//#define __DO_SATAN_DEBUG
+#define __DO_SATAN_DEBUG
 #include "satan_debug.hh"
 
 /***************************
@@ -804,9 +804,10 @@ void RemoteInterface::BaseObject::set_context(Context* _context) {
 
 std::shared_ptr<RemoteInterface::BaseObject> RemoteInterface::BaseObject::create_object_from_message(const Message &msg) {
 	std::string factory_type = msg.get_value("factory");
-
 	auto factory_iterator = factories.find(factory_type);
-	if(factory_iterator == factories.end()) throw NoSuchFactory();
+	if(factory_iterator == factories.end()) {
+		throw NoSuchFactory();
+	}
 
 	std::shared_ptr<RemoteInterface::BaseObject> o = factory_iterator->second->create(msg);
 
@@ -1336,6 +1337,12 @@ std::shared_ptr<RemoteInterface::BaseObject> RemoteInterface::SampleBank::Sample
 
 	std::shared_ptr<SampleBank> sb = std::make_shared<SampleBank>(this, serialized);
 	clientside_samplebanks[sb->get_name()] = sb;
+
+	SATAN_DEBUG("All clientside samplebanks:\n");
+	for(auto cssb : clientside_samplebanks) {
+		SATAN_DEBUG(" sbank: %s", cssb.first.c_str());
+	}
+
 	return sb;
 }
 
@@ -1351,12 +1358,11 @@ std::shared_ptr<RemoteInterface::BaseObject> RemoteInterface::SampleBank::Sample
 
 // client side
 RemoteInterface::SampleBank::SampleBank(const Factory *factory, const Message &serialized) : BaseObject(factory, serialized) {
-	bank_name = serialized.get_value("bank_name");
-
 	{
 		ItemDeserializer ides(serialized.get_value("content"));
 		serderize_samplebank(ides);
 	}
+	SATAN_DEBUG("SampleBank - client side - [%s] created.\n", bank_name.c_str());
 }
 
 // server side
@@ -1364,10 +1370,13 @@ RemoteInterface::SampleBank::SampleBank(int32_t new_obj_id, const Factory *facto
 	bank_name = "<global>";
 	// currently we only support the global sample bank (that's the only one availble at this time)
 	sample_names = Machine::StaticSignalLoader::get_all_signal_names();
+
+	SATAN_DEBUG("SampleBank - server side - created.\n");
 }
 
 template <class SerderClassT>
 void RemoteInterface::SampleBank::serderize_samplebank(SerderClassT& iserder) {
+	iserder.process(bank_name);
 	iserder.process(sample_names);
 }
 
@@ -1385,18 +1394,82 @@ std::string RemoteInterface::SampleBank::get_sample_name(int bank_index) {
 	return (*itr).second;
 }
 
+void RemoteInterface::SampleBank::load_sample(int bank_index, const std::string &serverside_file_path) {
+	if(is_client_side()) {
+		// transmit the attach request to the server
+		std::string new_name = "";
+		bool failed = true;
+
+		send_object_message(
+		[bank_index, serverside_file_path](std::shared_ptr<Message> &msg2send) {
+				msg2send->set_value("command", "loads");
+				msg2send->set_value("index", std::to_string(bank_index));
+				msg2send->set_value("path", serverside_file_path);
+			},
+		[&failed, &new_name](const Message *reply_message) {
+				if(reply_message) {
+					failed = false;
+					new_name = reply_message->get_value("name");
+				}
+			}
+			);
+		if(!failed) {
+			std::lock_guard<std::mutex> lock_guard(base_object_mutex);
+			sample_names[bank_index] = new_name;
+		}
+	}
+}
+
 void RemoteInterface::SampleBank::post_constructor_client() {}
-void RemoteInterface::SampleBank::process_message(Server *context, MessageHandler *src, const Message &msg) {}
-void RemoteInterface::SampleBank::process_message(Client *context, const Message &msg) {}
+
+void RemoteInterface::SampleBank::process_message(Server *context, MessageHandler *src, const Message &msg) {
+	auto command = msg.get_value("command");
+	if(command == "loads") {
+
+		int bank_index = std::stoi(msg.get_value("index"));
+		auto path = msg.get_value("path");
+
+		Machine::StaticSignalLoader::load_signal(bank_index, path);
+
+		auto new_name = Machine::StaticSignalLoader::get_signal_name_for_slot(bank_index);
+
+		// we also need to update all the clients of this change
+		auto thiz = std::dynamic_pointer_cast<SampleBank>(shared_from_this());
+		send_object_message(
+			[this, thiz, new_name, bank_index](std::shared_ptr<Message> &msg2send) {
+				msg2send->set_value("command", "setname");
+				msg2send->set_value("ignored", thiz->bank_name); // make sure thiz is not optimized away
+				msg2send->set_value("name", new_name);
+				msg2send->set_value("index", std::to_string(bank_index));
+			}
+			);
+
+		// then we reply, to synchronize
+		{
+			std::shared_ptr<Message> reply = context->acquire_reply(msg);
+			reply->set_value("name", new_name);
+			src->deliver_message(reply);
+		}
+
+	}
+}
+
+void RemoteInterface::SampleBank::process_message(Client *context, const Message &msg) {
+	std::lock_guard<std::mutex> lock_guard(base_object_mutex);
+
+	auto command = msg.get_value("command");
+	if(command == "setname") {
+		auto new_name = msg.get_value("name");
+		int bank_index = std::stoi(msg.get_value("index"));
+
+		sample_names[bank_index] = new_name;
+	}
+}
 
 void RemoteInterface::SampleBank::serialize(std::shared_ptr<Message> &target) {
-	target->set_value("bank_name", bank_name);
-
-	{
-		ItemSerializer iser;
-		serderize_samplebank(iser);
-		target->set_value("content", iser.result());
-	}
+	ItemSerializer iser;
+	serderize_samplebank(iser);
+	target->set_value("content", iser.result());
 }
 
 void RemoteInterface::SampleBank::on_delete(Client *context) {
@@ -1417,7 +1490,7 @@ auto RemoteInterface::SampleBank::get_bank(const std::string _name) -> std::shar
 	std::lock_guard<std::mutex> lock_guard(clientside_samplebanks_mutex);
 
 	std::string name = "<global>"; // default to <global>
-	if(name != "") name = _name; // but if _name is not empty then we set name to _name
+	if(_name != "") name = _name; // but if _name is not empty then we set name to _name
 
 	auto itr = clientside_samplebanks.find(name);
 	if(itr != clientside_samplebanks.end()) {
@@ -1426,8 +1499,7 @@ auto RemoteInterface::SampleBank::get_bank(const std::string _name) -> std::shar
 			return sb_locked;
 	}
 
-	std::shared_ptr<SampleBank> empty;
-	return empty;
+	throw NoSuchSampleBank();
 }
 
 std::map<std::string, std::weak_ptr<RemoteInterface::SampleBank> >RemoteInterface::SampleBank::clientside_samplebanks;
@@ -3274,10 +3346,7 @@ void RemoteInterface::Server::create_service_objects() {
 		create_object_from_factory(__FCT_GLOBALCONTROLOBJECT, [](std::shared_ptr<BaseObject> new_obj){});
 	}
 	{ // create global sample bank
-		create_object_from_factory(__FCT_SAMPLEBANK,
-					   [](std::shared_ptr<BaseObject> new_obj){
-					   }
-			);
+		create_object_from_factory(__FCT_SAMPLEBANK, [](std::shared_ptr<BaseObject> new_obj){});
 	}
 	{ // register us as a machine set listener
 		Machine::register_machine_set_listener(shared_from_this());

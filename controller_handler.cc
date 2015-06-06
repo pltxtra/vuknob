@@ -63,7 +63,6 @@ static bool sample_editor_shortcut_enabled = true;
 KammoEventHandler_Declare(ControllerHandlerOld,"showControlsContainer:cgroups");
 
 std::shared_ptr<ControllerHandler> chndl = std::make_shared<ControllerHandler>();
-Machine *current_machine = NULL;
 std::shared_ptr<RemoteInterface::RIMachine> current_ri_machine;
 
 std::vector<KammoGUI::Widget *> erasable_widgets;
@@ -305,7 +304,7 @@ void add_scale(KammoGUI::Container *cnt,
 	cnt->add(*int_cnt);
 }
 
-void rebuild_controller_list(std::shared_ptr<RemoteInterface::RIMachine> ri_m, Machine *m, std::string group_name) {
+void rebuild_controller_list(std::shared_ptr<RemoteInterface::RIMachine> ri_m, std::string group_name) {
 	static KammoGUI::Container *cnt = NULL;
 	KammoGUI::get_widget((KammoGUI::Widget **)&cnt, "controllerScroller");
 
@@ -358,7 +357,7 @@ std::string refresh_groups(std::shared_ptr<RemoteInterface::RIMachine> m) {
 	return first_group;
 }
 
-void refresh_controllers(std::shared_ptr<RemoteInterface::RIMachine> ri_m, Machine *m, std::string first_group) {
+void refresh_controllers(std::shared_ptr<RemoteInterface::RIMachine> ri_m, std::string first_group) {
 	static KammoGUI::List *groups = NULL;
 	KammoGUI::get_widget((KammoGUI::Widget **)&groups, "cgroups");
 
@@ -369,7 +368,7 @@ void refresh_controllers(std::shared_ptr<RemoteInterface::RIMachine> ri_m, Machi
 		// ignore
 	}
 
-	rebuild_controller_list(ri_m, m , first_group);
+	rebuild_controller_list(ri_m, first_group);
 
 }
 
@@ -377,23 +376,15 @@ virtual void on_select_row(KammoGUI::Widget *widget, KammoGUI::List::iterator ro
 	if(widget->get_id() == "cgroups") {
 		std::string group_name = ((KammoGUI::List *)widget)->get_value(row, 0);
 		SATAN_DEBUG("--- SELECTED CONTROLLER GROUP: %s\n", group_name.c_str());
-		rebuild_controller_list(current_ri_machine, current_machine, group_name);
+		rebuild_controller_list(current_ri_machine, group_name);
 	}
 }
 
 virtual void on_user_event(KammoGUI::UserEvent *ue, std::map<std::string, void *> args) {
-	void *data = NULL;
-
 	if(args.find("machine_to_control") != args.end()) {
 		char *m_name_c = (char *)args["machine_to_control"];
 		string m_name = m_name_c;
 		free(m_name_c);
-
-		for(auto m : Machine::get_machine_set()) {
-			if(m->get_name() == m_name) {
-				data = m;
-			}
-		}
 
 		current_ri_machine = chndl->get_machine_by_name(m_name);
 		if(current_ri_machine) {
@@ -403,15 +394,12 @@ virtual void on_user_event(KammoGUI::UserEvent *ue, std::map<std::string, void *
 
 	std::string first_group = "";
 
-	if(ue->get_id() == "showControlsContainer") {
-		if(data != NULL) {
-			current_machine = (Machine *)data;
+	if(current_ri_machine) {
+		if(ue->get_id() == "showControlsContainer") {
 			first_group = refresh_groups(current_ri_machine);
 		}
-	}
 
-	if(current_machine != NULL) {
-		refresh_controllers(current_ri_machine, current_machine, first_group);
+		refresh_controllers(current_ri_machine, first_group);
 	}
 }
 

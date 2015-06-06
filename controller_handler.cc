@@ -55,8 +55,10 @@ using namespace std;
 
 #include "controller_handler.hh"
 
-//#define __DO_SATAN_DEBUG
+#define __DO_SATAN_DEBUG
 #include "satan_debug.hh"
+
+static bool sample_editor_shortcut_enabled = true;
 
 KammoEventHandler_Declare(ControllerHandlerOld,"showControlsContainer:cgroups");
 
@@ -290,12 +292,15 @@ void add_scale(KammoGUI::Container *cnt,
 	int_cnt->add(*scl);
 	int_cnt->add(*more);
 
-	if(ctr->get_type() == RemoteInterface::RIMachine::RIController::ric_sigid) {
-		MySampleButton *smb = new MySampleButton(scl);
-		smb->attach_event_handler(this);
-		smb->set_title("LOAD");
-		int_cnt->add(*smb);
+	if(sample_editor_shortcut_enabled) {
+		if(ctr->get_type() == RemoteInterface::RIMachine::RIController::ric_sigid) {
+			MySampleButton *smb = new MySampleButton(scl);
+			smb->attach_event_handler(this);
+			smb->set_title("LOAD");
+			int_cnt->add(*smb);
+		}
 	}
+
 	cnt->add(*lbl_cnt);
 	cnt->add(*int_cnt);
 }
@@ -444,4 +449,8 @@ std::shared_ptr<RemoteInterface::RIMachine> ControllerHandler::get_machine_by_na
 	}
 
 	return retval;
+}
+
+void ControllerHandler::disable_sample_editor_shortcut() {
+	sample_editor_shortcut_enabled = false;
 }

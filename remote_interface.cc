@@ -64,7 +64,7 @@
 #define __FCT_RIMACHINE			"RIMachine"
 #define __FCT_SAMPLEBANK	        "SampleBank"
 
-#define __VUKNOB_PROTOCOL_VERSION__ 2
+#define __VUKNOB_PROTOCOL_VERSION__ 3
 
 //#define VUKNOB_UDP_SUPPORT
 //#define VUKNOB_UDP_USE

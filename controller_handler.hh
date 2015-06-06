@@ -30,6 +30,8 @@ public:
 	virtual void ri_machine_unregistered(std::shared_ptr<RemoteInterface::RIMachine> ri_machine) override;
 
 	std::shared_ptr<RemoteInterface::RIMachine> get_machine_by_name(const std::string &name);
+
+	static void disable_sample_editor_shortcut();
 };
 
 #endif

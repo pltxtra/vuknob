@@ -44,6 +44,7 @@ using namespace std;
 #include "logo_screen.hh"
 #include "svg_loader.hh"
 #include "remote_interface.hh"
+#include "controller_handler.hh"
 
 #ifdef ANDROID
 #include "android_java_interface.hh"
@@ -208,6 +209,13 @@ void LogoScreen::element_on_event(KammoGUI::SVGCanvas::SVGDocument *source,
 			if(ctx->selected_port == -1) {
 				ctx->selected_port = RemoteInterface::Server::start_server();
 				ctx->selected_server = "localhost";
+			}
+
+			// the current sample bank editor (sample_editor_ng.cc) doesn't support
+			// remote operation - so we must disable access to it if we are connecting to
+			// a remote server.
+			if(ctx->selected_server != "localhost") {
+				ControllerHandler::disable_sample_editor_shortcut();
 			}
 
 			// connect to the selected server

@@ -71,6 +71,9 @@ private:
 
 	ListView server_list;
 
+	void start_vuknob();
+	void select_server(std::function<void()> on_select_callback);
+
 	static void element_on_event(KammoGUI::SVGCanvas::SVGDocument *source, KammoGUI::SVGCanvas::ElementReference *e_ref,
 				     const KammoGUI::SVGCanvas::MotionEvent &event);
 public:

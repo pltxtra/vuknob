@@ -1,23 +1,23 @@
 --------- Market Version 56 (2.06) --------------
  * New arpeggio pattern
- * Support for remote control of vuKNOB on the local network
- 
+ * Support for remote control of vuKNOB via the companion app vuKNOBnet
+
 --------- Market Version 55 (2.05) --------------
  * Fixed race condition error
- 
+
 --------- Market Version 54 (2.04) --------------
  * Fixed bugs related to project loading
 
 --------- Market Version 53 (2.03) --------------
  * Another bugfix release
- 
+
 --------- Market Version 52 (2.02) --------------
  * Bug fixes (forgot to load libpathvariable.so)
- 
+
 --------- Market Version 51 (2.01) --------------
  * New logo
  * Bug fixes
- 
+
 --------- Market Version 50 (2.0) --------------
  * New connector interface
  * New internal backend system (no new user features yet)
@@ -26,11 +26,11 @@
 --------- Market Version 43 (1.42) --------------
  * UI improvements for tablet devices
  * Corrected Jam behavior on tablets
- 
+
 --------- Market Version 42 (1.41) --------------
  * Undo feature added to the note editor
  * Minor UI changes
- 
+
 --------- Market Version 41 (1.40) --------------
  * Added support for 24bit Wave files
  * Convert Jam sessions to loops (so you can edit)
@@ -44,7 +44,7 @@
 --------- Market Version 39 (1.38) --------------
  * UI changes
  * Bugfixes
- 
+
 --------- Market Version 38 (1.37) --------------
  * Sample management simplifications
  * Bugfixes
@@ -57,18 +57,18 @@
  * New multi voice chorus effect (stereo)
  * Speed-up of the start screen
  * Minor bugfixes
- 
+
 --------- Market Version 35 (1.34) --------------
  * Faster project loading
- * Set OpenSL buffered/direct mode depending on device type 
- 
+ * Set OpenSL buffered/direct mode depending on device type
+
 --------- Market Version 34 (1.33) --------------
  * Improved the JAM/livepad design to support longer motions better
  * Let the user record arbitrarily long JAM sessions (until record is turned off)
  * Velocity can be changed during arpeggiator playback of the same tones
  * Let a user clear a JAM/livepad session for a specific instrument
  * Added some informative messages to the user when he/she does something wrong
- 
+
 --------- Market Version 33 (1.32) --------------
  * Improved buffer usage (less choppy sound)
 
@@ -94,17 +94,17 @@
 
 --------- Market Version 28 (1.27) --------------
  * Sequencer scrolling has been improved.
- 
+
 --------- Market Version 27 (1.26) --------------
  * Enable digitar to play at lower tones
  * Add a volume parameter to the Sima Overdrive machine
  * Add a volume parameter to the DX7 machine
  * Fixed a bug in the sample preview code (crash)
  * Fixed a serious performance bug in dx7
- 
+
 --------- Market Version 26 (1.25) --------------
  * Fixed a bug preventing multiple DX7 instances
- 
+
 --------- Market Version 25 (1.24) --------------
  * Added a new Machine, DX7 (based on the Hexter project)
  * Fixed bug causing VuKNOB to crash on exit.
@@ -112,7 +112,7 @@
  * Fixed bugs related to WAV export.
  * Changed the Drumsampler machine so it should always complete samples.
  * More controllers in Silverbox can now be set using the custom envelope editor.
- 
+
 --------- Market Version 24 (1.23) --------------
  * Added a new synth - the Silverbox, hard acid sounds
  * Fixed deadlock when recording to wav
@@ -130,19 +130,19 @@
 
 --------- Market Version 21 (1.20) --------------
  * Better support for 7 inch devices like Nexus 7
- 
+
 --------- Market Version 20 (1.19) --------------
  * The app name was changed to VuKNOB because of users feeling insulted by the previous name
  * Major graphical redesign
  * Bugfixes
- 
+
 --------- Market Version 19 (1.18) --------------
  * Fix bug that prevented disabling/enabling looping
- 
+
 --------- Market Version 18 (1.17) --------------
  * Trim leading and trailing white space in project information text fields
  * RIFF output is now done asynchronously from the live output. This is needed to prevent low latency audio hickups..
- 
+
 --------- Market Version 17 (1.16) --------------
  * Build both classic ARM without floating point, and armeabi-v7a with floating point support
  * Machines now support both fixed point and floating point math
@@ -155,7 +155,7 @@
 
 --------- Market Version 15 (1.14) --------------
  * Fixed silly bug preventing version 14 from working
- 
+
 --------- Market Version 14 (1.13) --------------
  * Implement small and large mode for rewerb machine (additional to default medium)
  * Add filter line to the Delay machine
@@ -165,7 +165,7 @@
 --------- Market Version 13 (1.12) --------------
  * Usability fixes
  * Support for Android 4.0 theme
- * Easier save/load for project 
+ * Easier save/load for project
  * Easier loading interface for samples
  * Support more meta information in projects
  * Preview samples before loading
@@ -174,13 +174,13 @@
  * Plucked string machine called Digitar
  * New advanced synth, called Europa 4
  * Small UI fixes
- 
+
 --------- Market Version 11 (1.10) --------------
  * Shuffle parameter saved/loaded to project (bug fix)
  * New reverb machine, called Rewerb.
  * New flanger machine, called Flanger.
  * Small improvements.
- 
+
 --------- Market Version 10 (1.9) --------------
  * Shuffle mode!
  * Bug fixes (Crash on start on certain devices.)
@@ -188,10 +188,10 @@
 --------- Market Version 9 (1.8) ---------------
  * UI corrections for small screen devices
  * Added a new machine, the eq10 - or 10 band equalizer!
- 
+
 --------- Market Version 8 (1.7) ---------------
  * Huge performance boost on all devices (a lot higher margin for stutter!)
- 
+
 --------- Market Version 7 (1.6) ---------------
  * New graphical interface for machine management.
  * Drag the machine area
@@ -199,7 +199,7 @@
  * Detects availability of Neon
  * Export to OGG/Vorbis - if Neon is available in the CPU
  * Share exported OGG to, for example, Soundcloud (requires soundcloud app to be installed)
- 
+
 --------- Market Version 6 (1.5) ---------------
  * MIDI Export implemented
  * Stop android AudioTrack playback when pausing the playback thread.

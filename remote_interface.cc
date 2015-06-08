@@ -39,7 +39,7 @@
 #include "machine_sequencer.hh"
 #include "common.hh"
 
-#define __DO_SATAN_DEBUG
+//#define __DO_SATAN_DEBUG
 #include "satan_debug.hh"
 
 /***************************
@@ -3383,6 +3383,15 @@ int RemoteInterface::Server::start_server() {
 	}
 
 	return portval;
+}
+
+bool RemoteInterface::Server::is_running() {
+	std::lock_guard<std::mutex> lock_guard(server_mutex);
+
+	if(server) {
+		return true;
+	}
+	return false;
 }
 
 void RemoteInterface::Server::stop_server() {

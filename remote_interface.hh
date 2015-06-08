@@ -805,6 +805,7 @@ public:
 
 	public:
 		static int start_server(); // will start a server and return the port number. If the server is already started, it will just return the port number.
+		static bool is_running();
 		static void stop_server();
 
 		virtual void distribute_message(std::shared_ptr<Message> &msg, bool via_udp = false) override;

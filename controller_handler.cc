@@ -55,7 +55,7 @@ using namespace std;
 
 #include "controller_handler.hh"
 
-#define __DO_SATAN_DEBUG
+//#define __DO_SATAN_DEBUG
 #include "satan_debug.hh"
 
 static bool sample_editor_shortcut_enabled = true;

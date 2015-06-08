@@ -161,6 +161,79 @@ void failure_response(const std::string &response) {
 	jInformer::inform(response);
 }
 
+void LogoScreen::start_vuknob() {
+	// clear everything and prepare for start
+	Machine::prepare_baseline();
+	SatanProjectEntry::clear_satan_project();
+
+	// if the selected port is equal to -1, default to the local host & port
+	if(selected_port == -1) {
+		selected_port = RemoteInterface::Server::start_server();
+		selected_server = "localhost";
+	}
+
+	// the current sample bank editor (sample_editor_ng.cc) doesn't support
+	// remote operation - so we must disable access to it if we are connecting to
+	// a remote server.
+	if(selected_server != "localhost") {
+		ControllerHandler::disable_sample_editor_shortcut();
+	}
+
+	// connect to the selected server
+	RemoteInterface::Client::start_client(selected_server, selected_port,
+					      remote_interface_disconnected, failure_response);
+
+	// just show main UI
+	{
+		static KammoGUI::UserEvent *ue = NULL;
+		KammoGUI::get_widget((KammoGUI::Widget **)&ue, "showMainUIContainer");
+		if(ue != NULL)
+			KammoGUI::EventHandler::trigger_user_event(ue);
+	}
+
+	// if we should start with the JAM view, skip to that directly
+	if(start_with_jam_view) {
+		static KammoGUI::UserEvent *uej = NULL;
+		KammoGUI::get_widget((KammoGUI::Widget **)&uej, "showLivePad2");
+		if(uej != NULL)
+			KammoGUI::EventHandler::trigger_user_event(uej);
+	}
+}
+
+void LogoScreen::select_server(std::function<void()> on_select_callback) {
+	server_list.clear();
+
+	if(RemoteInterface::Server::is_running()) {
+		server_list.add_row("localhost");
+	}
+
+#ifdef ANDROID
+	auto list_content = AndroidJavaInterface::list_services();
+	for(auto srv : list_content) {
+		SATAN_DEBUG("   SRVC ---> %s\n", srv.first.c_str());
+		server_list.add_row(srv.first);
+	}
+#endif
+	server_list.select_from_list("Select vuKNOB server", NULL,
+				     [this, list_content, on_select_callback](void *context, bool selected, int row_number, const std::string &row) {
+					     if(selected) {
+						     auto srv = list_content.find(row);
+						     if(srv != list_content.end()) {
+							     selected_server = srv->second.first;
+							     selected_port = srv->second.second;
+						     } else {
+							     selected_server = "localhost";
+							     selected_port = RemoteInterface::Server::start_server(); // get the port number (the server is probably already started anyways..)
+						     }
+						     SATAN_DEBUG("Selected server ip/port: %s : %d",
+								 selected_server.c_str(), selected_port);
+
+						     on_select_callback();
+					     }
+				     }
+		);
+}
+
 void LogoScreen::element_on_event(KammoGUI::SVGCanvas::SVGDocument *source,
 				  KammoGUI::SVGCanvas::ElementReference *e_ref,
 				  const KammoGUI::SVGCanvas::MotionEvent &event) {
@@ -175,67 +248,12 @@ void LogoScreen::element_on_event(KammoGUI::SVGCanvas::SVGDocument *source,
 			// show google+ community
 			KammoGUI::external_uri("https://plus.google.com/u/0/communities/117584425255812411008");
 		} else if(e_ref == ctx->network_element) {
-			ctx->server_list.clear();
-			ctx->server_list.add_row("localhost");
-#ifdef ANDROID
-			auto list_content = AndroidJavaInterface::list_services();
-			for(auto srv : list_content) {
-				SATAN_DEBUG("   SRVC ---> %s\n", srv.first.c_str());
-				ctx->server_list.add_row(srv.first);
-			}
-#endif
-			ctx->server_list.select_from_list("Select vuKNOB server", NULL,
-							  [ctx, list_content](void *context, bool selected, int row_number, const std::string &row) {
-								  if(selected) {
-									  auto srv = list_content.find(row);
-									  if(srv != list_content.end()) {
-										  ctx->selected_server = srv->second.first;
-										  ctx->selected_port = srv->second.second;
-									  } else {
-										  ctx->selected_server = "localhost";
-										  ctx->selected_port = RemoteInterface::Server::start_server(); // get the port number (the server is probably already started anyways..)
-									  }
-									  SATAN_DEBUG("Selected server ip/port: %s : %d",
-										      ctx->selected_server.c_str(), ctx->selected_port);
-								  }
-							  }
-				);
+			ctx->select_server([]{});
 		} else if(e_ref == ctx->start_element) {
-			// clear everything and prepare for start
-			Machine::prepare_baseline();
-			SatanProjectEntry::clear_satan_project();
-
-			// if the selected port is equal to -1, default to the local host & port
-			if(ctx->selected_port == -1) {
-				ctx->selected_port = RemoteInterface::Server::start_server();
-				ctx->selected_server = "localhost";
-			}
-
-			// the current sample bank editor (sample_editor_ng.cc) doesn't support
-			// remote operation - so we must disable access to it if we are connecting to
-			// a remote server.
-			if(ctx->selected_server != "localhost") {
-				ControllerHandler::disable_sample_editor_shortcut();
-			}
-
-			// connect to the selected server
-			RemoteInterface::Client::start_client(ctx->selected_server, ctx->selected_port,
-							      remote_interface_disconnected, failure_response);
-
-			// just show main UI
-			{
-				static KammoGUI::UserEvent *ue = NULL;
-				KammoGUI::get_widget((KammoGUI::Widget **)&ue, "showMainUIContainer");
-				if(ue != NULL)
-					KammoGUI::EventHandler::trigger_user_event(ue);
-			}
-
-			// if we should start with the JAM view, skip to that directly
-			if(ctx->start_with_jam_view) {
-				static KammoGUI::UserEvent *uej = NULL;
-				KammoGUI::get_widget((KammoGUI::Widget **)&uej, "showLivePad2");
-				if(uej != NULL)
-					KammoGUI::EventHandler::trigger_user_event(uej);
+			if(RemoteInterface::Server::is_running()) {
+				ctx->start_vuknob();
+			} else {
+				ctx->select_server([ctx](){ ctx->start_vuknob(); });
 			}
 		}
 	}
@@ -299,16 +317,17 @@ virtual void on_init(KammoGUI::Widget *wid) {
 
 	SATAN_DEBUG("init LogoScreen - id: %s\n", wid->get_id().c_str());
 
-	if(wid->get_id() == "logoScreen") {
-		(void)new LogoScreen(false, cnvs, std::string(SVGLoader::get_svg_directory() + "/logoScreen.svg"));
-	} else if(wid->get_id() == "logoScreenOld") {
-		(void)new LogoScreen(true, cnvs, std::string(SVGLoader::get_svg_directory() + "/logoScreen.svg"));
+	(void)new LogoScreen(true, cnvs, std::string(SVGLoader::get_svg_directory() + "/logoScreen.svg"));
+
+	// if using the OLD logo screen - start up local VuKNOB server here
+	if(wid->get_id() == "logoScreenOld") {
+		int port_number = RemoteInterface::Server::start_server();
+#ifdef ANDROID
+		AndroidJavaInterface::announce_service(port_number);
+#endif
 	}
 
-	// start up local VuKNOB server here
-	int port_number = RemoteInterface::Server::start_server();
 #ifdef ANDROID
-	AndroidJavaInterface::announce_service(port_number);
 	AndroidJavaInterface::discover_services();
 #endif
 

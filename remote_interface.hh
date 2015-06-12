@@ -334,11 +334,7 @@ public:
 		public:
 			virtual void playback_state_changed(bool is_playing) = 0;
 			virtual void recording_state_changed(bool is_recording) = 0;
-		};
-
-		class PeriodicPlaybackListener {
-		public:
-			virtual void periodic_playback_update(int current_line) = 0;
+			virtual void periodic_playback_update(int current_row) = 0;
 		};
 
 		static std::shared_ptr<GlobalControlObject> get_global_control_object(); // get a shared ptr to the current GCO, shared_ptr will be empty if the client is not connected

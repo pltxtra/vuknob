@@ -1553,7 +1553,7 @@ Machine *Machine::top_render_chain = NULL;
 std::vector<Machine *> Machine::machine_set;
 std::set<std::weak_ptr<Machine::MachineSetListener>, std::owner_less<std::weak_ptr<Machine::MachineSetListener> > > Machine::machine_set_listeners;
 
-std::vector<std::pair<__MACHINE_PERIODIC_CALLBACK_F, int> > Machine::periodic_callback_set;
+std::vector<__MACHINE_PERIODIC_CALLBACK_F> Machine::periodic_callback_set;
 
 #ifdef SIMPLE_JTHREAD_DEBUG
 extern jThread::Monitor *SIMPLE_JTHREAD_DEBUG_MUTX;
@@ -1766,23 +1766,13 @@ void Machine::calculate_next_tick_at_and_sequence_position() {
 }
 
 void Machine::trigger_periodic_functions() {
-	std::vector<std::pair<__MACHINE_PERIODIC_CALLBACK_F, int> >::iterator
-		periodic_callback;
-
-	for(periodic_callback  = periodic_callback_set.begin();
-	    periodic_callback != periodic_callback_set.end();
-	    periodic_callback++) {
-		int value =
-			__next_sequence_position % ((*periodic_callback).second);
-		if(value == 0) {
-			auto f = (*periodic_callback).first;
-			auto pos = __next_sequence_position;
-			Machine::run_async_function(
-				[f, pos]() {
-					f(pos);
-				}
-				);
-		}
+	auto nsp = __next_sequence_position;
+	for(auto periodic_callback : periodic_callback_set) {
+		Machine::run_async_function(
+			[periodic_callback, nsp]() {
+				periodic_callback(nsp);
+			}
+			);
 	}
 }
 
@@ -1920,34 +1910,12 @@ void Machine::prepare_baseline() {
 	}
 }
 
-void Machine::register_periodic(__MACHINE_PERIODIC_CALLBACK_F callback_function,
-				int interval_in_playback_positions) {
-	std::pair<__MACHINE_PERIODIC_CALLBACK_F, int> _newval;
-
-	_newval.first = callback_function;
-	_newval.second = interval_in_playback_positions;
-
+void Machine::register_periodic(__MACHINE_PERIODIC_CALLBACK_F callback_function) {
 	Machine::machine_operation_enqueue(
-		[] (void *d) {
-			std::pair<__MACHINE_PERIODIC_CALLBACK_F, int> newval = *((std::pair<__MACHINE_PERIODIC_CALLBACK_F, int> *)d);
-
-			// search for existing entry for the callback
-			// if found, erase it and add with a new value
-			for(auto periodic_callback = periodic_callback_set.begin();
-			    periodic_callback != periodic_callback_set.end();
-			    periodic_callback++) {
-				if((*periodic_callback).first == newval.first) {
-					periodic_callback_set.erase(periodic_callback);
-					periodic_callback_set.push_back(newval);
-					return;
-				}
-
-			}
-
-			// if we are here, the function was not found, so we just add it
-			periodic_callback_set.push_back(newval);
+		[callback_function] (void *d) {
+			periodic_callback_set.push_back(callback_function);
 		},
-		&_newval, true);
+		NULL, false);
 }
 
 void Machine::register_machine_set_listener(std::weak_ptr<MachineSetListener> mset_listener) {

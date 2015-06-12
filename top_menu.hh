@@ -59,14 +59,6 @@ private:
 
 	MenuSelection current_selection;
 
-	// since the sequence_row_playing_changed() callback is running
-	// on the playback thread, we have this set_row_playing_markers() function
-	// that the first function will put in queue to execute on the UI thread, where it belongs.
-	static void run_play_pulse_marker(void *rowp);
-
-	// this callback is called by Machine on every sequence_step line
-	static void sequence_row_playing_changed(int row);
-
 	int w;
 	bool no_compose_mode = false;
 	bool show_pulse = false;
@@ -85,6 +77,7 @@ public:
 	// RemoteInterface::GlobalControlObject::PlaybackStateListener
 	virtual void playback_state_changed(bool is_playing) override;
 	virtual void recording_state_changed(bool is_recording) override;
+	virtual void periodic_playback_update(int current_line) override;
 };
 
 #endif

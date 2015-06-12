@@ -1021,7 +1021,19 @@ RemoteInterface::GlobalControlObject::GlobalControlObject(const Factory *factory
 	}
 }
 
-RemoteInterface::GlobalControlObject::GlobalControlObject(int32_t new_obj_id, const Factory *factory) : BaseObject(new_obj_id, factory) {}
+RemoteInterface::GlobalControlObject::GlobalControlObject(int32_t new_obj_id, const Factory *factory) : BaseObject(new_obj_id, factory) {
+	Machine::register_periodic(
+
+		[this](int row) {
+			send_object_message(
+				[this, row](std::shared_ptr<Message> &msg2send) {
+					msg2send->set_value("command", "nrplaying");
+					msg2send->set_value("nrow", std::to_string(row));
+				}
+				);
+		}
+		);
+}
 
 void RemoteInterface::GlobalControlObject::post_constructor_client() {}
 
@@ -1095,7 +1107,10 @@ void RemoteInterface::GlobalControlObject::process_message(Server *context, Mess
 void RemoteInterface::GlobalControlObject::process_message(Client *context, const Message &msg) {
 	std::string command = msg.get_value("command");
 
-	if(command == "play") {
+	if(command == "nrplaying") {
+		auto new_row = std::stoi(msg.get_value("nrow"));
+		for(auto w_clb : playback_state_listeners) if(auto clb = w_clb.lock()) clb->periodic_playback_update(new_row);
+	} else if(command == "play") {
 		SATAN_DEBUG("Client: Playing is now true.\n");
 		is_playing = true;
 		for(auto w_clb : playback_state_listeners) if(auto clb = w_clb.lock()) clb->playback_state_changed(is_playing);

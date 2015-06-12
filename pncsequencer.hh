@@ -53,11 +53,11 @@ private:
 		*btn_help_two,
 		*btn_help_three
 		;
-	
+
 	HelpType help_type;
-	
+
 public:
-	
+
 	PncHelpDisplay(
 		CanvasWidgetContext *cwc,
 		float x1,
@@ -66,7 +66,7 @@ public:
 		float y2,
 		HelpType ht
 		);
-	
+
 	virtual void resized();
 	virtual void expose();
 	virtual void on_event(KammoGUI::canvasEvent_t ce, int x, int y);
@@ -80,13 +80,13 @@ public:
 		_on_, _on_b_, _on_c_, _on_e_, _no_
 	};
 
-	
+
 private:
 	friend class RowNumberColumn;
 
-	class RowNumberColumn *parent;	
+	class RowNumberColumn *parent;
 	void (*parent_callback)(void *cbd, PncLoopIndicator *pli, KammoGUI::canvasEvent_t ce, int x, int y);
-	
+
 	static KammoGUI::Canvas::SVGDefinition
 	*btn_loop_no_d,
 		*btn_loop_on_d,
@@ -127,7 +127,7 @@ public:
 		RowNumberColumn *parent,
 		void (*parent_callback)(void *cbd, PncLoopIndicator *pli, KammoGUI::canvasEvent_t ce, int x, int y)
 		);
-	
+
 	virtual void resized();
 	virtual void expose();
 	virtual void on_event(KammoGUI::canvasEvent_t ce, int x, int y);
@@ -145,9 +145,9 @@ enum zoneMode {normalZone, hiddenZone, addnewZone};
 class PncSeqZone : public CanvasWidget {
 private:
 	zoneMode mode;
-	
+
 	bool only_value; // true if this PncSeqZone only shows value (no other gfx..)
-	
+
 	// this is true if the zone is to use the mute selector graphics instead
 	// of cursor graphics (used for the top row only)
 	bool show_mute;
@@ -160,7 +160,7 @@ private:
 
 	bool selected;
 	bool focus_left; // true if focus on left digit, false if focus on right digit..
-	
+
 	static KammoGUI::Canvas::SVGDefinition
 	*btn_selected_l_d,
 		*btn_selected_r_d,
@@ -178,11 +178,11 @@ private:
 		*btn_hidden,
 		*btn_shade,
 		*btn_plus;
-	
+
 	bool (*on_event_cb)(void *cbd, PncSeqZone *pnb, KammoGUI::canvasEvent_t ce, int x, int y);
 	void (*state_change)(void *cbd, PncSeqZone *pnb, bool selected, bool focus_left);
 	void *cbd;
-	
+
 public:
 
 	PncSeqZone(
@@ -208,11 +208,11 @@ public:
 	void set_mode(zoneMode mode);
 
 	void set_shade(bool shade);
-	
+
 	virtual void resized();
 	virtual void expose();
 	virtual void on_event(KammoGUI::canvasEvent_t ce, int x, int y);
-	
+
 };
 
 class PncSequenceFlingAnimation : public KammoGUI::Animation {
@@ -222,7 +222,7 @@ private:
 	float total_pixels_changed;
 	void (*scrolled)(void *cbd, int rel);
 	void *cbd; // call-back-data
-	
+
 public:
 	PncSequenceFlingAnimation(float speed, float zone_size, float duration, void (*scrolled)(void *cbd, int rel), void *cbd);
 	virtual void new_frame(float progress);
@@ -233,13 +233,13 @@ class PncSequence {
 private:
 	// fling detector
 	KammoGUI::FlingGestureDetector fling_detector;
-	
+
 	friend class PncSequencer;
-	
+
 	CanvasWidgetContext *context;
 
 	MachineSequencer *mseq;
-	
+
 	PncSeqZone *seq_number_zone; // this is the top zone of the column, shows mute and sequence number
 	std::map<int, PncSeqZone *> row; // this contain the rest of the column, each zone displays a row of the sequence data
 
@@ -251,7 +251,7 @@ private:
 	// call back, called from PncSeqZone when a zone's state has changed
 	static void zone_state_change(
 		void *cbd, PncSeqZone *szone, bool enabled, bool focus_left);
-	
+
 	// this function will be called when the user has done a horizontal scroll.
 	void (*horizontal_scroll_cb)(void *cbd, int valu);
 	// this function will be called when the user has done a vertical scroll.
@@ -269,7 +269,7 @@ public:
 		);
 
 	void set_current_playing_row(int row);
-	
+
 	void set_mode(zoneMode mode);
 
 	void set_machine_sequencer(const std::string &title, MachineSequencer *_mseq);
@@ -283,20 +283,20 @@ public:
 	void show_envelopes();
 };
 
-// this class will just display current row numbers 
+// this class will just display current row numbers
 class RowNumberColumn {
 private:
 	typedef enum {_set_start_, _move_loop_, _set_length_, _ignore_motion_} loopMotion_t;
-	
+
 	CanvasWidgetContext *context;
 
 	int visible_rows; // this value says how many sequence rows that are currently visible
 
 	bool just_do_tap;
 	loopMotion_t loop_motion;
-	
+
 	int motion_start_x;
-	
+
 	std::map<int, PncLoopIndicator *> row;
 
 	// call back, called from PncLoopIndicator on motion/click events
@@ -318,7 +318,7 @@ public:
 		machine_selected,
 		spacing_selected
 	};
-	
+
 	typedef enum _KeySum {
 		key_0 =      0x00,
 		key_1 =      0x01,
@@ -336,7 +336,7 @@ public:
 		key_d =      0x0d,
 		key_e =      0x0e,
 		key_f =      0x0f,
-		
+
 		key_up =     0x10,
 		key_down =   0x11,
 		key_left =   0x12,
@@ -349,18 +349,18 @@ public:
 		key_tracker =    0x21,
 		key_control_editor = 0x22,
 		key_envelope_editor = 0x23,
-		
+
 		key_alternative = 0x50,
-		
+
 		NO_KEY = 0xff
 	} KeySum;
-	
+
 private:
 	friend class PncSequence;
 	friend class RowNumberColumn;
 
 	static SequencerMode sequencer_mode;
-	
+
 	static PncHelpDisplay *phd; // we need a phd to explain this shit!
 	static PncSeqZone *stz; // step zone, shows the sequence step
 	static RowNumberColumn *rnrcol;
@@ -371,7 +371,7 @@ private:
 	static bool sel_seq_step; // this is true if input should go to the sequence_step parameter
 	static int sel_seq, sel_row;
 	static bool sel_hi; // select high byte or low byte
-	
+
 	// Canvas context
 	static CanvasWidgetContext *context;
 
@@ -382,7 +382,7 @@ private:
 
 	// this is called when the user wants to increase step length/sequence_step
 	static void step_increase(void *dbd, PncSeqZone *pnb, bool selected, bool focus_left);
-	
+
 	// these three are called (callbacks) from PncSequence
 	static void horizontal_scroll(void *cbd, int valu);
 	static void vertical_scroll(void *cbd, int valu);
@@ -392,15 +392,15 @@ private:
 	// on the playback thread, we have this set_row_playing_markers() function
 	// that the first function will put in queue to execute on the UI thread, where it belongs.
 	static int last_row_playing_marker;
-	static void set_row_playing_markers(void *rowp);	
+	static void set_row_playing_markers(int row);
 
 	// this callback is called by Machine on every sequence_step line
 	static void sequence_row_playing_changed(int row);
-		
+
 	// this is must be run when the machine sequencer set is changed to refresh the UI
 	// must be called on UI thread
 	static void machine_sequencer_set_changed(void *);
-	
+
 public:
 	// this will make sure the machine_sequencer_set_changed() is called on the UI thread
 	static void call_machine_sequencer_set_changed(void *);

@@ -64,7 +64,7 @@ class Machine;
 #define MACHINE_TICK_BITMASK 0x000000f
 #define MAX_STATIC_SIGNALS 256
 
-typedef void (*__MACHINE_PERIODIC_CALLBACK_F)(int playback_position);
+typedef std::function<void(int)> __MACHINE_PERIODIC_CALLBACK_F;
 typedef void __MACHINE_OPERATION_CALLBACK;
 
 class Machine {
@@ -720,7 +720,7 @@ private:
 	static std::vector<Machine *>machine_set; // global array of all machines
 
 	static std::set<std::weak_ptr<MachineSetListener>, std::owner_less<std::weak_ptr<MachineSetListener> > > machine_set_listeners;
-	static std::vector<std::pair<__MACHINE_PERIODIC_CALLBACK_F, int> > periodic_callback_set;
+	static std::vector<__MACHINE_PERIODIC_CALLBACK_F> periodic_callback_set;
 
 	// async operations object
 	static AsyncOperations *async_ops;
@@ -785,8 +785,7 @@ public:
 	static void prepare_baseline();
 
 	/// Call this to register a function that should be called periodically, where the period is defined by the interval_in_playback_positions parameter
-	static void register_periodic(__MACHINE_PERIODIC_CALLBACK_F fp,
-				      int interval_in_playback_positions);
+	static void register_periodic(__MACHINE_PERIODIC_CALLBACK_F fp);
 
 	/// Register a machine set listener (will be called on machine registered/unregistered events)
 	static void register_machine_set_listener(std::weak_ptr<MachineSetListener> mset_listener);

@@ -49,7 +49,7 @@ using namespace std;
 #include "machine.hh"
 #include "machine_sequencer.hh"
 
-//#define __DO_SATAN_DEBUG
+#define __DO_SATAN_DEBUG
 #include "satan_debug.hh"
 
 /***************************
@@ -235,19 +235,6 @@ void TopMenu::on_event(KammoGUI::canvasEvent_t ce, int x, int y) {
 	}
 }
 
-void TopMenu::run_play_pulse_marker(void *rowp) {
-	int row = (int)rowp;
-
-	if(!(row % Machine::get_lpb()))
-		top_menu->show_pulse = true;
-	else
-		top_menu->show_pulse = false;
-}
-
-void TopMenu::sequence_row_playing_changed(int row) {
-	KammoGUI::run_on_GUI_thread(run_play_pulse_marker, (void *)row);
-}
-
 void TopMenu::setup(bool _no_compose_mode, KammoGUI::Canvas *cnvs) {
 	float w_inch = KammoGUI::DisplayConfiguration::get_screen_width(KammoGUI::inches);
 
@@ -262,7 +249,6 @@ void TopMenu::setup(bool _no_compose_mode, KammoGUI::Canvas *cnvs) {
 	cwc->enable_events();
 
 	RemoteInterface::GlobalControlObject::register_playback_state_listener(top_menu);
-	Machine::register_periodic(sequence_row_playing_changed, 1);
 }
 
 void TopMenu::playback_state_changed(bool _is_playing) {
@@ -280,6 +266,18 @@ void TopMenu::recording_state_changed(bool _is_recording) {
 			is_recording = _is_recording;
 			redraw();
 		}
+		);
+}
+
+void TopMenu::periodic_playback_update(int row) {
+	KammoGUI::run_on_GUI_thread(
+		[this, row]() {
+			if(!(row % Machine::get_lpb()))
+				show_pulse = true;
+			else
+				show_pulse = false;
+		},
+		false
 		);
 }
 

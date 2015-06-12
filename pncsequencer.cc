@@ -1206,7 +1206,7 @@ void PncSequencer::refresh_sequencers() {
 		phd->set_help_type(PncHelpDisplay::_no_help);
 	}
 
-	set_row_playing_markers((void *)last_row_playing_marker);
+	set_row_playing_markers(last_row_playing_marker);
 }
 
 void PncSequencer::machine_sequencer_set_changed(void *ignored) {
@@ -1223,9 +1223,7 @@ void PncSequencer::call_machine_sequencer_set_changed(void *cbdata) {
 }
 
 int PncSequencer::last_row_playing_marker = 0;
-void PncSequencer::set_row_playing_markers(void *rowp) {
-	int row = (int)rowp;
-
+void PncSequencer::set_row_playing_markers(int row) {
 	int k;
 	for(k = 0; k < (int)seq.size(); k++) {
 		seq[k]->set_current_playing_row(row);
@@ -1233,11 +1231,6 @@ void PncSequencer::set_row_playing_markers(void *rowp) {
 
 	// cache this entry
 	last_row_playing_marker = row;
-}
-
-void PncSequencer::sequence_row_playing_changed(int row) {
-	SATAN_DEBUG("sequence_row_playing_changed().\n");
-	KammoGUI::run_on_GUI_thread(set_row_playing_markers, (void *)row);
 }
 
 PncSequencer::SequencerMode PncSequencer::get_sequencer_mode() {
@@ -1387,7 +1380,6 @@ void PncSequencer::send_keysum(bool button_down, KeySum ksum) {
 			if(value > 99) value = 99;
 
 			sequence_step = value;
-			Machine::register_periodic(sequence_row_playing_changed, sequence_step);
 
 			char bfr[9];
 			snprintf(bfr, 8, "%01d %01d", value / 10, value % 10);
@@ -1544,10 +1536,21 @@ void PncSequencer::init(CanvasWidgetContext *cwc) {
 
 	// register us for change notification from MachineSequencer
 	MachineSequencer::register_change_callback(call_machine_sequencer_set_changed);
-	Machine::register_periodic(sequence_row_playing_changed, sequence_step);
+	Machine::register_periodic(
+		[](int row) {
+			SATAN_DEBUG("sequence_row_playing_changed().\n");
+			KammoGUI::run_on_GUI_thread(
+				[row]() {
+					if((row % PncSequencer::sequence_step) == 0) {
+						set_row_playing_markers(row);
+					}
+				}
+				);
+		}
+		);
 
 	// initial playback marker
-	set_row_playing_markers((void *)0);
+	set_row_playing_markers(0);
 
 	// initial refresh
 	refresh_sequencers();

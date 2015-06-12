@@ -131,6 +131,7 @@ public:
 	// RemoteInterface::GlobalControlObject::PlaybackStateListener
 	virtual void playback_state_changed(bool is_playing) override;
 	virtual void recording_state_changed(bool is_recording) override;
+	virtual void periodic_playback_update(int current_line) override { /* empty */ }
 };
 
 #endif

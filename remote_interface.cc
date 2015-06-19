@@ -999,6 +999,10 @@ void RemoteInterface::GlobalControlObject::parse_serialized_keys(const std::stri
 }
 
 RemoteInterface::GlobalControlObject::GlobalControlObject(const Factory *factory, const Message &serialized) : BaseObject(factory, serialized) {
+	// get basics
+	bpm = std::stoi(serialized.get_value("bpm"));
+	lpb = std::stoi(serialized.get_value("lpb"));
+
 	// parse scale list
 	std::stringstream scales_s(serialized.get_value("scales"));
 	std::string scale;
@@ -1101,7 +1105,46 @@ void RemoteInterface::GlobalControlObject::process_message(Server *context, Mess
 		reply->set_value("fname", Machine::get_record_file_name());
 		src->deliver_message(reply);
 		SATAN_DEBUG("Reply delivered...\n");
+	} else if(command == "set_bpm") {
+		SATAN_DEBUG("set_bpm command received...\n");
+		int new_bpm = std::stoi(msg.get_value("bpm"));
+		Machine::set_bpm(new_bpm);
+		new_bpm = Machine::get_bpm();
+
+		// update state of clients
+		send_object_message(
+			[new_bpm](std::shared_ptr<Message> &msg2send) {
+				msg2send->set_value("command", "bpmset");
+				msg2send->set_value("bpm", std::to_string(new_bpm));
+			}
+			);
+
+		// send reply to synchronize
+		std::shared_ptr<Message> reply = context->acquire_reply(msg);
+		reply->set_value("bpmsync", std::to_string(new_bpm));
+		src->deliver_message(reply);
+
+	} else if(command == "set_lpb") {
+		SATAN_DEBUG("set_lpb command received...\n");
+		int new_lpb = std::stoi(msg.get_value("lpb"));
+		Machine::set_lpb(new_lpb);
+		new_lpb = Machine::get_lpb();
+
+		// update state of clients
+		send_object_message(
+			[new_lpb](std::shared_ptr<Message> &msg2send) {
+				msg2send->set_value("command", "lpbset");
+				msg2send->set_value("lpb", std::to_string(new_lpb));
+			}
+			);
+
+		// send reply to synchronize
+		std::shared_ptr<Message> reply = context->acquire_reply(msg);
+		reply->set_value("lpbsync", std::to_string(new_lpb));
+		src->deliver_message(reply);
+
 	}
+
 }
 
 void RemoteInterface::GlobalControlObject::process_message(Client *context, const Message &msg) {
@@ -1126,6 +1169,14 @@ void RemoteInterface::GlobalControlObject::process_message(Client *context, cons
 		SATAN_DEBUG("Client: Recording is now false.\n");
 		is_recording = false;
 		for(auto w_clb : playback_state_listeners) if(auto clb = w_clb.lock()) clb->recording_state_changed(is_recording);
+	} else if(command == "bpmset") {
+		std::lock_guard<std::mutex> lock_guard(base_object_mutex);
+		bpm = std::stoi(msg.get_value("bpm"));
+		SATAN_DEBUG("Client: bpm updated: %d.\n", bpm);
+	} else if(command == "lpbset") {
+		std::lock_guard<std::mutex> lock_guard(base_object_mutex);
+		lpb = std::stoi(msg.get_value("lpb"));
+		SATAN_DEBUG("Client: lpb updated: %d.\n", lpb);
 	}
 }
 
@@ -1162,6 +1213,9 @@ void RemoteInterface::GlobalControlObject::serialize(std::shared_ptr<Message> &t
 		serialize_keys(target, keys4scale_id.str(), MachineSequencer::PadConfiguration::get_scale_keys(scale_name));
 	}
 	target->set_value("scales", scales_serialized.str());
+
+	target->set_value("bpm", std::to_string(Machine::get_bpm()));
+	target->set_value("lpb", std::to_string(Machine::get_lpb()));
 }
 
 void RemoteInterface::GlobalControlObject::on_delete(Client *context) { /* noop */ }
@@ -1289,6 +1343,48 @@ std::string RemoteInterface::GlobalControlObject::get_record_file_name() {
 		);
 
 	return rec_fname;
+}
+
+int RemoteInterface::GlobalControlObject::get_bpm() {
+	std::lock_guard<std::mutex> lock_guard(base_object_mutex);
+	return bpm;
+}
+
+int RemoteInterface::GlobalControlObject::get_lpb() {
+	std::lock_guard<std::mutex> lock_guard(base_object_mutex);
+	return lpb;
+}
+
+void RemoteInterface::GlobalControlObject::set_bpm(int _bpm) {
+	send_object_message(
+		[_bpm](std::shared_ptr<Message> &msg2send) {
+			msg2send->set_value("command", "set_bpm");
+			msg2send->set_value("bpm", std::to_string(_bpm));
+		},
+		[this, &_bpm](const Message *reply_message) {
+			if(reply_message) {
+				// this is just for synchronization - not really used
+				_bpm = std::stoi(reply_message->get_value("bpmsync"));
+			}
+		}
+
+		);
+}
+
+void RemoteInterface::GlobalControlObject::set_lpb(int _lpb) {
+	send_object_message(
+		[_lpb](std::shared_ptr<Message> &msg2send) {
+			msg2send->set_value("command", "set_lpb");
+			msg2send->set_value("lpb", std::to_string(_lpb));
+		},
+		[this, &_lpb](const Message *reply_message) {
+			if(reply_message) {
+				// this is just for synchronization - not really used
+				_lpb = std::stoi(reply_message->get_value("lpbsync"));
+			}
+		}
+
+		);
 }
 
 void RemoteInterface::GlobalControlObject::insert_new_playback_state_listener_object(std::shared_ptr<PlaybackStateListener> listener_object) {

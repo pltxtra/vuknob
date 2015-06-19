@@ -272,10 +272,13 @@ void TopMenu::recording_state_changed(bool _is_recording) {
 void TopMenu::periodic_playback_update(int row) {
 	KammoGUI::run_on_GUI_thread(
 		[this, row]() {
-			if(!(row % Machine::get_lpb()))
-				show_pulse = true;
-			else
-				show_pulse = false;
+			if(auto gco = RemoteInterface::GlobalControlObject::get_global_control_object()) {
+				auto lpb = gco->get_lpb();
+				if(!(row % lpb))
+					show_pulse = true;
+				else
+					show_pulse = false;
+			}
 		},
 		false
 		);

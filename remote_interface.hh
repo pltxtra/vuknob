@@ -351,6 +351,11 @@ public:
 		bool get_record_state();
 		std::string get_record_file_name();
 
+		int get_lpb();
+		int get_bpm();
+		void set_lpb(int lpb);
+		void set_bpm(int lpb);
+
 		static void register_playback_state_listener(std::shared_ptr<PlaybackStateListener> listener_object);
 
 //		void register_periodic(std::function<void(int line)>, int nr_lines_per_period);
@@ -363,6 +368,7 @@ public:
 
 		static void insert_new_playback_state_listener_object(std::shared_ptr<PlaybackStateListener> listener_object);
 
+		int bpm, lpb;
 		bool is_playing = false, is_recording = false;
 
 		std::map<std::string, std::vector<int> > scale2keys;

@@ -27,7 +27,7 @@
  *
  */
 
-#include <sched.h>  
+#include <sched.h>
 //#define _DONT_DO_GUI
 
 #include <sys/types.h>
@@ -100,7 +100,7 @@ int set_realtime_priority(void)
 }
 
 #endif
-	
+
 KammoEventHandler_Declare(MainWindowHandler, "MainWindow:quitnow");
 
 virtual void on_click(KammoGUI::Widget *wid) {
@@ -108,7 +108,7 @@ virtual void on_click(KammoGUI::Widget *wid) {
 	SATAN_ERROR("taking down service..\n");
 	AndroidJavaInterface::takedown_service();
 #endif
-	
+
 	SATAN_ERROR("stopping server..\n");
 	RemoteInterface::Server::stop_server();
 	SATAN_ERROR("disconnecting client..\n");
@@ -158,16 +158,16 @@ void refresh_shuffle_label(int _new_shuffle) {
 void refresh_all() {
 	{
 		int bpm = Machine::get_bpm();
-		
+
 		static KammoGUI::Scale *bpmScale;
 		KammoGUI::get_widget((KammoGUI::Widget **)&bpmScale, "scaleBPM");
 		bpmScale->set_value(bpm);
-		
+
 		refresh_bpm_label(bpm);
 	}
 	{
 		int lpb = Machine::get_lpb();
-		
+
 		static KammoGUI::Scale *lpbScale;
 		KammoGUI::get_widget((KammoGUI::Widget **)&lpbScale, "scaleLPB");
 		lpbScale->set_value(lpb);
@@ -176,7 +176,7 @@ void refresh_all() {
 	}
 	{
 		int shuffle = (int)(Machine::get_shuffle_factor());
-		
+
 		static KammoGUI::Scale *shuffleScale;
 		KammoGUI::get_widget((KammoGUI::Widget **)&shuffleScale, "scaleShuffle");
 		shuffleScale->set_value(shuffle);
@@ -218,37 +218,40 @@ virtual void on_click(KammoGUI::Widget *wid) {
 		changeShuffle++;
 	}
 	if(changeBPM) {
-		int bpm = Machine::get_bpm();
+		if(auto gco = RemoteInterface::GlobalControlObject::get_global_control_object()) {
+			int bpm = gco->get_bpm();
 
-		bpm += changeBPM;
+			bpm += changeBPM;
 
-		// we just try and set the new value, in case of an error we just ignore
-		try {Machine::set_bpm(bpm);} catch(...) { /* ignore */ }
-		// if there was an error we must make sure we have the correct value, so we read it back
-		bpm = Machine::get_bpm();
+			// we just try and set the new value, in case of an error we just ignore
+			gco->set_bpm(bpm);
+			// if there was an error we must make sure we have the correct value, so we read it back
+			bpm = gco->get_bpm();
 
-		
-		static KammoGUI::Scale *bpmScale;
-		KammoGUI::get_widget((KammoGUI::Widget **)&bpmScale, "scaleBPM");
-		bpmScale->set_value(bpm);
+			static KammoGUI::Scale *bpmScale;
+			KammoGUI::get_widget((KammoGUI::Widget **)&bpmScale, "scaleBPM");
+			bpmScale->set_value(bpm);
 
-		refresh_bpm_label(bpm);
+			refresh_bpm_label(bpm);
+		}
 	}
 	if(changeLPB) {
-		int lpb = Machine::get_lpb();
+		if(auto gco = RemoteInterface::GlobalControlObject::get_global_control_object()) {
+			int lpb = gco->get_lpb();
 
-		lpb += changeLPB;
+			lpb += changeLPB;
 
-		// we just try and set the new value, in case of an error we just ignore
-		try {Machine::set_lpb(lpb);} catch(...) { /* ignore */ }
-		// if there was an error we must make sure we have the correct value, so we read it back
-		lpb = Machine::get_lpb();
-		
-		static KammoGUI::Scale *lpbScale;
-		KammoGUI::get_widget((KammoGUI::Widget **)&lpbScale, "scaleLPB");
-		lpbScale->set_value(lpb);
+			// we just try and set the new value, in case of an error we just ignore
+			gco->set_lpb(lpb);
+			// if there was an error we must make sure we have the correct value, so we read it back
+			lpb = gco->get_lpb();
 
-		refresh_lpb_label(lpb);
+			static KammoGUI::Scale *lpbScale;
+			KammoGUI::get_widget((KammoGUI::Widget **)&lpbScale, "scaleLPB");
+			lpbScale->set_value(lpb);
+
+			refresh_lpb_label(lpb);
+		}
 	}
 	if(changeShuffle) {
 		int shuffle = (int)(Machine::get_shuffle_factor());
@@ -259,7 +262,7 @@ virtual void on_click(KammoGUI::Widget *wid) {
 		try {Machine::set_shuffle_factor(shuffle);} catch(...) { /* ignore */ }
 		// if there was an error we must make sure we have the correct value, so we read it back
 		shuffle = (int)(Machine::get_shuffle_factor());
-		
+
 		static KammoGUI::Scale *shuffleScale;
 		KammoGUI::get_widget((KammoGUI::Widget **)&shuffleScale, "scaleShuffle");
 		shuffleScale->set_value(shuffle);
@@ -271,18 +274,22 @@ virtual void on_click(KammoGUI::Widget *wid) {
 virtual void on_value_changed(KammoGUI::Widget *wid) {
 	int value = (int)((KammoGUI::Scale *)wid)->get_value();
 	if(wid->get_id() == "scaleBPM") {
-		// we just try and set the new value, in case of an error we just ignore
-		try {Machine::set_bpm(value);} catch(...) { /* ignore */ }
-		// if there was an error we must make sure we have the correct value, so we read it back
-		value = Machine::get_bpm();
+		if(auto gco = RemoteInterface::GlobalControlObject::get_global_control_object()) {
+			// we just try and set the new value, in case of an error we just ignore
+			gco->set_bpm(value);
+			// if there was an error we must make sure we have the correct value, so we read it back
+			value = gco->get_bpm();
+		}
 
 		refresh_bpm_label(value);
 	}
 	if(wid->get_id() == "scaleLPB") {
-		// we just try and set the new value, in case of an error we just ignore
-		try {Machine::set_lpb(value);} catch(...) { /* ignore */ }
-		// if there was an error we must make sure we have the correct value, so we read it back
-		value = Machine::get_lpb();
+		if(auto gco = RemoteInterface::GlobalControlObject::get_global_control_object()) {
+			// we just try and set the new value, in case of an error we just ignore
+			gco->set_lpb(value);
+			// if there was an error we must make sure we have the correct value, so we read it back
+			value = gco->get_lpb();
+		}
 
 		refresh_lpb_label(value);
 	}
@@ -302,7 +309,7 @@ class Satan {
 private:
 //	jCommunicator *comm;
 
-	
+
 public:
 	void usage() {
 		cout << "\n"
@@ -352,10 +359,10 @@ public:
 		if(user_name == "") {
 			cout << "No name defined, use option -u.\n";
 			exit(1);
-		}		
+		}
 
 		printf("   listen: %d, connect: %d\n", listen, connect);
-		
+
 		/*
 		comm = new jCommunicator(user_name, listen);
 
@@ -381,17 +388,17 @@ public:
 
 		try {
 			std::cout << "\n\n*************** REGISTERING GUI ****************\n\n";
-			KammoGUI::register_xml(file);			
+			KammoGUI::register_xml(file);
 			std::cout << "\n\n*************** GUI REGISTERED ****************\n\n";
 		} catch(jException e) {
 			std::cout << "blasted![" << e.message << "]\n";
 			exit(1);
 		}
-		
+
 		file.close();
 #endif
 		KammoGUI::start(); // this must be called prior to clearing project and calling refreshProject, otherwise any code trying to call run_on_GUI_thread_synchronized() will deadlock...
-			
+
 #ifdef ANDROID
 		// for android, the gui starts when we return...
 		return 0;
@@ -399,7 +406,7 @@ public:
 		while(1) {
 			sleep(1000);
 		}
-#endif		
+#endif
 	}
 };
 
@@ -424,11 +431,11 @@ void kamoflage_android_main() {
 
 	// replace stdin and stdout fd:s with the fd for the new file
 	dup2(debug_out, 1);
-	dup2(debug_out, 2);	
+	dup2(debug_out, 2);
 
 	printf("Hello brave new world!\n"); fflush(0);
 #endif
-	
+
 #else
 
 int main(int argc, char **argv) {
@@ -444,7 +451,7 @@ int main(int argc, char **argv) {
 	mkdir(DEFAULT_EXPORT_PATH, 0755);
 
 	InformationCatcher::init();
-	
+
 	Satan satan;
 	satan.main(argc, argv);
 

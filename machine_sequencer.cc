@@ -70,7 +70,7 @@ void MachineSequencer::MidiEventChainControler::init_free_midi_event_chain() {
 	if(data == NULL) {
 		throw std::bad_alloc();
 	}
-	
+
 	memset(data, 0, sizeof(MidiEventChain) * DEFAULT_MAX_FREE_CHAIN);
 	separation_zone = &data[DEFAULT_MAX_FREE_CHAIN];
 
@@ -78,7 +78,7 @@ void MachineSequencer::MidiEventChainControler::init_free_midi_event_chain() {
 	for(k = DEFAULT_MAX_FREE_CHAIN - 1; k >= 0; k--) {
 		next_free_midi_event = &data[k];
 		next_free_midi_event->next_in_chain = next;
-		
+
 		next = next_free_midi_event;
 	}
 }
@@ -89,7 +89,7 @@ void MachineSequencer::MidiEventChainControler::check_separation_zone() {
 
 inline MidiEvent *MachineSequencer::MidiEventChainControler::pop_next_free_midi(size_t size) {
 	if(size > 4) throw MachineSequencer::ParameterOutOfSpec();
-	
+
 	if(next_free_midi_event == NULL) {
 		init_free_midi_event_chain();
 	}
@@ -106,7 +106,7 @@ inline MidiEvent *MachineSequencer::MidiEventChainControler::pop_next_free_midi(
 	MidiEvent *mev = (MidiEvent *)(&(retval->data));
 
 	mev->length = size;
-	
+
 	return mev;
 }
 
@@ -123,7 +123,7 @@ inline void MachineSequencer::MidiEventChainControler::push_next_free_midi(MidiE
 	} else {
 		element->last_in_chain = element;
 	}
-	
+
 	element->next_in_chain = next_free_midi_event;
 	next_free_midi_event = element;
 }
@@ -132,17 +132,17 @@ MidiEvent *MachineSequencer::MidiEventChainControler::get_chain_head(MidiEventCh
 	if((*queue) == NULL) return NULL;
 
 	MidiEventChain *chain = *queue;
-	
+
 	MidiEvent *mev = (MidiEvent *)((*queue)->data);
-	
-	
+
+
 	if((*queue)->next_in_chain != NULL)
 		(*queue)->next_in_chain->last_in_chain = (*queue)->last_in_chain;
-	
+
 	(*queue) = (*queue)->next_in_chain;
 	chain->next_in_chain = NULL;
 	chain->last_in_chain = chain;
-	
+
 	return mev;
 }
 
@@ -157,7 +157,7 @@ void MachineSequencer::MidiEventChainControler::join_chains(MidiEventChain **des
 	// if destination is empty it's easy
 	if(*destination == NULL) {
 		*destination = *source;
-		*source = NULL;		
+		*source = NULL;
 		return;
 	}
 
@@ -168,7 +168,7 @@ void MachineSequencer::MidiEventChainControler::join_chains(MidiEventChain **des
 	last_entry->next_in_chain = *source;
 	(*destination)->last_in_chain = (*source)->last_in_chain;
 	*source = NULL;
-	
+
 }
 
 /*************************************
@@ -228,7 +228,7 @@ void MachineSequencer::MidiEventBuilder::queue_note_on(int note, int velocity, i
 		mev,
 		(MIDI_NOTE_ON) | (channel & 0x0f),
 		note,
-		velocity);	       
+		velocity);
 
 	chain_event(mev);
 }
@@ -240,19 +240,19 @@ void MachineSequencer::MidiEventBuilder::queue_note_off(int note, int velocity, 
 		mev,
 		(MIDI_NOTE_OFF) | (channel & 0x0f),
 		note,
-		velocity);	       
+		velocity);
 
 	chain_event(mev);
 }
 
 void MachineSequencer::MidiEventBuilder::queue_controller(int controller, int value, int channel) {
 	MidiEvent *mev = MidiEventChainControler::pop_next_free_midi(3);
-	
+
 	SET_MIDI_DATA_3(
 		mev,
 		(MIDI_CONTROL_CHANGE) | (channel & 0x0f),
 		controller,
-		value);	       
+		value);
 
 	chain_event(mev);
 }
@@ -288,7 +288,7 @@ void MachineSequencer::PadMidiExportBuilder::queue_note_on(int note, int velocit
 	}
 }
 
-void MachineSequencer::PadMidiExportBuilder::queue_note_off(int note, int velocity, int channel) {	
+void MachineSequencer::PadMidiExportBuilder::queue_note_off(int note, int velocity, int channel) {
 	std::map<int, NoteEntry *>::iterator n;
 	n = active_notes.find(note);
 	if(n != active_notes.end()) {
@@ -296,7 +296,7 @@ void MachineSequencer::PadMidiExportBuilder::queue_note_off(int note, int veloci
 		(void) loop->internal_insert_note((*n).second);
 
 		SATAN_DEBUG("(%p) insert note %d at %d\n", loop, (*n).second->note, (*n).second->on_at / 16);
-		
+
 		active_notes.erase(n);
 
 		{
@@ -343,7 +343,7 @@ void MachineSequencer::NoteEntry::set_to(const NoteEntry *original) {
 	this->velocity = (original->velocity & 0x7f);
 	this->note = (original->note & 0x7f);
 	this->on_at = original->on_at;
-	this->length = original->length;	
+	this->length = original->length;
 }
 
 /*************************************
@@ -352,7 +352,7 @@ void MachineSequencer::NoteEntry::set_to(const NoteEntry *original) {
  *
  *************************************/
 
-MachineSequencer::ControllerEnvelope::ControllerEnvelope() : enabled(true), controller_coarse(-1), controller_fine(-1) {	
+MachineSequencer::ControllerEnvelope::ControllerEnvelope() : enabled(true), controller_coarse(-1), controller_fine(-1) {
 }
 
 MachineSequencer::ControllerEnvelope::ControllerEnvelope(const ControllerEnvelope *original) : t(0), enabled(true), controller_coarse(-1), controller_fine(-1) {
@@ -362,7 +362,7 @@ MachineSequencer::ControllerEnvelope::ControllerEnvelope(const ControllerEnvelop
 
 void MachineSequencer::ControllerEnvelope::refresh_playback_data() {
 	if(control_point.size() == 0) return;
-	
+
 	next_c = control_point.lower_bound(t);
 	previous_c = next_c;
 
@@ -374,7 +374,7 @@ void MachineSequencer::ControllerEnvelope::refresh_playback_data() {
 }
 
 // returns true if the controller finished playing
-void MachineSequencer::ControllerEnvelope::process_envelope(int t, MidiEventBuilder *_meb) {	
+void MachineSequencer::ControllerEnvelope::process_envelope(int t, MidiEventBuilder *_meb) {
 	if(!enabled || control_point.size() == 0) {
 		return;
 	} else if(next_c == control_point.end()) {
@@ -389,12 +389,12 @@ void MachineSequencer::ControllerEnvelope::process_envelope(int t, MidiEventBuil
 
 	if((*next_c).first > t && next_c == control_point.begin())
 		return;
-	
+
 	int y;
 
 	if((*next_c).first == t) {
-		y = (*next_c).second;		
-		next_c++;		
+		y = (*next_c).second;
+		next_c++;
 	} else {
 		// interpolate
 		y = (*previous_c).second + ((((*next_c).second - (*previous_c).second) * (t - (*previous_c).first)) / ((*next_c).first - (*previous_c).first));
@@ -437,12 +437,12 @@ void MachineSequencer::ControllerEnvelope::set_control_point_line(
 	// this code erases all points between the first and the second
 	if(k1 != control_point.end()) {
 		control_point.erase(k1, k2);
-	} 
+	}
 
 	// then we update the points at first and second
 	control_point[first_x] = first_y;
 	control_point[second_x] = second_y;
-	
+
 	refresh_playback_data();
 }
 
@@ -461,8 +461,8 @@ void MachineSequencer::ControllerEnvelope::delete_control_point_range(
 	// this code erases all points between the first and the second
 	if(k1 != control_point.end()) {
 		control_point.erase(k1, k2);
-	} 
-	
+	}
+
 	refresh_playback_data();
 }
 
@@ -470,7 +470,7 @@ void MachineSequencer::ControllerEnvelope::delete_control_point(int line, int ti
 	std::map<int, int>::iterator k;
 
 	k = control_point.find(PAD_TIME(line, tick));
-	
+
 	if(k != control_point.end()) {
 		control_point.erase(k);
 	}
@@ -492,7 +492,7 @@ void MachineSequencer::ControllerEnvelope::write_to_xml(const std::string &id, s
 	    k++) {
 		stream << "<p t=\"" << (*k).first << "\" y=\"" << (*k).second << "\" />\n";
 	}
-	
+
 	stream << "</envelope>\n";
 }
 
@@ -546,27 +546,27 @@ MachineSequencer::Arpeggiator::Pattern *MachineSequencer::Arpeggiator::Pattern::
 
 void MachineSequencer::Arpeggiator::Pattern::initiate_built_in() {
 	if(built_in != NULL) return;
-	
+
 	built_in = (Pattern *)malloc(sizeof(Pattern) * MAX_BUILTIN_ARP_PATTERNS);
 	memset(built_in, 0, sizeof(Pattern) * MAX_BUILTIN_ARP_PATTERNS);
-	
+
 	/* create the built in patterns */
 	int i = -1; // just for purity
-	
+
 	// new pattern 0
 	i++;
 	SATAN_DEBUG("new pattern: %d\n", i);
 	built_in[i].append(Note(MACHINE_TICKS_PER_LINE - (MACHINE_TICKS_PER_LINE >> 1),
 				(MACHINE_TICKS_PER_LINE >> 1),
 				0, 0));
-	
+
 	// new pattern 1
 	i++;
 	SATAN_DEBUG("new pattern: %d\n", i);
 	built_in[i].append(Note((MACHINE_TICKS_PER_LINE >> 1) - (MACHINE_TICKS_PER_LINE >> 2),
 				(MACHINE_TICKS_PER_LINE >> 2),
 				0, 0));
-	
+
 	// new pattern 2
 	i++;
 	SATAN_DEBUG("new pattern: %d\n", i);
@@ -579,7 +579,7 @@ void MachineSequencer::Arpeggiator::Pattern::initiate_built_in() {
 				(MACHINE_TICKS_PER_LINE >> 1),
 				1, 0));
 	SATAN_DEBUG("--new note\n");
-	
+
 	// new pattern 3
 	i++;
 	SATAN_DEBUG("new pattern: %d\n", i);
@@ -592,7 +592,7 @@ void MachineSequencer::Arpeggiator::Pattern::initiate_built_in() {
 	built_in[i].append(Note(MACHINE_TICKS_PER_LINE - (MACHINE_TICKS_PER_LINE >> 1),
 				(MACHINE_TICKS_PER_LINE >> 1),
 				-1, 0));
-	
+
 	// new pattern 4
 	i++;
 	SATAN_DEBUG("new pattern: %d\n", i);
@@ -638,7 +638,7 @@ MachineSequencer::Arpeggiator::Arpeggiator() : phase(0), ticks_left(0), note(0),
 	}
 
 	Pattern::initiate_built_in();
-	
+
 	current_pattern = &Pattern::built_in[0]; // default
 }
 
@@ -658,7 +658,7 @@ void MachineSequencer::Arpeggiator::sort_keys() {
 	int k, l;
 
 	if(finger_count < 2) return;
-	
+
 	for(k = 0; k < finger_count -1; k++) {
 		for(l = k + 1; l < finger_count; l++) {
 			if(finger[l].key < finger[k].key) {
@@ -697,22 +697,22 @@ void MachineSequencer::Arpeggiator::disable_key(int key) {
 
 			if(finger[k].counter == 0) {
 				finger_count--;
-				
+
 				for(int l = k; l < finger_count; l++) {
 					finger[l] = finger[l + 1];
 				}
 			}
-			
+
 			break;
 		}
 	}
 
 	sort_keys();
 
-	if(finger_count == 0) current_finger = 0;	
+	if(finger_count == 0) current_finger = 0;
 }
 
-void MachineSequencer::Arpeggiator::process_pattern(bool mute, MidiEventBuilder *_meb) {	
+void MachineSequencer::Arpeggiator::process_pattern(bool mute, MidiEventBuilder *_meb) {
 	if(current_pattern == NULL || current_pattern->length <= 0)
 		return;
 
@@ -720,9 +720,9 @@ void MachineSequencer::Arpeggiator::process_pattern(bool mute, MidiEventBuilder 
 		pattern_index = 0;
 		phase = 0;
 	}
-	
+
 	int old_note = note;
-	
+
 	switch(phase) {
 	case 0:
 	{
@@ -736,7 +736,7 @@ void MachineSequencer::Arpeggiator::process_pattern(bool mute, MidiEventBuilder 
 			// clamp note to [0 127]
 			if(note < 0) note = 0;
 			if(note > 127) note = 127;
-			
+
 			_meb->queue_note_on(note, velocity);
 		} else {
 			note = -1;
@@ -767,7 +767,7 @@ void MachineSequencer::Arpeggiator::process_pattern(bool mute, MidiEventBuilder 
 		ticks_left = current_pattern->note[pattern_index].off_length - 1; // -1 to include phase 2 which takes one tick..
 	}
 	break;
-	
+
 	case 3:
 	{
 		ticks_left--;
@@ -836,7 +836,7 @@ MachineSequencer::Loop::Loop(const KXMLDoc &loop_xml) :
 			temp_note.on_at = tick;
 			temp_note.length = length;
 		}
-		
+
 		if(temp_note.length >= 0) {
 			internal_insert_note(new NoteEntry(&temp_note));
 		}
@@ -862,18 +862,18 @@ void MachineSequencer::Loop::get_loop_xml(std::ostringstream &stream, int id) {
 
 	while(crnt != NULL) {
 		stream << "    <note "
-		       << " channel=\"" << (int)(crnt->channel) << "\"" 
-		       << " program=\"" << (int)(crnt->program) << "\"" 
-		       << " velocity=\"" << (int)(crnt->velocity) << "\"" 
-		       << " note=\"" << (int)(crnt->note) << "\"" 
-		       << " on_tick=\"" << crnt->on_at << "\"" 
+		       << " channel=\"" << (int)(crnt->channel) << "\""
+		       << " program=\"" << (int)(crnt->program) << "\""
+		       << " velocity=\"" << (int)(crnt->velocity) << "\""
+		       << " note=\"" << (int)(crnt->note) << "\""
+		       << " on_tick=\"" << crnt->on_at << "\""
 		       << " length=\"" << crnt->length << "\""
 		       << " />\n"
 			;
-		
+
 		crnt = crnt->next;
 	}
-	
+
 	stream << "</loop>\n";
 }
 
@@ -922,16 +922,16 @@ void MachineSequencer::Loop::process_note_off(MidiEventBuilder *_meb) {
 				n->ticks2off--;
 			} else {
 				deactivate_note(n);
-				_meb->queue_note_off(n->note, 0x80, n->channel);				
+				_meb->queue_note_off(n->note, 0x80, n->channel);
 			}
 		}
 	}
 }
 
-void MachineSequencer::Loop::process(bool mute, MidiEventBuilder *_meb) {	
+void MachineSequencer::Loop::process(bool mute, MidiEventBuilder *_meb) {
 	process_note_on(mute, _meb);
 	process_note_off(_meb);
-	
+
 	loop_position++;
 }
 
@@ -951,7 +951,7 @@ MachineSequencer::NoteEntry *MachineSequencer::Loop::internal_delete_note(const 
 			}
 			if(crnt == note)
 				note = crnt->next;
-			
+
 			return crnt;
 		}
 		crnt = crnt->next;
@@ -1020,24 +1020,24 @@ const MachineSequencer::NoteEntry *MachineSequencer::Loop::internal_insert_note(
 		if(crnt->on_at > new_one->on_at) {
 			new_one->prev = crnt->prev;
 			new_one->next = crnt;
-			
+
 			if(crnt->prev) {
 				crnt->prev->next = new_one;
 			} else { // must be the first one, then
 				note = new_one;
 			}
 			crnt->prev = new_one;
-			
+
 			return new_one;
 		}
-		
+
 		if(crnt->next == NULL) {
 			// end of the line...
 			crnt->next = new_one;
 			new_one->prev = crnt;
 			new_one->next = NULL;
 			return new_one;
-		} 
+		}
 
 		crnt = crnt->next;
 	}
@@ -1046,7 +1046,7 @@ const MachineSequencer::NoteEntry *MachineSequencer::Loop::internal_insert_note(
 	note = new_one;
 	note->next = NULL;
 	note->prev = NULL;
-	
+
 	return new_one;
 }
 
@@ -1067,7 +1067,7 @@ const MachineSequencer::NoteEntry *MachineSequencer::Loop::note_insert(const Mac
 			p->retval = p->thiz->internal_insert_note(p->new_entry);
 		},
 		&param, true);
-	
+
 	return param.retval;
 }
 
@@ -1102,7 +1102,7 @@ void MachineSequencer::Loop::clear_loop() {
 
 MachineSequencer::NoteEntry *MachineSequencer::Loop::internal_insert_notes(MachineSequencer::NoteEntry *new_notes) {
 	NoteEntry *notes_to_delete = internal_clear();
-	
+
 	NoteEntry *tmp = new_notes;
 	while(tmp != NULL) {
 		NoteEntry *crnt = tmp;
@@ -1139,7 +1139,7 @@ void MachineSequencer::Loop::copy_loop(const MachineSequencer::Loop *src) {
 		original = original->next;
 	}
 	param.new_notes = new_ones;
-	
+
 	Machine::machine_operation_enqueue(
 		[] (void *d) {
 			Param *p = (Param *)d;
@@ -1223,11 +1223,11 @@ void MachineSequencer::PadConfiguration::load_configuration_from_xml(const KXMLD
 	int _mode = 0;
 	KXML_GET_NUMBER(c, "m", _mode, _mode);
 	mode = (PadMode)_mode;
-	
+
 	int c_mode = 0;
 	KXML_GET_NUMBER(c, "c", c_mode, c_mode);
 	chord_mode = (ChordMode)c_mode;
-	
+
 	KXML_GET_NUMBER(c, "s", scale, scale);
 	KXML_GET_NUMBER(c, "o", octave, octave);
 	KXML_GET_NUMBER(c, "arp", arpeggio_pattern, arpeggio_pattern);
@@ -1238,7 +1238,7 @@ void MachineSequencer::PadConfiguration::load_configuration_from_xml(const KXMLD
 
 std::vector<std::string> MachineSequencer::PadConfiguration::get_scale_names() {
 	std::vector<std::string> retval;
-	
+
 	int k, max;
 
 	max = sizeof(scales_library) / sizeof(ScaleEntry);
@@ -1252,7 +1252,7 @@ std::vector<std::string> MachineSequencer::PadConfiguration::get_scale_names() {
 
 std::vector<int> MachineSequencer::PadConfiguration::get_scale_keys(const std::string &scale_name) {
 	std::vector<int> retval;
-	
+
 	int k, max;
 
 	max = sizeof(scales_library) / sizeof(ScaleEntry);
@@ -1283,8 +1283,8 @@ void MachineSequencer::PadMotion::get_padmotion_xml(int finger, std::ostringstre
 	for(k = 0; k < x.size(); k++) {
 		stream << "<d x=\"" << x[k] << "\" y=\"" << y[k] << "\" t=\"" << t[k] << "\" />\n";
 	}
-	
-	stream << "</m>\n";	
+
+	stream << "</m>\n";
 }
 
 MachineSequencer::PadMotion::PadMotion(Pad *parent_config,
@@ -1294,9 +1294,9 @@ MachineSequencer::PadMotion::PadMotion(Pad *parent_config,
 {
 	for(int x = 0; x < MAX_PAD_CHORD; x++)
 		last_chord[x] = -1;
-	
+
 	add_position(_x, _y);
-	
+
 }
 
 MachineSequencer::PadMotion::PadMotion(Pad *parent_config, int &start_offset_return, const KXMLDoc &pad_xml) :
@@ -1314,28 +1314,28 @@ MachineSequencer::PadMotion::PadMotion(Pad *parent_config, int &start_offset_ret
 	} catch(...) { /* ignore */ }
 
 	int first_tick = 0;
-	
+
 	// because of the difference between project_level 4 and 5
 	// this code get's a bit ugly (it converts level 4 representation to level 5 and beyond
 	for(int k = 0; k < mk; k++) {
 		KXMLDoc dxml = pad_xml["d"][k];
 		int _x, _y, _abs_time, _t;
-		
+
 		KXML_GET_NUMBER(dxml, "x", _x, -1);
 		KXML_GET_NUMBER(dxml, "y", _y, -1);
 		KXML_GET_NUMBER(dxml, "t", _abs_time, -1);
-		
+
 		int lin = PAD_TIME_LINE(_abs_time);
 		int tick = PAD_TIME_TICK(_abs_time);
-		
+
 		if(k == 0) {
 			start_offset_return = _abs_time;
 			first_tick = (lin * MACHINE_TICKS_PER_LINE) + tick;
-			_t = 0; 
-		} else { 
+			_t = 0;
+		} else {
 			_t = (lin * MACHINE_TICKS_PER_LINE) + tick - first_tick;
 		}
-		
+
 		// _t might be < 0 - a.k.a. wrap failure
 		// this was the major problem with the old style, it did not wrap very good..
 		// so here we just discard it
@@ -1356,7 +1356,7 @@ MachineSequencer::PadMotion::PadMotion(Pad *parent_config, const KXMLDoc &pad_xm
 	load_configuration_from_xml(pad_xml);
 
 	KXML_GET_NUMBER(pad_xml, "start", start_tick, -1);
-	
+
 	int mk = 0;
 	try {
 		mk = pad_xml["d"].get_count();
@@ -1365,11 +1365,11 @@ MachineSequencer::PadMotion::PadMotion(Pad *parent_config, const KXMLDoc &pad_xm
 	for(int k = 0; k < mk; k++) {
 		KXMLDoc dxml = pad_xml["d"][k];
 		int _x, _y, _t;
-		
+
 		KXML_GET_NUMBER(dxml, "x", _x, -1);
 		KXML_GET_NUMBER(dxml, "y", _y, -1);
 		KXML_GET_NUMBER(dxml, "t", _t, -1);
-		
+
 		x.push_back(_x);
 		y.push_back(_y);
 		t.push_back(_t);
@@ -1388,13 +1388,13 @@ void MachineSequencer::PadMotion::quantize() {
 #else
 	int qtick = quantize_tick(start_tick);
 	SATAN_DEBUG("quantizing PadMotion...(%d -> %d)\n", start_tick, qtick);
-	start_tick = qtick; 
+	start_tick = qtick;
 #endif
 }
 
 void MachineSequencer::PadMotion::add_position(int _x, int _y) {
 	if(terminated) return;
-	
+
 	x.push_back(_x);
 	y.push_back(_y);
 	t.push_back(crnt_tick + 1); // when add_position is called the crnt_tick has not been upreved yet by "process_motion", so we have to do + 1
@@ -1430,14 +1430,14 @@ void MachineSequencer::PadMotion::delete_motion(PadMotion *to_delete) {
 bool MachineSequencer::PadMotion::start_motion(int session_position) {
 	// first check if the motion is not running (i.e. index == -1)
 	if(index == -1) {
-		if(session_position == start_tick) { 
+		if(session_position == start_tick) {
 			index = 0;
 			crnt_tick = -1; // we start at a negative index, it will be stepped up in process motion
 			last_x = -1;
 			return true;
 		}
 	}
-	
+
 	return false;
 }
 
@@ -1470,12 +1470,12 @@ bool MachineSequencer::PadMotion::process_motion(MachineSequencer::MidiEventBuil
 	int scale_offset = scales_library[scale].offset;
 
 	int max = (int)x.size();
-	
+
 	while( (t[index] <= crnt_tick) && (index < max) ) {
 		int pad_column = (x[index] >> 5) >> 4; // first right shift 5 for "coarse" data, then shift by 4 to get wich of the 8 columns we are in..
 		int note = octave * 12 + scale_data[pad_column + scale_offset];
 		int chord[MAX_PAD_CHORD];
-		
+
 		if( (!to_be_deleted) && (chord_mode != chord_off) && ((!terminated) || (index < (max - 1))) ) {
 			build_chord(scale_data, scale_offset, chord, pad_column);
 		} else {
@@ -1483,19 +1483,19 @@ bool MachineSequencer::PadMotion::process_motion(MachineSequencer::MidiEventBuil
 				chord[k] = -1;
 			}
 		}
-		
+
 		int y_c = (y[index] >> 5);
 		int y_f = (y[index] & 0x1f) << 2;
-		
+
 		int velocity = (pad_controller_coarse == -1) ? y_c : 0x7f;
-		
+
 		if(pad_controller_coarse != -1) {
 			_meb->queue_controller(pad_controller_coarse, y_c);
 			if(pad_controller_fine != -1) {
 				_meb->queue_controller(pad_controller_fine, y_f);
 			}
 		}
-		
+
 		if(mode == pad_normal) {
 			if(chord_mode != chord_off) {
 				for(int k = 0; k < MAX_PAD_CHORD; k++) {
@@ -1512,10 +1512,10 @@ bool MachineSequencer::PadMotion::process_motion(MachineSequencer::MidiEventBuil
 				if((!to_be_deleted) && (last_x != note) ) {
 					if((!terminated) || (index < (max - 1)))
 						_meb->queue_note_on(note, velocity);
-					
+
 					if(last_x != -1)
 						_meb->queue_note_off(last_x, 0x7f);
-					
+
 				} else if( to_be_deleted || (terminated && (index == (max - 1)) )  ) {
 					_meb->queue_note_off(last_x, 0x7f);
 				}
@@ -1537,19 +1537,19 @@ bool MachineSequencer::PadMotion::process_motion(MachineSequencer::MidiEventBuil
 					}
 					if((!terminated) || (index < (max - 1))) {
 						note = arpeggiator->enable_key(note, velocity);
-					}						
+					}
 				} else if( to_be_deleted || (terminated && (index == (max - 1)) ) ) {
 					arpeggiator->disable_key(last_x);
 				}
 			}
 		}
-			
+
 		for(int k = 0; k < MAX_PAD_CHORD; k++)
 			last_chord[k] = chord[k];
 		last_x = note;
 
 		// step to next index
-		index++;	
+		index++;
 	}
 
 	return false;
@@ -1634,22 +1634,23 @@ void MachineSequencer::PadFinger::process_finger_events(const PadEvent &pe, int 
 	if(to_be_deleted) return;
 
 	session_position++; // at this stage the session_position is at the last position still, we need to increase it by one.
-	
+
 	int x = pe.x, y = pe.y;
 	PadEvent_t t = pe.t;
-	
+
 	switch(t) {
 	case ms_pad_press:
 		current = new PadMotion(parent, session_position, x, y);
 		if(current->start_motion(session_position)) {
 			playing_motions.push_back(current);
 		} else {
+			SATAN_ERROR("MachineSequencer::PadFinger::process_finger_events() - Failed to start motion.\n");
 			delete current; // highly unlikely - shouldn't happen, but if it does just silently fail...
 			current = NULL;
 		}
 
 		break;
-		
+
 	case ms_pad_release:
 		if(current) {
 			current->add_position(x, y);
@@ -1670,7 +1671,7 @@ bool MachineSequencer::PadFinger::process_finger_motions(bool do_record, bool mu
 							 MidiEventBuilder *_meb, Arpeggiator *arpeggiator,
 							 bool quantize) {
 	PadMotion *top = next_motion_to_play;
-	
+
 	// OK, check if we have anything at all now..
 	if((!to_be_deleted) && (!mute) && top) {
 		while(top && top->start_motion(session_position)) {
@@ -1759,19 +1760,19 @@ MachineSequencer::PadSession::PadSession(Pad *parent, const KXMLDoc &ps_xml) :
 	for(int k = 0; k < MAX_PAD_FINGERS; k++) {
 		finger[k].parent = parent;
 	}
-	
+
 	KXML_GET_NUMBER(ps_xml, "start", start_at_tick, 0);
 
 	int mx = 0;
 	mx = ps_xml["m"].get_count();
-	
+
 	for(int k = 0; k < mx; k++) {
 		KXMLDoc mxml = ps_xml["m"][k];
-		
+
 		int _f;
 		KXML_GET_NUMBER(mxml, "f", _f, 0);
-		
-		PadMotion *m = new PadMotion(parent, mxml);		
+
+		PadMotion *m = new PadMotion(parent, mxml);
 		PadMotion::record_motion(&(finger[_f].recorded), m);
 	}
 
@@ -1785,7 +1786,7 @@ MachineSequencer::PadSession::PadSession(Pad *parent, int start, PadMotion *padm
 	for(int k = 0; k < MAX_PAD_FINGERS; k++) {
 		finger[k].parent = parent;
 	}
-	
+
 	PadMotion::record_motion(&(finger[finger_id].recorded), padmot);
 }
 
@@ -1794,14 +1795,14 @@ bool MachineSequencer::PadSession::start_play(int crnt_tick) {
 
 	if(start_at_tick == crnt_tick) {
 		SATAN_DEBUG(" starting session.\n");
-	
+
 		in_play = true;
 		playback_position = -1;
 
 		for(int _f = 0; _f < MAX_PAD_FINGERS; _f++) {
 			finger[_f].start_from_the_top();
 		}
-		
+
 		return true;
 	}
 
@@ -1821,7 +1822,7 @@ bool MachineSequencer::PadSession::process_session(bool do_record, bool mute,
 							  _meb, arpeggiator,
 							  quantize);
 		session_completed = session_completed && finger_completed;
-			
+
 	}
 
 	// if session is completed, we are no longer in play
@@ -1835,7 +1836,7 @@ bool MachineSequencer::PadSession::process_session(bool do_record, bool mute,
 
 void MachineSequencer::PadSession::reset() {
 	in_play = false;
-	
+
 	for(int _f = 0; _f < MAX_PAD_FINGERS; _f++) {
 		finger[_f].reset();
 	}
@@ -1843,7 +1844,7 @@ void MachineSequencer::PadSession::reset() {
 
 void MachineSequencer::PadSession::delete_session() {
 	to_be_deleted = true;
-	
+
 	for(int _f = 0; _f < MAX_PAD_FINGERS; _f++) {
 		finger[_f].delete_pad_finger();
 	}
@@ -1860,7 +1861,7 @@ void MachineSequencer::PadSession::get_session_xml(std::ostringstream &stream) {
 	stream << "<s start=\"" << start_at_tick << "\">\n";
 	for(int _f = 0; _f < MAX_PAD_FINGERS; _f++) {
 		PadMotion *k = finger[_f].recorded;
-		
+
 		while(k != NULL) {
 			k->get_padmotion_xml(_f, stream);
 			k = k->next;
@@ -1886,8 +1887,16 @@ MachineSequencer::Pad::~Pad() {
 
 void MachineSequencer::Pad::reset() {
 	arpeggiator.reset();
-	for(auto session : recorded_sessions) {
-		session->reset();
+
+	auto session_iterator = recorded_sessions.begin();
+	while(session_iterator != recorded_sessions.end()) {
+		if((*session_iterator) == current_session) {
+			session_iterator = recorded_sessions.erase(session_iterator);
+			delete current_session;
+			current_session = NULL;
+		} else {
+			(*session_iterator)->reset();
+		}
 	}
 }
 
@@ -1902,7 +1911,7 @@ void MachineSequencer::Pad::process_events(int tick) {
 					SATAN_DEBUG("  WILL QUANTIZE THIS SESSION. (%x -> %x)\n", start_tick, qtick);
 					start_tick = qtick;
 				}
-				
+
 				// if we are looping and we end up at or after __loop_stop, move us back
 				if(Machine::get_loop_state()) {
 					int loop_start = Machine::get_loop_start();
@@ -1910,13 +1919,13 @@ void MachineSequencer::Pad::process_events(int tick) {
 					if(start_tick >= (loop_end << BITS_PER_LINE))
 						start_tick -= (loop_start << BITS_PER_LINE);
 				}
-				
+
 				current_session = new PadSession(this, start_tick, false);
 				current_session->in_play = true;
 				current_session->playback_position = -1;
-				recorded_sessions.push_back(current_session); 
+				recorded_sessions.push_back(current_session);
 			}
-			
+
 			current_session->finger[pe.finger].process_finger_events(pe, current_session->playback_position);
 		}
 	}
@@ -1959,7 +1968,7 @@ void MachineSequencer::Pad::get_pad_xml(std::ostringstream &stream) {
 			k->get_session_xml(stream);
 		}
 	}
-	
+
 	stream << "</pad>\n";
 }
 
@@ -1976,10 +1985,10 @@ void MachineSequencer::Pad::load_pad_from_xml(int project_interface_level, const
 		if(project_interface_level < 5) {
 			int mx = 0;
 			mx = pad_xml["m"].get_count();
-			
+
 			for(int k = 0; k < mx; k++) {
 				KXMLDoc mxml = pad_xml["m"][k];
-				
+
 				int _f;
 				KXML_GET_NUMBER(mxml, "f", _f, 0);
 
@@ -1987,12 +1996,12 @@ void MachineSequencer::Pad::load_pad_from_xml(int project_interface_level, const
 				PadMotion *m = new PadMotion(this, start_offset, mxml);
 
 				PadSession *nses = new PadSession(this, start_offset, m, _f);
-				recorded_sessions.push_back(nses);				
+				recorded_sessions.push_back(nses);
 			}
 		} else {
 			int mx = 0;
 			mx = pad_xml["s"].get_count();
-			
+
 			for(int k = 0; k < mx; k++) {
 				KXMLDoc ps_xml = pad_xml["s"][k];
 
@@ -2000,7 +2009,7 @@ void MachineSequencer::Pad::load_pad_from_xml(int project_interface_level, const
 				recorded_sessions.push_back(nses);
 			}
 		}
-		
+
 	} catch(...) {
 		// ignore
 	}
@@ -2013,26 +2022,26 @@ void MachineSequencer::Pad::export_to_loop(int start_tick, int stop_tick, Machin
 		stop_tick = 0x7fffffff;
 	}
 	PadMidiExportBuilder pmxb(start_tick, loop);
-	
+
 	std::vector<PadSession *> remaining_sessions;
 	std::vector<PadSession *> active_sessions;
 
 	// reset all prior to exporting
 	reset();
-	
+
 	// copy all the recorded sessions that we should
 	// export to the remaining sessions vector
 	for(auto session : recorded_sessions) {
 		if(session != current_session &&
 		   session->start_at_tick >= start_tick &&
 		   session->start_at_tick < stop_tick) {
-			remaining_sessions.push_back(session);			
+			remaining_sessions.push_back(session);
 		}
 	}
 
 	while(pmxb.current_tick < stop_tick || active_sessions.size() > 0) {
 		{
-			// scan remaining sessions to see if anyone can start at this tick		
+			// scan remaining sessions to see if anyone can start at this tick
 			auto session = remaining_sessions.begin();
 			while(session != remaining_sessions.end()) {
 				if((*session)->start_play(pmxb.current_tick)) {
@@ -2066,7 +2075,7 @@ void MachineSequencer::Pad::export_to_loop(int start_tick, int stop_tick, Machin
 
 	// we also reset all after exporting
 	SATAN_DEBUG("Reset post export...\n");
-	reset();	
+	reset();
 	SATAN_DEBUG("Done export...\n");
 }
 
@@ -2079,13 +2088,13 @@ void MachineSequencer::Pad::enqueue_event(int finger_id, PadEvent_t t, int x, in
 
 	x = PAD_RESOLUTION * x / pad_width;
 	y = PAD_RESOLUTION * (pad_height - y) / pad_height;
-	
+
 	padEventQueue->enqueue(PadEvent(finger_id, t, x, y));
 }
 
 void MachineSequencer::Pad::internal_set_record(bool _do_record) {
 	if(do_record == _do_record) return; // no change...
-	
+
 	if(current_session) {
 		if(!do_record) {
 			SATAN_DEBUG(" session deleted.\n");
@@ -2219,9 +2228,9 @@ std::string MachineSequencer::get_descriptive_xml() {
 						     jException::sanity_error);
 
 	stream << "<siblingmachine name=\"" << sibling_name << "\" />\n";
-	
-	get_loops_xml(stream);	
-	get_loop_sequence_xml(stream);	
+
+	get_loops_xml(stream);
+	get_loop_sequence_xml(stream);
 	pad.get_pad_xml(stream);
 
 	// write controller envelopes to the xml stream
@@ -2257,7 +2266,7 @@ void MachineSequencer::internal_get_loop_ids_at(int *position_vector, int length
 
 void MachineSequencer::internal_set_loop_id_at(int position, int loop_id) {
 	if(position < 0) throw ParameterOutOfSpec();
-	
+
 	if(!(position >= 0 && position < loop_sequence_length)) {
 		try {
 			set_sequence_length(position + 16);
@@ -2271,7 +2280,7 @@ void MachineSequencer::internal_set_loop_id_at(int position, int loop_id) {
 		) {
 		throw ParameterOutOfSpec();
 	}
-	
+
 	loop_sequence[position] = loop_id;
 	inform_registered_callbacks_async();
 }
@@ -2279,7 +2288,7 @@ void MachineSequencer::internal_set_loop_id_at(int position, int loop_id) {
 int MachineSequencer::internal_add_new_loop() {
 	// don't allow more than 99 loops... (current physical limit of pncsequencer.cc GUI design..)
 	if(last_free_loop_store_position == 100) throw NoFreeLoopsAvailable();
-	
+
 	Loop *new_loop = LoopCreator::create();
 
 	int k;
@@ -2304,7 +2313,7 @@ int MachineSequencer::internal_add_new_loop() {
 
 void MachineSequencer::prep_empty_loop_sequence() {
 	loop_sequence_length = sequence_length;
-	
+
 	loop_sequence = (int *)malloc(sizeof(int) * loop_sequence_length);
 	if(loop_sequence == NULL) {
 		free(loop_store);
@@ -2314,7 +2323,7 @@ void MachineSequencer::prep_empty_loop_sequence() {
 
 	SATAN_DEBUG(" allocated seq at [%p], length: %d\n",
 		    loop_sequence, loop_sequence_length);
-	
+
 	// init sequence to NOTE_NOT_SET
 	int k;
 	for(k = 0; k < loop_sequence_length; k++) {
@@ -2349,7 +2358,7 @@ void MachineSequencer::get_midi_controllers(const std::string &name, int &coarse
 	Machine::Controller *c = NULL;
 	coarse = -1;
 	fine = -1;
-		
+
 	try {
 
 		Machine *target = Machine::internal_get_by_name(sibling_name);
@@ -2361,7 +2370,7 @@ void MachineSequencer::get_midi_controllers(const std::string &name, int &coarse
 			// be set accordingly. If the controller does NOT have a midi equivalent, the values
 			// will both remain -1...
 			(void) c->has_midi_controller(coarse, fine);
-			
+
 			delete c; // remember to delete c when done, otherwise we get a mem leak.. (we do not need it since we will use MIDI to control it)
 		}
 
@@ -2374,20 +2383,20 @@ void MachineSequencer::get_midi_controllers(const std::string &name, int &coarse
 
 std::set<std::string> MachineSequencer::internal_available_midi_controllers() {
 	std::set<std::string> retval;
-	
+
 	Machine *target = Machine::internal_get_by_name(sibling_name);
-	
+
 	for(auto k : target->internal_get_controller_names()) {
 		Machine::Controller *c = target->internal_get_controller(k);
 		int coarse = -1, fine = -1;
-		
+
 		if(c->has_midi_controller(coarse, fine)) {
 			retval.insert(k);
 		}
-		
+
 		delete c; // remember to delete c when done, otherwise we get a mem leak..
 	}
-		
+
 	return retval;
 }
 
@@ -2399,11 +2408,11 @@ void MachineSequencer::create_controller_envelopes() {
 		// only create ControllerEnvelope objects if non existing.
 		std::map<std::string, ControllerEnvelope *>::iterator l;
 		if((l = controller_envelope.find((*k))) == controller_envelope.end()) {
-			
+
 			ControllerEnvelope *nc = new ControllerEnvelope();
 			controller_envelope[(*k)] = nc;
 			get_midi_controllers((*k), nc->controller_coarse, nc->controller_fine);
-			
+
 		}
 	}
 }
@@ -2441,24 +2450,24 @@ void MachineSequencer::fill_buffers() {
 	int samples_per_tick_shuffle = get_samples_per_tick_shuffle(_MIDI);
 
 	_meb.use_buffer(output_buffer, output_limit);
-	
+
 	while(next_tick_at < output_limit) {
 		int overdraft = _meb.tell() - next_tick_at + 1;
 		if(overdraft < 0) overdraft = 0;
-		
+
 		_meb.skip_to(next_tick_at + overdraft);
 
 		pad.process(mute, PAD_TIME(sequence_position, current_tick), &_meb);
 
 		if(current_tick == 0) {
 			int loop_id = internal_get_loop_id_at(sequence_position);
-				
+
 			if(loop_id != NOTE_NOT_SET) {
 				current_loop = loop_store[loop_id];
 				current_loop->start_to_play();
 			}
 		}
-						
+
 		if(current_loop) {
 			current_loop->process(mute, &_meb);
 		}
@@ -2469,7 +2478,7 @@ void MachineSequencer::fill_buffers() {
 
 		if(current_tick == 0) {
 			sequence_position++;
-			
+
 			if(do_loop && sequence_position >= loop_stop) {
 				sequence_position = loop_start;
 			}
@@ -2480,7 +2489,7 @@ void MachineSequencer::fill_buffers() {
 		} else {
 			next_tick_at += samples_per_tick + samples_per_tick_shuffle;
 		}
-				
+
 	}
 
 	// wrap around for next buffer
@@ -2554,7 +2563,7 @@ void MachineSequencer::set_loop_id_at(int position, int loop_id) {
 	Machine::machine_operation_enqueue(
 		[] (void *d) {
 			Param *p = (Param *)d;
-				
+
 			try {
 				p->thiz->internal_set_loop_id_at(p->pos, p->l_id);
 			} catch(ParameterOutOfSpec poos) {
@@ -2580,7 +2589,7 @@ MachineSequencer::Loop *MachineSequencer::get_loop(int loop_id) {
 	Machine::machine_operation_enqueue(
 		[] (void *d) {
 			Param *p = (Param *)d;
-			
+
 			if(!(p->lid >= 0 && p->lid < p->thiz->loop_store_size)) {
 				p->retval = NULL;
 			} else
@@ -2638,21 +2647,21 @@ void MachineSequencer::delete_loop(int id) {
 	Machine::machine_operation_enqueue(
 		[] (void *d) {
 			Param *p = (Param *)d;
-			
+
 			int k;
 			for(k = 0; k < p->thiz->loop_sequence_length; k++) {
 				if(p->thiz->loop_sequence[k] == p->_id)
 					p->thiz->loop_sequence[k] = NOTE_NOT_SET;
-				
+
 				if(p->thiz->loop_sequence[k] > p->_id)
 					p->thiz->loop_sequence[k] = p->thiz->loop_sequence[k] - 1;
 			}
-			
+
 			for(k = p->_id; k < p->thiz->loop_store_size - 1; k++) {
 				p->thiz->loop_store[k] = p->thiz->loop_store[k + 1];
 			}
 			p->thiz->last_free_loop_store_position--;
-			
+
 		},
 		&param, true);
 }
@@ -2679,7 +2688,7 @@ std::set<std::string> MachineSequencer::available_midi_controllers() {
 			p->retval = p->thiz->internal_available_midi_controllers();
 		},
 		&param, true);
-	
+
 	return param.retval;
 }
 
@@ -2718,7 +2727,7 @@ static bool arpeggio_pattern_id_list_ready = false;
 static void build_arpeggio_pattern_id_list() {
 	if(arpeggio_pattern_id_list_ready) return;
 	arpeggio_pattern_id_list_ready = true;
-	
+
 	for(int k = 0; k < MAX_BUILTIN_ARP_PATTERNS; k++) {
 		std::stringstream bi_name;
 		bi_name << "built-in #" << k;
@@ -2728,7 +2737,7 @@ static void build_arpeggio_pattern_id_list() {
 
 void MachineSequencer::set_pad_arpeggio_pattern(const std::string identity) {
 	build_arpeggio_pattern_id_list();
-	
+
 	typedef struct {
 		MachineSequencer *thiz;
 		int id;
@@ -2743,7 +2752,7 @@ void MachineSequencer::set_pad_arpeggio_pattern(const std::string identity) {
 			param.id = k;
 		}
 	}
-			
+
 	machine_operation_enqueue(
 		[] (void *d) {
 			Param *p = (Param *)d;
@@ -2768,7 +2777,7 @@ void MachineSequencer::set_pad_chord_mode(PadConfiguration::ChordMode pconf) {
 		.thiz = this,
 		.cnf = pconf
 	};
-			
+
 	machine_operation_enqueue(
 		[] (void *d) {
 			Param *p = (Param *)d;
@@ -2785,7 +2794,7 @@ int MachineSequencer::export_pad_to_loop(int loop_id) {
 	Loop *loop = get_loop(loop_id);
 
 	loop->clear_loop();
-	
+
 	typedef struct {
 		MachineSequencer *thiz;
 		Loop *l;
@@ -2794,18 +2803,18 @@ int MachineSequencer::export_pad_to_loop(int loop_id) {
 		.thiz = this,
 		.l = loop
 	};
-			
+
 	machine_operation_enqueue(
 		[] (void *d) {
 
 			int start_tick = 0;
 			int stop_tick = -1;
-			
+
 			if(Machine::get_loop_state()) {
 				start_tick = Machine::get_loop_start() * MACHINE_TICKS_PER_LINE;
 				stop_tick = (Machine::get_loop_start() + Machine::get_loop_length()) * MACHINE_TICKS_PER_LINE;
 			}
-			
+
 			Param *p = (Param *)d;
 			p->thiz->pad.export_to_loop(start_tick, stop_tick, p->l);
 		},
@@ -2829,7 +2838,7 @@ Machine *MachineSequencer::get_machine() {
 		.thiz = this
 	};
 	param.gbn = Machine::internal_get_by_name;
-	
+
 	Machine::machine_operation_enqueue(
 		[] (void *d) {
 			Param *p = (Param *)d;
@@ -2903,9 +2912,9 @@ void MachineSequencer::update_controller_envelope(
  *************************************/
 
 MachineSequencer::~MachineSequencer() {
-	{ // unmap machine2sequencer 
+	{ // unmap machine2sequencer
 		std::map<Machine *, MachineSequencer *>::iterator k;
-		
+
 		for(k = machine2sequencer.begin();
 		    k != machine2sequencer.end();
 		    k++) {
@@ -2922,9 +2931,9 @@ MachineSequencer::~MachineSequencer() {
 		    k != controller_envelope.end();
 		    k++) {
 			delete ((*k).second);
-		}		
+		}
 	}
-	
+
 	inform_registered_callbacks_async();
 }
 
@@ -2951,8 +2960,8 @@ MachineSequencer::MachineSequencer(int project_interface_level, const KXMLDoc &m
 	setup_machine();
 
 	pad.load_pad_from_xml(project_interface_level, machine_xml);
-	
-	sibling_name = machine_xml["siblingmachine"].get_attr("name");	
+
+	sibling_name = machine_xml["siblingmachine"].get_attr("name");
 
 	/**********************
 	 *
@@ -2979,7 +2988,7 @@ MachineSequencer::MachineSequencer(int project_interface_level, const KXMLDoc &m
 
 	// allocate loop store and clear it
 	loop_store_size = MACHINE_SEQUENCER_INITIAL_SEQUENCE_LENGTH > max_loop_id ?
-		MACHINE_SEQUENCER_INITIAL_SEQUENCE_LENGTH : max_loop_id;	
+		MACHINE_SEQUENCER_INITIAL_SEQUENCE_LENGTH : max_loop_id;
 	loop_store = (Loop **)malloc(sizeof(Loop *) * loop_store_size);
 	if(loop_store == NULL)
 		throw jException("Failed to allocate memory for initial loop store.",
@@ -2989,7 +2998,7 @@ MachineSequencer::MachineSequencer(int project_interface_level, const KXMLDoc &m
 	// then we read the actual loops here
 	for(c = 0; c < c_max; c++) {
 		KXMLDoc loop_xml = machine_xml["loop"][c];
-		
+
 		int loop_id;
 		loop_id = -1;
 		KXML_GET_NUMBER(loop_xml,"id",loop_id,-1);
@@ -3004,7 +3013,7 @@ MachineSequencer::MachineSequencer(int project_interface_level, const KXMLDoc &m
 	 *
 	 * OK - loops are done, read the sequence
 	 *
-	 */	
+	 */
 	KXMLDoc sequence_xml = machine_xml["sequence"];
 	// get number of sequence entries in XML
 	try {
@@ -3025,7 +3034,7 @@ MachineSequencer::MachineSequencer(int project_interface_level, const KXMLDoc &m
 		KXML_GET_NUMBER(s_entry_xml,"pos",pos,-1);
 		KXML_GET_NUMBER(s_entry_xml,"id",id,-1);
 
-		if(pos != -1 && id != -1) 
+		if(pos != -1 && id != -1)
 			internal_set_loop_id_at(pos, id);
 
 		SATAN_DEBUG("    SEQ[%d] = %d\n", pos, id);
@@ -3053,8 +3062,8 @@ MachineSequencer::MachineSequencer(int project_interface_level, const KXMLDoc &m
 			ControllerEnvelope *nc = new ControllerEnvelope();
 			try {
 				std::string env_id = nc->read_from_xml(e_entry_xml);
-				
-				{ // if there is already a controller envelope object, delete it and remove the entry 
+
+				{ // if there is already a controller envelope object, delete it and remove the entry
 					std::map<std::string, ControllerEnvelope *>::iterator k;
 					k = controller_envelope.find(env_id);
 					if(k != controller_envelope.end() &&
@@ -3085,13 +3094,13 @@ MachineSequencer::MachineSequencer(const std::string &name_root) :
 	loop_sequence_length(0)
 {
 	// create the controller envelopes
-	create_controller_envelopes();	
+	create_controller_envelopes();
 
 	output_descriptor[MACHINE_SEQUENCER_MIDI_OUTPUT_NAME] =
 		Signal::Description(_MIDI, 1, false);
 	setup_machine();
 
-	loop_store_size = MACHINE_SEQUENCER_INITIAL_SEQUENCE_LENGTH;	
+	loop_store_size = MACHINE_SEQUENCER_INITIAL_SEQUENCE_LENGTH;
 	loop_store = (Loop **)malloc(sizeof(Loop *) * loop_store_size);
 	if(loop_store == NULL)
 		throw jException("Failed to allocate memory for initial loop store.",
@@ -3111,7 +3120,7 @@ void MachineSequencer::double_loop_store() {
 	if(new_store == NULL)
 		throw jException("Failed to allocate memory for doubled loop store.",
 				 jException::syscall_error);
-	
+
 	memset(new_store, 0, sizeof(Loop *) * new_size);
 
 	int k;
@@ -3127,11 +3136,11 @@ void MachineSequencer::refresh_length() {
 	if(loop_sequence_length >= sequence_length) {
 		return; // no need to change
 	}
-	
+
 	int new_size = sequence_length;
-	
+
 	int *new_seq = (int *)malloc(sizeof(int) * new_size);
-	
+
 	int
 		k,
 		mid_term = new_size < loop_sequence_length ? new_size : loop_sequence_length;
@@ -3180,7 +3189,7 @@ void MachineSequencer::write_MIDI_info_track(MidiExport *target) {
 	midi_chunk->push_u8b_word((msPerQuarterNote & 0xff0000) >> 16);
 	midi_chunk->push_u8b_word((msPerQuarterNote & 0x00ff00) >>  8);
 	midi_chunk->push_u8b_word((msPerQuarterNote & 0x0000ff) >>  0);
-	
+
 	// push "Time Signature" meta event
 	midi_chunk->push_u32b_word_var_len(0);
 	midi_chunk->push_u8b_word(0xff);
@@ -3209,13 +3218,13 @@ bool MachineSequencer::export_sequence2midi_file(MidiExport *target) {
 
 	// create the midi chunk
 	MidiExport::Chunk *midi_chunk = target->append_new_chunk("MTrk");
-	
+
 	// push "Track Name" meta event
 	midi_chunk->push_u32b_word_var_len(0);
 	midi_chunk->push_u8b_word(0xff);
 	midi_chunk->push_u8b_word(0x03);
 	midi_chunk->push_string(sibling_name);
-	
+
 	/*************
 	 *
 	 *  Generate note related midi data
@@ -3227,11 +3236,11 @@ bool MachineSequencer::export_sequence2midi_file(MidiExport *target) {
 	int last_p = 0;
 	// keep track of the off position which is last
 	int highest_off_p = -1;
-	
+
 	const NoteEntry *ndata = NULL; // note data
 
 	std::map<int, NoteEntry *> notes_to_off; // currently active notes that we should stop (integer value is at which value of s_p when we should stop it)
-	
+
 	for(s_p = 0; s_p < loop_sequence_length || s_p < highest_off_p; s_p++, l_p++) {
 		if(s_p < loop_sequence_length && loop_sequence[s_p] != NOTE_NOT_SET) {
 			l_p = 0;
@@ -3241,16 +3250,16 @@ bool MachineSequencer::export_sequence2midi_file(MidiExport *target) {
 		}
 
 		if(ndata != NULL) {
-			while(ndata != NULL && ndata->on_at <= PAD_TIME(l_p, 0)) {				
+			while(ndata != NULL && ndata->on_at <= PAD_TIME(l_p, 0)) {
 				NoteEntry *new_one = new NoteEntry(ndata);
 				int off_position = l_s + PAD_TIME_LINE(ndata->on_at) + ndata->length + 1;
 
 				SATAN_DEBUG("MEXPORT: on: %d, len: %d\n",
 					    ndata->on_at, ndata->length);
-				
+
 				if(off_position > highest_off_p)
 					highest_off_p = off_position;
-				
+
 				/***
 				 * first we handle the book keeping
 				 ***/
@@ -3261,7 +3270,7 @@ bool MachineSequencer::export_sequence2midi_file(MidiExport *target) {
 				// if others exist on this off position, chain them to the new one first
 				if(k != notes_to_off.end()) {
 					new_one->next = (*k).second;
-				} 
+				}
 
 				notes_to_off[off_position] = new_one;
 
@@ -3277,7 +3286,7 @@ bool MachineSequencer::export_sequence2midi_file(MidiExport *target) {
 				midi_chunk->push_u8b_word(0x90 | (0x0f & new_one->channel));
 				midi_chunk->push_u8b_word(new_one->note);
 				midi_chunk->push_u8b_word(new_one->velocity);
-				
+
 			}
 		}
 
@@ -3324,7 +3333,7 @@ std::vector<MachineSequencerSetChangeCallbackF_t> MachineSequencer::set_change_c
 
 void MachineSequencer::inform_registered_callbacks_async() {
 	if(Machine::internal_get_load_state()) return; // if in loading state, don't bother with this.
-	
+
 	std::vector<MachineSequencerSetChangeCallbackF_t>::iterator k;
 	for(k  = set_change_callback.begin();
 	    k != set_change_callback.end();
@@ -3343,7 +3352,7 @@ void MachineSequencer::set_sequence_length(int newv) {
 
 	{
 		std::map<Machine *, MachineSequencer *>::iterator k;
-		
+
 		for(k =  machine2sequencer.begin();
 		    k !=  machine2sequencer.end();
 		    k++) {
@@ -3360,10 +3369,10 @@ void MachineSequencer::set_sequence_length(int newv) {
 
 int MachineSequencer::quantize_tick(int start_tick) {
 	int offset = start_tick & MACHINE_TICK_BITMASK;
-	
+
 	// chop of the additional ticks
 	int new_tick = start_tick & MACHINE_LINE_BITMASK;
-	
+
 
 	SATAN_DEBUG("offset: (%x => %x) %x > %x ? %s\n",
 		    start_tick, new_tick,
@@ -3374,7 +3383,7 @@ int MachineSequencer::quantize_tick(int start_tick) {
 	if(offset > ((0x1 << BITS_PER_LINE) >> 1)) {
 		new_tick += (0x1 << BITS_PER_LINE);
 	}
-	
+
 	return new_tick;
 }
 
@@ -3391,7 +3400,7 @@ void MachineSequencer::presetup_from_xml(int project_interface_level, const KXML
 		[] (void *d) {
 			Param *p = (Param *)d;
 			std::string iname = p->mxml.get_attr("name"); // instance name
-			MachineSequencer *result = new MachineSequencer(p->pil, p->mxml, iname);	
+			MachineSequencer *result = new MachineSequencer(p->pil, p->mxml, iname);
 			machine_from_xml_cache.push_back(result);
 		},
 		&param, true);
@@ -3403,29 +3412,29 @@ void MachineSequencer::finalize_xml_initialization() {
 	} Param;
 	Param param;
 	param.internal_get_by_name = Machine::internal_get_by_name;
-	
+
 	Machine::machine_operation_enqueue(
 		[] (void *d) {
 			Param *p = (Param *)d;
 			std::vector<MachineSequencer *>::iterator k;
-			
+
 			for(k  = machine_from_xml_cache.begin();
 			    k != machine_from_xml_cache.end();
 			    k++) {
 				MachineSequencer *mseq = (*k);
 				if(mseq) {
 					Machine *sibling = NULL;
-					
+
 					sibling = p->internal_get_by_name(mseq->sibling_name);
-					
+
 					if(sibling == NULL)
 						throw jException("Project file contains a MachineSequencer, but no matching sibling ]" +
 								 mseq->sibling_name +
 								 "[", jException::sanity_error);
-					
+
 					mseq->tightly_connect(sibling);
 					machine2sequencer[sibling] = mseq;
-					
+
 					// create the controller envelopes
 					mseq->create_controller_envelopes();
 				}
@@ -3433,30 +3442,30 @@ void MachineSequencer::finalize_xml_initialization() {
 
 			// we're done now - clear it out
 			machine_from_xml_cache.clear();
-			
+
 			// this will make sure all sequence lengths are synchronized
 			set_sequence_length(sequence_length);
-			
+
 			inform_registered_callbacks_async();
 		},
 		&param, true);
-	
+
 }
 
 void MachineSequencer::create_sequencer_for_machine(Machine *sibling) {
 	{
 		bool midi_input_found = false;
-		
+
 		try {
 			(void) sibling->get_input_index(MACHINE_SEQUENCER_MIDI_INPUT_NAME);
 			midi_input_found = true;
 		} catch(...) {
 			// ignore
 		}
-		
+
 		if(!midi_input_found) return; // no midi input to attach MachineSequencer too
 	}
-	
+
 	{
 		Machine::machine_operation_enqueue(
 			[] (void *d) {
@@ -3465,13 +3474,13 @@ void MachineSequencer::create_sequencer_for_machine(Machine *sibling) {
 				   machine2sequencer.end()) {
 					throw jException("Trying to create MachineSequencer for a machine that already has one!",
 							 jException::sanity_error);
-				}				
+				}
 			},
 			sibling, true);
 	}
 	MachineSequencer *mseq =
 		new MachineSequencer(sibling->get_name());
-	
+
 	sibling->attach_input(mseq,
 			      MACHINE_SEQUENCER_MIDI_OUTPUT_NAME,
 			      MACHINE_SEQUENCER_MIDI_INPUT_NAME);
@@ -3487,7 +3496,7 @@ void MachineSequencer::create_sequencer_for_machine(Machine *sibling) {
 		};
 		Machine::machine_operation_enqueue(
 			[] (void *d) {
-				Param *p = (Param *)d;				
+				Param *p = (Param *)d;
 				/* Make sure these machines are tightly connected
 				 * so that they can not exist without the other
 				 */
@@ -3496,7 +3505,7 @@ void MachineSequencer::create_sequencer_for_machine(Machine *sibling) {
 				inform_registered_callbacks_async();
 			},
 			&param, true);
-	}		
+	}
 }
 
 MachineSequencer *MachineSequencer::get_sequencer_for_machine(Machine *m) {
@@ -3511,9 +3520,9 @@ MachineSequencer *MachineSequencer::get_sequencer_for_machine(Machine *m) {
 	Machine::machine_operation_enqueue(
 		[] (void *d) {
 			Param *p = (Param *)d;
-			
+
 			std::map<Machine *, MachineSequencer *>::iterator k;
-			
+
 			for(k =  machine2sequencer.begin();
 			    k !=  machine2sequencer.end();
 			    k++) {
@@ -3581,19 +3590,19 @@ void MachineSequencer::export2MIDI(bool _just_loops, const std::string &_output_
 			Param *p = (Param *)d;
 			bool just_loops = p->jloops;
 			const std::string &output_path = p->opth;
-			
+
 			MidiExport *target = new MidiExport(output_path);
-			
+
 			try {
 				// first we create the header-chunk, since it must be first in the file
 				// please note that the contents of the header chunk is created last
 				// since it depends on how many tracks we will export which we do not know yet
 				MidiExport::Chunk *header = target->append_new_chunk("MThd");
 				uint16_t nr_of_tracks = 1;
-				
+
 				// write information container track
 				write_MIDI_info_track(target);
-				
+
 				// step through all sequences / loops
 				std::map<Machine *, MachineSequencer *>::iterator k;
 				for(k  = machine2sequencer.begin();
@@ -3607,20 +3616,20 @@ void MachineSequencer::export2MIDI(bool _just_loops, const std::string &_output_
 							nr_of_tracks++;
 					}
 				}
-				
+
 				// create the content of the header chunk
 				header->push_u16b_word(1);
 				header->push_u16b_word(nr_of_tracks);
 				header->push_u16b_word(MACHINE_TICKS_PER_LINE * get_lpb());
-				
+
 				// OK, finalize the file (dump it to disk...)
 				target->finalize_file();
-				
+
 				// then we delete the construct.
 				delete target;
 			} catch(...) {
 				delete target;
-				
+
 				throw;
 			}
 		},

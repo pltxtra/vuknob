@@ -49,7 +49,7 @@ using namespace std;
 #include "machine.hh"
 #include "machine_sequencer.hh"
 
-#define __DO_SATAN_DEBUG
+//#define __DO_SATAN_DEBUG
 #include "satan_debug.hh"
 
 /***************************

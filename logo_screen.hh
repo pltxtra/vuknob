@@ -52,7 +52,6 @@ private:
 		virtual void on_touch_event();
 	};
 
-	bool start_with_jam_view = false;
 	bool thump_in_progress = false;
 	double thump_offset = 0.0;
 
@@ -71,7 +70,7 @@ private:
 
 	ListView server_list;
 
-	void start_vuknob();
+	void start_vuknob(bool start_with_jam_view);
 	void select_server(std::function<void()> on_select_callback);
 
 	static void element_on_event(KammoGUI::SVGCanvas::SVGDocument *source, KammoGUI::SVGCanvas::ElementReference *e_ref,

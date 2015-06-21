@@ -161,7 +161,7 @@ void failure_response(const std::string &response) {
 	jInformer::inform(response);
 }
 
-void LogoScreen::start_vuknob() {
+void LogoScreen::start_vuknob(bool start_with_jam_view) {
 	// clear everything and prepare for start
 	Machine::prepare_baseline();
 	SatanProjectEntry::clear_satan_project();
@@ -251,9 +251,9 @@ void LogoScreen::element_on_event(KammoGUI::SVGCanvas::SVGDocument *source,
 			ctx->select_server([]{});
 		} else if(e_ref == ctx->start_element) {
 			if(RemoteInterface::Server::is_running()) {
-				ctx->start_vuknob();
+				ctx->start_vuknob(false);
 			} else {
-				ctx->select_server([ctx](){ ctx->start_vuknob(); });
+				ctx->select_server([ctx](){ ctx->start_vuknob(true); });
 			}
 		}
 	}
@@ -282,8 +282,6 @@ static void ask_question(void *ignored) {
 #endif
 
 LogoScreen::LogoScreen(bool hide_network_element, KammoGUI::SVGCanvas *cnvs, std::string fname) : SVGDocument(fname, cnvs), logo_base_got(false), server_list(cnvs) {
-	start_with_jam_view = !hide_network_element;
-
 	google_element = new KammoGUI::SVGCanvas::ElementReference(this, "google");
 	google_element->set_event_handler(element_on_event);
 	start_element = new KammoGUI::SVGCanvas::ElementReference(this, "start");

@@ -437,9 +437,9 @@ void Tracker::NoteGraphic::update_graphics() {
 
 	line.set_line_coords(on_at * tick_width,
 			     (128.0f - note) * bar_height + bar_height / 2.0f,
-			     (on_at + length + 1.0f) * tick_width,
+			     (on_at + length) * tick_width,
 			     (128.0f - note) * bar_height + bar_height / 2.0f);
-	stretch.set_line_coords((on_at + length + 1) * tick_width,
+	stretch.set_line_coords((on_at + length) * tick_width,
 				(128.0f - note) * bar_height + bar_height / 2.0f,
 				(on_at + length + MACHINE_TICKS_PER_LINE - 2.0f) * tick_width,
 				(128.0f - note) * bar_height + bar_height / 2.0f);
@@ -567,9 +567,9 @@ void Tracker::NoteGraphic::on_event(KammoGUI::SVGCanvas::SVGDocument *source, Ka
 				just_tap = false;
 		} else {
 			{ // stretch block
-				int tick_diff = (now_x - start_x) / Tracker::tick_width;
+				int tick_diff = (now_x - start_x) / (Tracker::tick_width * skip_interval);
 				if(abs(tick_diff) > 0) {
-					int new_length = ctx->length + tick_diff;
+					int new_length = ctx->length + tick_diff * skip_interval;
 					if(new_length < 1) new_length = 1;
 					ctx->length = new_length;
 					ctx->update_data();
@@ -849,6 +849,7 @@ void debug_array(KammoGUI::SVGCanvas::SVGDocument *doc, const char *dbg_head, st
 
 int Tracker::tick_width = 0;
 int Tracker::bar_height = 0;
+unsigned int Tracker::skip_interval = 0;
 std::vector<MachineSequencer::NoteEntry> Tracker::clipboard;
 Tracker::UndoStack Tracker::undo_stack;
 
@@ -1027,7 +1028,7 @@ void Tracker::on_render() {
 
 		double zfactor = ((double)MACHINE_TICKS_PER_LINE) / (horizontal_zoom_factor * 4.0f);
 
-		unsigned int skip_interval = (unsigned int)zfactor;
+		skip_interval = (unsigned int)zfactor;
 
 		// clamp skip_interval to [1, MAX_LEGAL]
 		static int legal_intervals[] = {
@@ -1485,6 +1486,8 @@ void Tracker::stop_add(double x, double y) {
 		if(snap_mode == Tracker::snap_to_line) {
 			add_graphic->length = add_graphic->length & MACHINE_LINE_BITMASK;
 		}
+
+		if(add_graphic->length == 0) add_graphic->length = skip_interval;
 
 		add_graphic->add_note_to_loop(current_loop);
 		graphics.push_back(add_graphic);

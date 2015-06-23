@@ -49,16 +49,16 @@ private:
 			    public ScaleSlider::ScaleSliderChangedListener {
 	private:
 		bool selected;
-		
+
 		const MachineSequencer::NoteEntry *note_data;
 		MachineSequencer::Loop *loop;
-		
+
 		NoteGraphic(uint8_t key, unsigned int start_tick, unsigned int length, KammoGUI::SVGCanvas::ElementReference *note_container,
 			    const std::string &id,
 			    const MachineSequencer::NoteEntry *_node_data);
 		void update_graphics();
 		void update_data();
-		
+
 		static void add_graphic(KammoGUI::SVGCanvas::ElementReference *note_container, const std::string &id);
 
 		static void on_event(KammoGUI::SVGCanvas::SVGDocument *source, KammoGUI::SVGCanvas::ElementReference *e_ref,
@@ -69,7 +69,7 @@ private:
 		virtual ~NoteGraphic();
 		// this will delete the graphic AND the note in the actual loop as well, if it exists
 		static void delete_note_and_graphic(NoteGraphic *);
-		
+
 		static NoteGraphic *create(KammoGUI::SVGCanvas::ElementReference *note_container, const std::string &id,
 					   int key, int start_tick, int length);
 		// reference an existing NoteEntry from a loop
@@ -78,7 +78,7 @@ private:
 		// clone the note_data into a new NoteGraphic entry, without attaching to an existing loop
 		static NoteGraphic *clone(KammoGUI::SVGCanvas::ElementReference *note_container, const std::string &id,
 					  const MachineSequencer::NoteEntry *note_data);
-		
+
 		void set_data(int start_tick, int length);
 		void quantize();
 		bool try_shift(int offset);
@@ -100,7 +100,7 @@ private:
 
 		std::function<void(Tracker *context, float pixels_changed)> callback;
 		Tracker *context;
-		
+
 	public:
 		BarFlingAnimation(float speed, float duration,
 				  std::function<void(Tracker *context, float pixels_changed)> callback,
@@ -121,12 +121,12 @@ private:
 	};
 
 	static UndoStack undo_stack;
-	
+
 	static std::vector<MachineSequencer::NoteEntry> clipboard;
-	
+
 	// bar touch data
 	enum BarMode {
-		bar_default_mode, bar_add_mode 
+		bar_default_mode, bar_add_mode
 	};
 
 	BarMode bar_mode;
@@ -142,22 +142,22 @@ private:
 	void start_add(int key, double x, double y);
 	void stop_add(double x, double y);
 	void update_add_graphic();
-	
+
 	// yes/no functions (used when asking the user yes or no questions
 	static void yes_overwrite(void *void_ctx);
 	static void yes_erase_all(void *void_ctx);
 	static void do_nothing(void *ctx);
-	
+
 	// Tracker data
 	MachineSequencer *mseq;
 	MachineSequencer::Loop *current_loop; // which loop we are currently editing
 	int current_loop_id;
 	std::vector<NoteGraphic *> graphics;
-	
+
 	void clear_note_graphics();
 	void generate_note_graphics();
 	void refresh_note_graphics();
-	
+
 	// fling detector
 	KammoGUI::FlingGestureDetector fling_detector;
 
@@ -171,10 +171,11 @@ private:
 	bool default_offset_not_set; // on first creation, force the vertical offset to a sensible default.
 	int bar_count; // number of _visible_ bars (total number of bars is 128)
 	int canvas_w, canvas_h;
+	static unsigned int skip_interval;
 	float canvas_w_inches, canvas_h_inches;
 	double vertical_offset, max_vertical_offset;
 	double horizontal_zoom_factor, line_offset;
-	
+
 	KammoGUI::SVGCanvas::ElementReference *bar_container;
 	KammoGUI::SVGCanvas::ElementReference *piano_roll_container;
 	KammoGUI::SVGCanvas::ElementReference *timeline_container;
@@ -184,7 +185,7 @@ private:
 	std::vector<Bar *> bars;
 	std::vector<KammoGUI::SVGCanvas::ElementReference *> keys;
 	std::vector<KammoGUI::SVGCanvas::ElementReference *> lines_n_ticks;
-	
+
 	void clear_bars();
 	void create_bars();
 
@@ -199,13 +200,13 @@ private:
 
 	void clear_note_container();
 	void create_note_container();
-	
+
 	void clear_everything();
 	void refresh_svg();
 
 	static void scrolled_vertical(Tracker *ctx, float pixels_changed);
 	static void scrolled_horizontal(Tracker *ctx, float pixels_changed);
-	
+
 	static void bar_on_event(KammoGUI::SVGCanvas::SVGDocument *source, KammoGUI::SVGCanvas::ElementReference *e_ref,
 				     const KammoGUI::SVGCanvas::MotionEvent &event);
 	static void scroll_on_event(KammoGUI::SVGCanvas::SVGDocument *source, KammoGUI::SVGCanvas::ElementReference *e_ref,
@@ -223,17 +224,17 @@ public:
 	void previous_selected();
 	void next_selected();
 	void restore_from_undo_buffer();
-	void snap_toggled();	
+	void snap_toggled();
 	SnapMode get_snap_mode();
 	bool undo_stack_disabled();
 
 	// these are called by SelectNoneButton
 	void select_none(); // deselect all NoteGraphics
-	
-	// 
+
+	//
 	Tracker(KammoGUI::SVGCanvas *cnv, std::string file_name);
 	~Tracker();
-	
+
 	virtual void on_resize();
 	virtual void on_render();
 
@@ -254,7 +255,7 @@ private:
 	bool rim_visible;
 
 	Tracker::SnapMode last_snap_mode;
-	
+
 	int pixel_w, pixel_h;
 	float scale, translate_h, translate_v;
 
@@ -294,14 +295,14 @@ private:
 	static void menu_center_on_event(KammoGUI::SVGCanvas::SVGDocument *source,
 					 KammoGUI::SVGCanvas::ElementReference *e_ref,
 					 const KammoGUI::SVGCanvas::MotionEvent &event);
-	
+
 public:
 	Tracker *tracker;
-	
+
 	TrackerMenu(KammoGUI::SVGCanvas *cnv);
 
 	void set_loop_number(int loop_nr);
-	
+
 	virtual void on_resize();
 	virtual void on_render();
 };
@@ -321,7 +322,7 @@ private:
 			     const KammoGUI::SVGCanvas::MotionEvent &event);
 public:
 	Tracker *tracker;
-	
+
 	SelectNoneButton(KammoGUI::SVGCanvas *cnv);
 
 	virtual void on_resize();

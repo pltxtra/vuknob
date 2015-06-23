@@ -105,7 +105,7 @@ void TrackerMenu::on_render() {
 		KammoGUI::SVGCanvas::SVGMatrix menu_t;
 		menu_t.scale(scale, scale);
 		menu_t.translate(translate_h, translate_v);
-		
+
 		KammoGUI::SVGCanvas::ElementReference root(this);
 		root.set_transform(menu_t);
 	}
@@ -143,7 +143,7 @@ void TrackerMenu::on_resize() {
 	float h_fingers = canvas_w_inches / INCHES_PER_FINGER;
 
 	float five_fingers = 5.5f * (float)pixel_w / h_fingers;
-	
+
 	KammoGUI::SVGCanvas::SVGRect rect;
 	KammoGUI::SVGCanvas::ElementReference root(this);
 	root.get_viewport(rect);
@@ -161,7 +161,7 @@ void TrackerMenu::menu_selection_on_event(KammoGUI::SVGCanvas::SVGDocument *sour
 
 	double now_x = event.get_x();
 	double now_y = event.get_y();
-	
+
 	switch(event.get_action()) {
 	case KammoGUI::SVGCanvas::MotionEvent::ACTION_CANCEL:
 	case KammoGUI::SVGCanvas::MotionEvent::ACTION_OUTSIDE:
@@ -190,55 +190,55 @@ void TrackerMenu::menu_selection_on_event(KammoGUI::SVGCanvas::SVGDocument *sour
 			if(e_ref == &(ctx->menu_copy)) {
 				ctx->tracker->copy_selected();
 				helpanim = new HelpTextAnimation(ctx->menu_help, "Copy");
-				
+
 			} else if(e_ref == &(ctx->menu_paste)) {
 				ctx->tracker->paste_selected();
 				helpanim = new HelpTextAnimation(ctx->menu_help, "Paste");
-				
+
 			} else if(e_ref == &(ctx->menu_trash)) {
 				ctx->tracker->trash_selected();
 				helpanim = new HelpTextAnimation(ctx->menu_help, "Delete");
-				
+
 			} else if(e_ref == &(ctx->menu_quantize)) {
 				ctx->tracker->quantize_selected();
 				helpanim = new HelpTextAnimation(ctx->menu_help, "Quantize");
-				
+
 			} else if(e_ref == &(ctx->menu_shiftLeft)) {
 				ctx->tracker->shift_selected(-1);
 				helpanim = new HelpTextAnimation(ctx->menu_help, "Shift Left");
-				
+
 			} else if(e_ref == &(ctx->menu_shiftRight)) {
 				ctx->tracker->shift_selected( 1);
 				helpanim = new HelpTextAnimation(ctx->menu_help, "Shift Right");
-				
+
 			} else if(e_ref == &(ctx->menu_transposeUp)) {
 				ctx->tracker->transpose_selected(  1);
 				helpanim = new HelpTextAnimation(ctx->menu_help, "Transpose +1");
-				
+
 			} else if(e_ref == &(ctx->menu_transposeDown)) {
 				ctx->tracker->transpose_selected( -1);
 				helpanim = new HelpTextAnimation(ctx->menu_help, "Transpose -1");
-				
+
 			} else if(e_ref == &(ctx->menu_octaveUp)) {
 				ctx->tracker->transpose_selected( 12);
 				helpanim = new HelpTextAnimation(ctx->menu_help, "Transpose +12");
-				
+
 			} else if(e_ref == &(ctx->menu_octaveDown)) {
 				ctx->tracker->transpose_selected(-12);
 				helpanim = new HelpTextAnimation(ctx->menu_help, "Transpose -12");
-				
+
 			} else if(e_ref == &(ctx->menu_previousLoop)) {
 				ctx->tracker->previous_selected();
 				helpanim = new HelpTextAnimation(ctx->menu_help, "Previous");
-				
+
 			} else if(e_ref == &(ctx->menu_nextLoop)) {
 				ctx->tracker->next_selected();
 				helpanim = new HelpTextAnimation(ctx->menu_help, "Next");
-				
+
 			} else if(e_ref == &(ctx->menu_undo)) {
 				ctx->tracker->restore_from_undo_buffer();
 				helpanim = new HelpTextAnimation(ctx->menu_help, "Undo");
-				
+
 			} else if(e_ref == &(ctx->menu_snapTo)) {
 				ctx->tracker->snap_toggled();
 				helpanim = new HelpTextAnimation(ctx->menu_help, "Snap toggled");
@@ -286,7 +286,7 @@ TrackerMenu::TrackerMenu(KammoGUI::SVGCanvas *cnvs) :
 
 	menu_copy = KammoGUI::SVGCanvas::ElementReference(this, "menuCopy");
 	menu_paste = KammoGUI::SVGCanvas::ElementReference(this, "menuPaste");
-	menu_trash = KammoGUI::SVGCanvas::ElementReference(this, "menuTrash");	
+	menu_trash = KammoGUI::SVGCanvas::ElementReference(this, "menuTrash");
 
 	menu_quantize = KammoGUI::SVGCanvas::ElementReference(this, "menuQuantize");
 	menu_shiftLeft = KammoGUI::SVGCanvas::ElementReference(this, "menuShiftLeft");
@@ -385,7 +385,7 @@ void SelectNoneButton::on_render() {
 		KammoGUI::SVGCanvas::SVGMatrix button_t;
 		button_t.scale(scale, scale);
 		button_t.translate(translate_h, translate_v);
-		
+
 		KammoGUI::SVGCanvas::ElementReference root(this);
 		root.set_transform(button_t);
 	}
@@ -399,7 +399,7 @@ void SelectNoneButton::on_resize() {
 	float h_fingers = canvas_w_inches / INCHES_PER_FINGER;
 
 	float two_fingers = 2.0f * (float)pixel_w / h_fingers;
-	
+
 	KammoGUI::SVGCanvas::SVGRect rect;
 	KammoGUI::SVGCanvas::ElementReference root(this);
 	root.get_viewport(rect);
@@ -434,7 +434,7 @@ void Tracker::NoteGraphic::update_graphics() {
 	KammoGUI::SVGCanvas::ElementReference rect = find_child_by_class("noteRect");
 	KammoGUI::SVGCanvas::ElementReference line = find_child_by_class("noteLine");
 	KammoGUI::SVGCanvas::ElementReference stretch = find_child_by_class("stretchLine");
-	
+
 	line.set_line_coords(on_at * tick_width,
 			     (128.0f - note) * bar_height + bar_height / 2.0f,
 			     (on_at + length + 1.0f) * tick_width,
@@ -447,7 +447,7 @@ void Tracker::NoteGraphic::update_graphics() {
 			     (128 - note) * bar_height,
 			     (length - 0.5) * tick_width,
 			     bar_height);
-	
+
 	line.set_style(std::string("stroke:") + (selected ? "#f1a123" : "#33ccff") + ";");
 	stretch.set_style(std::string("stroke:") + (selected ? "#e6920f" : "#22bbee") + ";");
 }
@@ -492,7 +492,7 @@ void Tracker::NoteGraphic::delete_note_and_graphic(NoteGraphic *ng) {
 		    ng, ng->note_data, ng->loop);
 
 	if(ng->is_selected()) ng->set_selected(false);
-	
+
 	if(ng->note_data && ng->loop)  {
 		ng->loop->note_delete(ng->note_data);
 		ng->note_data = NULL;
@@ -549,10 +549,10 @@ void Tracker::NoteGraphic::on_event(KammoGUI::SVGCanvas::SVGDocument *source, Ka
 	double now_y = event.get_y();
 
 	SATAN_DEBUG("  NoteGraphic::on_event() for %p\n", ctx);
-	
+
 	double dist_x = fabs(now_x - start_x);
 	double dist_y = fabs(now_y - start_y);
-	
+
 	switch(event.get_action()) {
 	case KammoGUI::SVGCanvas::MotionEvent::ACTION_CANCEL:
 	case KammoGUI::SVGCanvas::MotionEvent::ACTION_OUTSIDE:
@@ -578,14 +578,14 @@ void Tracker::NoteGraphic::on_event(KammoGUI::SVGCanvas::SVGDocument *source, Ka
 				}
 			}
 			{ // transpose block
-				
+
 				int key_diff = (now_y - start_y) / Tracker::bar_height;
-				
+
 				SATAN_DEBUG("  key_diff: %d (note: %d)\n", key_diff, ctx->note);
-				
+
 				if(abs(key_diff) > 0) {
 					SATAN_DEBUG("   TRANSPOSE ************ %d\n", key_diff);
-					
+
 					ctx->note -= key_diff;
 					ctx->update_data();
 					ctx->update_graphics();
@@ -613,7 +613,7 @@ Tracker::NoteGraphic *Tracker::NoteGraphic::create(KammoGUI::SVGCanvas::ElementR
 	SATAN_DEBUG("NoteGraphic::create()\n");
 	add_graphic(note_container, id);
 	return new NoteGraphic(_key, _start_tick, _length,
-			       note_container, id, NULL);	
+			       note_container, id, NULL);
 }
 
 Tracker::NoteGraphic *Tracker::NoteGraphic::reference_existing(KammoGUI::SVGCanvas::ElementReference *note_container, const std::string &id,
@@ -625,7 +625,7 @@ Tracker::NoteGraphic *Tracker::NoteGraphic::reference_existing(KammoGUI::SVGCanv
 			       note_container, id, _note_data);
 	// reference the loop here
 	ng->loop = _loop;
-	
+
 	return ng;
 }
 
@@ -651,14 +651,14 @@ void Tracker::NoteGraphic::set_data(int _start_tick, int _length) {
 
 void Tracker::NoteGraphic::quantize() {
 	on_at = MachineSequencer::quantize_tick(on_at);
-	
+
 	update_data();
 	update_graphics();
 }
 
 bool Tracker::NoteGraphic::try_shift(int offset) {
 	offset *= MACHINE_TICKS_PER_LINE;
-	
+
 	int new_on_at = (int)on_at;
 
 	new_on_at += offset;
@@ -676,7 +676,7 @@ void Tracker::NoteGraphic::shift(int offset) {
 	if(new_on_at < 0) new_on_at = 0;
 
 	on_at = new_on_at;
-	
+
 	update_data();
 	update_graphics();
 }
@@ -697,7 +697,7 @@ void Tracker::NoteGraphic::transpose(int offset) {
 	new_note += offset;
 	if(new_note < 0) new_note = 0;
 	if(new_note > 127) new_note = 127;
-	
+
 	note = (uint8_t)new_note;
 
 	update_data();
@@ -718,12 +718,12 @@ void Tracker::NoteGraphic::set_selected(bool _selected) {
 	get_boundingbox(rect);
 	SATAN_DEBUG("    scale_slider: get_viewport: (%f, %f) (%f, %f)\n",
 		    rect.x, rect.y, rect.width, rect.height);
-	
+
 	if(selected) {
 		scale_slider->show(
 			rect.x, rect.y,
 			rect.width, rect.height,
-			
+
 			finger_width * (double)(canvas_width_fingers - 3),
 			finger_height * (double)(1),
 			finger_width * 3.0,
@@ -746,7 +746,7 @@ bool Tracker::NoteGraphic::is_selected() {
 
 void Tracker::NoteGraphic::on_scale_slider_changed(ScaleSlider *scl, double new_value) {
 	new_value *= 127;
-	
+
 	velocity = (uint8_t)new_value;
 	update_data();
 	// update_graphics(); // no graphic update needed since velocity is not yet visible graphically
@@ -768,12 +768,12 @@ Tracker::BarFlingAnimation::BarFlingAnimation(
 
 void Tracker::BarFlingAnimation::new_frame(float progress) {
 	current_speed = start_speed - deacc * progress * duration;
-	
+
 	float time_diff = (progress * duration) - last_time;
 	float pixels_change = time_diff * current_speed;
 
 	callback(context, pixels_change);
-	
+
 	last_time = progress * duration;
 }
 
@@ -790,7 +790,7 @@ void Tracker::BarFlingAnimation::on_touch_event() {
 void Tracker::UndoStack::push(const std::vector<NoteGraphic *> &graphics) {
 	std::vector<MachineSequencer::NoteEntry> *buffer = new std::vector<MachineSequencer::NoteEntry>();
 	if(buffer == NULL) throw std::bad_alloc();
-	
+
 	for(auto graphic : graphics){
 		buffer->push_back(MachineSequencer::NoteEntry(graphic));
 	}
@@ -860,28 +860,28 @@ void Tracker::clear_and_erase_current() {
 		}
 		graphics.clear();
 	}
-	get_parent()->redraw(); 
+	get_parent()->redraw();
 }
 
 void Tracker::replace_from_buffer(std::vector<MachineSequencer::NoteEntry> &notes) {
 	clear_and_erase_current();
-	
+
 	int k = 0;
 	for(auto note : notes) {
 		std::stringstream ss;
 		ss << "note_graphic_" << k++;
 		SATAN_DEBUG("pasting graphic: %s\n", ss.str().c_str());
-		
+
 		NoteGraphic *g = NoteGraphic::clone(note_container, ss.str(), &note);
 		g->add_note_to_loop(current_loop);
-		
+
 		graphics.push_back(g);
 	}
 }
 
 void Tracker::save_to_undo_buffer() {
 	if(current_loop == NULL) return;
-	
+
 	undo_stack.push(graphics);
 }
 
@@ -897,7 +897,7 @@ void Tracker::clear_note_graphics() {
 
 void Tracker::generate_note_graphics() {
 	if(current_loop == NULL) return;
-	
+
  	const MachineSequencer::NoteEntry *note = current_loop->notes_get();
 
 	int k = 0;
@@ -906,10 +906,10 @@ void Tracker::generate_note_graphics() {
 		ss << "note_graphic_" << k;
 
 		SATAN_DEBUG("Show note: %s (%d, %d, %d)\n", ss.str().c_str(), note->note, note->on_at, note->length);
-		
+
 		NoteGraphic *g = NoteGraphic::reference_existing(note_container, ss.str(), note, current_loop);
 		graphics.push_back(g);
-		
+
 		note = note->next;
 	}
 }
@@ -923,25 +923,25 @@ void Tracker::show_tracker_for(MachineSequencer *ms, int loop_id) {
 	if(loop_id == NOTE_NOT_SET) loop_id = 0;
 
 	undo_stack.clear();
-	
+
 	current_tracker->current_loop_id = NOTE_NOT_SET; // change this further down if we successfully can fetch the loop
 	current_tracker->current_loop = NULL;
 	current_tracker->mseq = NULL;
 
-	if(ms) {	
+	if(ms) {
 		try {
 			// current_loop and mseq is only set if current_loop can be set without exception
 			// otherwise they will remain NULL
 			current_tracker->current_loop = ms->get_loop(loop_id);
 			current_tracker->current_loop_id = loop_id;
-			current_tracker->mseq = ms; 
+			current_tracker->mseq = ms;
 		} catch(MachineSequencer::ParameterOutOfSpec poos) {
 			/// ignore this error
 		}
 	}
 
 	static KammoGUI::UserEvent *ue = NULL;
-	KammoGUI::get_widget((KammoGUI::Widget **)&ue, "showTrackerContainer");	
+	KammoGUI::get_widget((KammoGUI::Widget **)&ue, "showTrackerContainer");
 	KammoGUI::EventHandler::trigger_user_event(ue);
 
 	current_tracker_menu->set_loop_number(current_tracker->current_loop_id);
@@ -962,18 +962,18 @@ void Tracker::on_render() {
 
 		KammoGUI::SVGCanvas::SVGMatrix bar_container_t;
 		bar_container_t.translate(0.0, bar_height * (bar_offset - (double)bar_offset_i - 2));
-		
+
 		bar_container->set_transform(bar_container_t);
 		piano_roll_container->set_transform(bar_container_t);
 
 		auto key_graphic = keys.begin();
 		for(auto bar : bars) {
 			bar->key = key;
-			
+
 			int half_note = key % 12;
 			int octave = key / 12;
 			bool black_not_white = false;
-			
+
 			if(half_note == 1 || half_note == 3 || half_note == 6 || half_note == 8 || half_note == 10) {
 				// black key
 				black_not_white = true;
@@ -983,7 +983,7 @@ void Tracker::on_render() {
 			bar_style << "fill:" << (black_not_white ? "#b4b4b4" : "#d4d4d4") << ";stroke:none;"
 				  << "display:" << ((key < 128) ? "inline" : "none") << ";";
 			bar->set_style(bar_style.str());
-				
+
 			std::stringstream key_style;
 			key_style << "fill:" << (black_not_white ? "#000000" : "#ffffff") << ";stroke:none;"
 				  << "display:" << ((key < 128) ? "inline" : "none") << ";";
@@ -997,52 +997,54 @@ void Tracker::on_render() {
 
 				roll_key.set_style(key_style.str());
 				roll_text.set_style(text_style.str());
-				
+
 				std::stringstream key_text;
 				key_text << key_names[half_note] << octave;
 				roll_text.set_text_content(key_text.str());
-				
+
 				bar->str = key_text.str();
 			} catch(...) {
 				SATAN_ERROR("Tracker::on_render() couldn't find roll_text or roll_key class in key graphic.\n");
 			}
-			
+
 			key_graphic++;
 			key++;
 		}
 	}
 
+	// calcualte current space between ticks, given the current zoom factor
+	double tick_spacing = horizontal_zoom_factor * tick_width;
+
+	// calculate line offset
+	double line_offset_d = line_offset / (tick_spacing * (double)MACHINE_TICKS_PER_LINE);
+	int line_offset_i = line_offset_d; // we need the pure integer version too
+
+	// calculate the pixel offset for the first line
+	double graphics_offset = 0.0;
+
 	{ // select visible ticks, and translate time line graphics
+		graphics_offset = (line_offset_d - (double)line_offset_i) * tick_spacing * ((double)MACHINE_TICKS_PER_LINE);
+
 		double zfactor = ((double)MACHINE_TICKS_PER_LINE) / (horizontal_zoom_factor * 4.0f);
 
 		unsigned int skip_interval = (unsigned int)zfactor;
-		
+
 		// clamp skip_interval to [1, MAX_LEGAL]
 		static int legal_intervals[] = {
 			0, 1, 2, 2, 4, 4, 4, 4, 8, 8, 8,  8,  8,  8,  8,  8,  16
 		};
 #define MAX_LEGAL (sizeof(legal_intervals) / sizeof(int))
 		if(skip_interval > MAX_LEGAL) skip_interval = MAX_LEGAL;
-		if(skip_interval <= 0) skip_interval = 1; 
+		if(skip_interval <= 0) skip_interval = 1;
 		skip_interval = legal_intervals[skip_interval];
-		
-//		SATAN_DEBUG("skip_interval: %d\n", skip_interval);
 
-		// calcualte current space between ticks, given the current zoom factor
-		double tick_spacing = horizontal_zoom_factor * tick_width;
-		
-		// calculate line offset
-		double line_offset_d = line_offset / (tick_spacing * (double)MACHINE_TICKS_PER_LINE);
-		int line_offset_i = line_offset_d; // we need the pure integer version too
-		
-		// calculate the pixel offset for the first line
-		double graphics_offset = (line_offset_d - (double)line_offset_i) * tick_spacing * ((double)MACHINE_TICKS_PER_LINE);	
+//		SATAN_DEBUG("skip_interval: %d\n", skip_interval);
 
 		KammoGUI::SVGCanvas::SVGMatrix mtrx;
 
 		// translate by graphics_offset
 		mtrx.translate(graphics_offset, 0);
-		
+
 		for(unsigned int k = 0; k < lines_n_ticks.size(); k++) {
 			// transform the line marker
 			(lines_n_ticks[k])->set_transform(mtrx);
@@ -1052,13 +1054,13 @@ void Tracker::on_render() {
 
 			// calculate prospective line number
 			int line_number = (-line_offset_i + (k / MACHINE_TICKS_PER_LINE));
-			
+
 //			SATAN_DEBUG("       lines_n_ticks[%d] -> %p (%p) [%s]\n", k, lines_n_ticks[k], lines_n_ticks[k]->pointer(), lines_n_ticks[k]->get_id().c_str());
 			if((line_number >= 0) && (k % skip_interval == 0)) {
 				lines_n_ticks[k]->set_display("inline");
 
 				try { // for lines (not ticks) set timetext to the current line number
-					std::stringstream ss;			
+					std::stringstream ss;
 					ss << line_number;
 
 					lines_n_ticks[k]->find_child_by_class("timetext").set_text_content(ss.str());
@@ -1069,10 +1071,14 @@ void Tracker::on_render() {
 		}
 	}
 
-	{ // Translate and scale note container 
+	{ // Translate and scale note container
+		graphics_offset = (line_offset_d) * tick_spacing * ((double)MACHINE_TICKS_PER_LINE);
+
 		KammoGUI::SVGCanvas::SVGMatrix note_container_t;
-		note_container_t.translate((double)line_offset, (double)vertical_offset);
+
+		note_container_t.translate(0.0, (double)vertical_offset);
 		note_container_t.scale((double)horizontal_zoom_factor, 1.0);
+		note_container_t.translate(graphics_offset, 0.0);
 
 		note_container->set_transform(note_container_t);
 	}
@@ -1095,20 +1101,20 @@ void Tracker::create_timelines() {
 	KammoGUI::SVGCanvas::ElementReference root_element(this);
 
 	{ // timeline group creation block
-		std::stringstream ss;			
+		std::stringstream ss;
 		ss << "<svg id=\"timeline_container\" "
 		   << " x=\"0\" \n"
 		   << " y=\"0\" \n"
 		   << " width=\"" << canvas_w << "\" \n"
 		   << " height=\"" << canvas_h << "\" \n"
-		   << "/>\n";			
+		   << "/>\n";
 		root_element.add_svg_child(ss.str());
-		
+
 		timeline_container = new KammoGUI::SVGCanvas::ElementReference(this, "timeline_container");
 	}
-	
+
 	{ // timeline creation block
-	       
+
 		// "optimal" horizontal finger count
 		double line_count_d = canvas_w_inches / INCHES_PER_FINGER;
 
@@ -1121,15 +1127,15 @@ void Tracker::create_timelines() {
 			new_id << "tickntimel_" << k;
 			if(k % MACHINE_TICKS_PER_LINE == 0) {
 				// create main timeline
-				
+
 				std::stringstream ss;
 				ss << "<svg id=\"" << new_id.str() << "\" "
 				   << " x=\"0\" \n"
 				   << " y=\"0\" \n"
 				   << " width=\"" << bar_height << "\" \n" // use bar_height as width...
-				   << " height=\"" << canvas_h << "\" \n"					
+				   << " height=\"" << canvas_h << "\" \n"
 				   << ">\n"
-				   << "<line class=\"timeline\" " 
+				   << "<line class=\"timeline\" "
 				   << "stroke=\"black\" "
 				   << "stroke-width=\"1.0\" "
 				   << "x1=\"0\" "
@@ -1145,11 +1151,11 @@ void Tracker::create_timelines() {
 				   << "</svg>\n"
 					;
 				timeline_container->add_svg_child(ss.str());
-				
+
 				lines_n_ticks.push_back(new KammoGUI::SVGCanvas::ElementReference(this, new_id.str()));
 			} else {
 				// create MACHINE_TICKS_PER_LINE - 1 dashed lines marking the "in between" ticks per timeline
-				
+
 				std::stringstream ss;
 				ss << "<line id=\"" << new_id.str() << "\" "
 				   << "stroke=\"black\" "
@@ -1161,7 +1167,7 @@ void Tracker::create_timelines() {
 				   << "y2=\"" << canvas_h << "\" "
 				   << "/>\n";
 				timeline_container->add_svg_child(ss.str());
-				
+
 				lines_n_ticks.push_back(new KammoGUI::SVGCanvas::ElementReference(this, new_id.str()));
 			}
 		}
@@ -1185,22 +1191,22 @@ void Tracker::create_bars() {
 	KammoGUI::SVGCanvas::ElementReference root_element(this);
 
 	{ // bar group creation block
-		std::stringstream ss;			
+		std::stringstream ss;
 		ss << "<svg id=\"bar_container\" "
 		   << " x=\"0\" \n"
 		   << " y=\"0\" \n"
 		   << " width=\"" << canvas_w << "\" \n"
 		   << " height=\"" << canvas_h << "\" \n"
-		   << "/>\n";			
+		   << "/>\n";
 		root_element.add_svg_child(ss.str());
-		
+
 		bar_container = new KammoGUI::SVGCanvas::ElementReference(this, "bar_container");
 	}
-	
+
 	{ // bar creation block
-	       
+
 		float bar_count_f = canvas_h_inches / INCHES_PER_FINGER;
-		
+
 		bar_count = (int)bar_count_f; // bar_count is now the number of VISIBLE bars
 		bar_height = canvas_h / bar_count; // using the amount of VISIBLE bars we calculate the bar_height, in pixels
 
@@ -1214,13 +1220,13 @@ void Tracker::create_bars() {
 
 			int half_note = k % 12;
 			bool black_not_white = false;
-			
+
 			if(half_note == 1 || half_note == 3 || half_note == 6 || half_note == 8 || half_note == 10) {
 				// black key
 				black_not_white = true;
-			} 
-			
-			std::stringstream ss;			
+			}
+
+			std::stringstream ss;
 			ss << "<g>"
 			   << "<rect id=\"" << new_id.str() << "\" "
 			   << " style=\"fill:" << (black_not_white ? "#b4b4b4" : "#d4d4d4") << ";stroke:none;\" "
@@ -1231,7 +1237,7 @@ void Tracker::create_bars() {
 			   << "/>\n"
 			   << "</g>";
 			bar_container->add_svg_child(ss.str());
-			
+
 			Bar *new_bar =
 				new Bar(k, this, new_id.str());
 			new_bar->set_event_handler(bar_on_event);
@@ -1258,18 +1264,18 @@ void Tracker::create_piano_roll() {
 	KammoGUI::SVGCanvas::ElementReference root_element(this);
 
 	{ // piano roll group creation block
-		std::stringstream ss;			
+		std::stringstream ss;
 		ss << "<svg id=\"piano_roll_container\" "
 		   << " x=\"0\" \n"
 		   << " y=\"0\" \n"
 		   << " width=\"" << canvas_w << "\" \n"
 		   << " height=\"" << canvas_h << "\" \n"
-		   << "/>\n";			
+		   << "/>\n";
 		root_element.add_svg_child(ss.str());
-		
+
 		piano_roll_container = new KammoGUI::SVGCanvas::ElementReference(this, "piano_roll_container");
 	}
-	
+
 	{ // piano roll creation block
 		// - 2 for supporting faux scrolling in on_render()
 		for(int k = (128 - bar_count - 2); k < 128; k++) {
@@ -1279,13 +1285,13 @@ void Tracker::create_piano_roll() {
 			int half_note = k % 12;
 			int octave = k / 12;
 			bool black_not_white = false;
-			
+
 			if(half_note == 1 || half_note == 3 || half_note == 6 || half_note == 8 || half_note == 10) {
 				// black key
 				black_not_white = true;
-			} 
-			
-			std::stringstream ss;			
+			}
+
+			std::stringstream ss;
 			ss << "<g id=\"" << new_id.str() << "\">\n"
 			   << "<rect class=\"roll_key\" "
 			   << " style=\"fill:" << (black_not_white ? "#000000" : "#ffffff") << ";fill-opacity:0.7;stroke:none;\" "
@@ -1294,7 +1300,7 @@ void Tracker::create_piano_roll() {
 			   << " width=\"" << bar_height << "\" \n"
 			   << " height=\"" << (bar_height) << "\" \n"
 			   << "/>\n"
-			   << "<text class=\"roll_text\" x=\"5\" y=\"" << (128 * bar_height - k * bar_height + font_size) << "\" " 
+			   << "<text class=\"roll_text\" x=\"5\" y=\"" << (128 * bar_height - k * bar_height + font_size) << "\" "
 			   << "font-family=\"Roboto\" font-size=\"" << font_size << "\" fill=\"" << (black_not_white ? "white" : "black") << "\" >"
 			   << key_names[half_note] << octave
 			   << "</text>"
@@ -1315,14 +1321,14 @@ void Tracker::clear_time_index() {
 		time_index_container->drop_element();
 		delete time_index_container; time_index_container = NULL;
 	}
-	
+
 }
 
 void Tracker::create_time_index() {
 	KammoGUI::SVGCanvas::ElementReference root_element(this);
-	
+
 	{ // time index container
-		std::stringstream ss;			
+		std::stringstream ss;
 		ss << "<svg id=\"time_index_container\" "
 		   << " x=\"0\" \n"
 		   << " y=\"0\" \n"
@@ -1335,10 +1341,10 @@ void Tracker::create_time_index() {
 		   << " y=\"0\" \n"
 		   << " width=\"" << canvas_w << "\" \n"
 		   << " height=\"" << bar_height << "\" \n"
-		   << "/>\n"			
-		   << "</svg>\n";			
+		   << "/>\n"
+		   << "</svg>\n";
 		root_element.add_svg_child(ss.str());
-		
+
 		time_index_container = new KammoGUI::SVGCanvas::ElementReference(this, "time_index_container");
 		time_index_container->set_event_handler(scroll_on_event);
 	}
@@ -1349,23 +1355,23 @@ void Tracker::clear_note_container() {
 		note_container->drop_element();
 		delete note_container; note_container = NULL;
 	}
-	
+
 }
 
 void Tracker::create_note_container() {
 	KammoGUI::SVGCanvas::ElementReference root_element(this);
-	
+
 	{ // note container
-		std::stringstream ss;			
+		std::stringstream ss;
 		ss << "<svg id=\"note_container\" "
 		   << " x=\"0\" \n"
 		   << " y=\"0\" \n"
 		   << " width=\"" << canvas_w << "\" \n"
 		   << " height=\"" << bar_height << "\" \n"
 		   << ">\n"
-		   << "</svg>\n";			
+		   << "</svg>\n";
 		root_element.add_svg_child(ss.str());
-		
+
 		note_container = new KammoGUI::SVGCanvas::ElementReference(this, "note_container");
 	}
 }
@@ -1376,7 +1382,7 @@ void Tracker::clear_everything() {
 	clear_piano_roll();
 	clear_note_container();
 	clear_timelines();
-	clear_bars();	
+	clear_bars();
 }
 
 void Tracker::refresh_svg() {
@@ -1389,8 +1395,8 @@ void Tracker::refresh_svg() {
 	create_note_container();
 	create_piano_roll();
 	create_time_index();
-	
-	// set default offsets	
+
+	// set default offsets
 	line_offset = bar_height; // so first line is not stuck under the piano roll
 
 	// finally, refresh note graphics
@@ -1418,9 +1424,9 @@ void Tracker::on_resize() {
 	// font_size = finger_height / 3 - but in integer math
 	font_size = 10 * finger_height;
 	font_size /= 30;
-	
+
 	SATAN_DEBUG("Font size set to : %d\n", font_size);
-	
+
 	refresh_svg();
 
 	// when the Tracker is created, set the vertical_offset to something sensible
@@ -1435,7 +1441,7 @@ void Tracker::scrolled_vertical(Tracker *ctx, float pixels_changed) {
 	ctx->vertical_offset += pixels_changed;
 
 	if(ctx->vertical_offset > 0) ctx->vertical_offset = 0;
-	
+
 	if(ctx->vertical_offset < (-ctx->max_vertical_offset) ) ctx->vertical_offset = -ctx->max_vertical_offset;
 }
 
@@ -1450,7 +1456,7 @@ bool Tracker::on_scale(KammoGUI::ScaleGestureDetector *detector) {
 	line_offset *= detector->get_scale_factor();
 
 	SATAN_DEBUG("  new zoom factor: %f\n", horizontal_zoom_factor);
-	
+
 	return true;
 }
 
@@ -1467,7 +1473,7 @@ void Tracker::start_add(int key, double x, double y) {
 		ss << "note_graphic_" << graphics.size();
 
 		add_graphic = NoteGraphic::create(note_container, ss.str(), key, 0, 1);
-		
+
 		update_add_graphic();
 	}
 }
@@ -1475,11 +1481,11 @@ void Tracker::start_add(int key, double x, double y) {
 void Tracker::stop_add(double x, double y) {
 	if(add_graphic) {
 		save_to_undo_buffer();
-		
+
 		if(snap_mode == Tracker::snap_to_line) {
 			add_graphic->length = add_graphic->length & MACHINE_LINE_BITMASK;
 		}
-		
+
 		add_graphic->add_note_to_loop(current_loop);
 		graphics.push_back(add_graphic);
 		add_graphic = NULL;
@@ -1492,7 +1498,7 @@ void Tracker::update_add_graphic() {
 	// if bar_mode = add, update the add_graphic
 	if(add_graphic) {
 		double x1, x2;
-	       		
+
 		if(bar_first_x < bar_current_x) {
 			x1 = bar_first_x;
 			x2 = bar_current_x;
@@ -1503,7 +1509,7 @@ void Tracker::update_add_graphic() {
 
 		// calcualte current space between ticks, given the current zoom factor
 		double tick_spacing = horizontal_zoom_factor * tick_width;
-		
+
 		double nx1 = (x1 - line_offset) / tick_spacing;
 		double nx2 = (x2 - line_offset) / tick_spacing;
 
@@ -1522,7 +1528,7 @@ void Tracker::update_add_graphic() {
 			stop = stop & MACHINE_LINE_BITMASK;
 			break;
 		}
-		
+
 		add_graphic->set_data(start, stop - start);
 	}
 }
@@ -1560,7 +1566,7 @@ void Tracker::bar_on_event(KammoGUI::SVGCanvas::SVGDocument *source,
 		case KammoGUI::SVGCanvas::MotionEvent::ACTION_UP:
 			ctx->stop_add(event.get_x(), event.get_y());
 			break;
-		case KammoGUI::SVGCanvas::MotionEvent::ACTION_MOVE:	       		
+		case KammoGUI::SVGCanvas::MotionEvent::ACTION_MOVE:
 			ctx->bar_current_x = event.get_x();
 			ctx->bar_current_y = event.get_y();
 
@@ -1586,15 +1592,15 @@ void Tracker::scroll_on_event(KammoGUI::SVGCanvas::SVGDocument *source,
 		if(ctx->fling_detector.on_touch_event(event)) {
 			float speed_x, speed_y;
 			float abs_speed_x, abs_speed_y;
-			
+
 			ctx->fling_detector.get_speed(speed_x, speed_y);
 			ctx->fling_detector.get_absolute_speed(abs_speed_x, abs_speed_y);
-			
+
 			bool do_horizontal_fling = abs_speed_x > abs_speed_y ? true : false;
-			
+
 			float speed = 0.0f, abs_speed;
 			std::function<void(Tracker *context, float pixels_changed)> scrolled;
-			
+
 			if(do_horizontal_fling) {
 				abs_speed = abs_speed_x;
 				speed = speed_x;
@@ -1604,14 +1610,14 @@ void Tracker::scroll_on_event(KammoGUI::SVGCanvas::SVGDocument *source,
 				speed = speed_y;
 				scrolled = scrolled_vertical;
 			}
-			
+
 			float fling_duration = abs_speed / FLING_DEACCELERATION;
-			
+
 			BarFlingAnimation *flinganim =
 				new BarFlingAnimation(speed, fling_duration, scrolled, ctx);
 			ctx->start_animation(flinganim);
 		}
-	
+
 		switch(event.get_action()) {
 		case KammoGUI::SVGCanvas::MotionEvent::ACTION_CANCEL:
 		case KammoGUI::SVGCanvas::MotionEvent::ACTION_OUTSIDE:
@@ -1626,10 +1632,10 @@ void Tracker::scroll_on_event(KammoGUI::SVGCanvas::SVGDocument *source,
 		case KammoGUI::SVGCanvas::MotionEvent::ACTION_UP:
 			scroll_x = event.get_x() - scroll_start_x;
 			scroll_y = event.get_y() - scroll_start_y;
-			
+
 			scrolled_horizontal(ctx, scroll_x);
 			scrolled_vertical(ctx, scroll_y);
-			
+
 			scroll_start_x = event.get_x();
 			scroll_start_y = event.get_y();
 			break;
@@ -1655,7 +1661,7 @@ void Tracker::scroll_on_event(KammoGUI::SVGCanvas::SVGDocument *source,
 
 void Tracker::copy_selected() {
 	clipboard.clear();
-	
+
 	// if nothing is selected, copy all NoteGraphic entries
 	bool copy_all = !anything_selected();
 
@@ -1671,7 +1677,7 @@ void Tracker::yes_overwrite(void *void_ctx) {
 	Tracker *ctx = (Tracker *)void_ctx;
 
 	SATAN_DEBUG("yes_overwrite() : %p, %p, %p\n", ctx, ctx->mseq, ctx->current_loop);
-	
+
 	// then paste
 	if(ctx != NULL && ctx->mseq != NULL) {
 		ctx->save_to_undo_buffer();
@@ -1696,14 +1702,14 @@ void Tracker::paste_selected() {
 
 	if(graphics.size() > 0) {
 		std::ostringstream question;
-		
+
 		question << "Do you want overwrite the previous content?";
-		
+
 		KammoGUI::ask_yes_no("Overwrite?",
 				     question.str(),
 				     yes_overwrite, this,
 				     do_nothing, this);
-		
+
 	} else {
 		yes_overwrite(this);
 	}
@@ -1714,14 +1720,14 @@ void Tracker::trash_selected() {
 		// we have graphics, but none is selected
 		// if the user wants to erase the entire loop - do so - otherwise do nothing
 		std::ostringstream question;
-		
+
 		question << "Do you want to erase the entire loop?";
-		
+
 		KammoGUI::ask_yes_no("Erase?",
 				     question.str(),
 				     yes_erase_all, this,
 				     do_nothing, this);
-		
+
 	} else {
 		// user has selected one or more notes, erase them directly
 
@@ -1810,7 +1816,7 @@ void Tracker::next_selected() {
 
 void Tracker::restore_from_undo_buffer() {
 	if(current_loop == NULL) return;
-	
+
 	std::vector<MachineSequencer::NoteEntry> *buffer = undo_stack.pop();
 	replace_from_buffer(*buffer);
 	delete buffer;
@@ -1855,7 +1861,7 @@ Tracker::Tracker(KammoGUI::SVGCanvas *cnvs, std::string fname) : SVGDocument(fna
 
 Tracker::~Tracker() {
 	clear_everything();
-	
+
 	if(sgd) delete sgd;
 }
 
@@ -1869,15 +1875,15 @@ KammoEventHandler_Declare(TrackerHandler,"tracker");
 
 virtual void on_init(KammoGUI::Widget *wid) {
 	if(wid->get_id() == "tracker") {
-		KammoGUI::SVGCanvas *cnvs = (KammoGUI::SVGCanvas *)wid;		
+		KammoGUI::SVGCanvas *cnvs = (KammoGUI::SVGCanvas *)wid;
 		cnvs->set_bg_color(1.0, 1.0, 1.0);
-		
+
 		current_tracker = new Tracker(cnvs, std::string(SVGLoader::get_svg_directory() + "/tracker.svg"));
 		current_tracker_menu = new TrackerMenu(cnvs);
 		current_select_none_button = new SelectNoneButton(cnvs);
-		
+
 		scale_slider = new ScaleSlider(cnvs);
-		
+
 		current_tracker_menu->tracker = current_tracker;
 		current_select_none_button->tracker = current_tracker;
 	}

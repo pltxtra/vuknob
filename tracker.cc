@@ -443,9 +443,9 @@ void Tracker::NoteGraphic::update_graphics() {
 				(128.0f - note) * bar_height + bar_height / 2.0f,
 				(on_at + length + MACHINE_TICKS_PER_LINE - 2.0f) * tick_width,
 				(128.0f - note) * bar_height + bar_height / 2.0f);
-	rect.set_rect_coords(on_at * tick_width,
+	rect.set_rect_coords((on_at - 4) * tick_width,
 			     (128 - note) * bar_height,
-			     (length - 0.5) * tick_width,
+			     (length - 0.5 + 4) * tick_width,
 			     bar_height);
 
 	line.set_style(std::string("stroke:") + (selected ? "#f1a123" : "#33ccff") + ";");

@@ -60,7 +60,7 @@ import com.holidaystudios.vuknobbase.JavaInterface;
 import com.holidaystudios.vuknobbase.WifiControl;
 
 public class vuKNOBnet extends KamoflageActivity
-	implements 
+	implements
 	android.media.AudioManager.OnAudioFocusChangeListener
 {
 	final int BUFFER = 2048;
@@ -68,14 +68,14 @@ public class vuKNOBnet extends KamoflageActivity
 	private void unpack_native_files(String destdir) throws IOException {
 		InputStream istream = null;
 		istream = this.getResources().openRawResource(R.raw.nativefiletreearchive);
-		
+
 		if(istream == null)
 			throw new IOException("Can't open native file tree archive.");
-		
+
 		ZipInputStream zis;
-		
+
 		zis = new ZipInputStream(istream);
-				
+
 		BufferedOutputStream dest = null;
 
 		ZipEntry entry;
@@ -83,22 +83,22 @@ public class vuKNOBnet extends KamoflageActivity
 		while((entry = zis.getNextEntry()) != null) {
 			if(entry.isDirectory()) {
 				File f = new File(destdir + "/" + entry);
-				f.mkdirs();				
+				f.mkdirs();
 			} else {
 				int count;
 				byte data[] = new byte[BUFFER];
-				
+
 				// write the files to the disk
-				FileOutputStream fos = new 
+				FileOutputStream fos = new
 					FileOutputStream(destdir + "/" + entry.getName());
-				dest = new 
+				dest = new
 					BufferedOutputStream(fos, BUFFER);
-				
-				while ((count = zis.read(data, 0, BUFFER)) 
+
+				while ((count = zis.read(data, 0, BUFFER))
 				       != -1) {
 					dest.write(data, 0, count);
 				}
-				
+
 				dest.flush();
 				dest.close();
 			}
@@ -122,7 +122,7 @@ public class vuKNOBnet extends KamoflageActivity
 	public void onAudioFocusChange(int focusChange) {
 		// ignore for now...
 	}
-	
+
 	/** Called when the activity is first created. */
 	@Override
 	public void onCreate(Bundle savedInstanceState) {
@@ -142,7 +142,7 @@ public class vuKNOBnet extends KamoflageActivity
 
 		wfctrl = new WifiControl(this);
 		wfctrl.acquire();
-		
+
 		setContentView(R.layout.main);
 		Log.v("VuKNOB", "Bringing up VuKNOB - content set!");
 		mProgress = (ProgressBar) findViewById(R.id.progress_bar);
@@ -162,7 +162,7 @@ public class vuKNOBnet extends KamoflageActivity
 								    AudioManager.AUDIOFOCUS_GAIN);
 
 		Log.v("VuKNOB", "Bringing up VuKNOB - prepare(audioManager);");
-		VuknobAndroidAudio.prepare(audioManager);
+		VuknobAndroidAudio.prepare(this, audioManager);
 		buffersizeField.setText(
 			"Device: " + android.os.Build.DEVICE + ", " +
 			"Frequency: " + String.valueOf(VuknobAndroidAudio.default_frequency) + ", " +
@@ -181,7 +181,7 @@ public class vuKNOBnet extends KamoflageActivity
 						String nativedatadir =
 							getDir("nativedata",
 							       MODE_PRIVATE).getAbsolutePath();
-						
+
 						// check if the timestamp file exists, if it does then
 						// we unpacked this archive before, if it does not exist
 						// then this specific version of the archive has not
@@ -211,13 +211,13 @@ public class vuKNOBnet extends KamoflageActivity
 									statusField.setText("Unpacking finished...");
 								}
 							});
-						
+
 						uiAct.runOnUiThread(new Runnable() {
 								public void run() {
 									mProgress.setProgress(10);
 								}
 							});
-						
+
 						uiAct.runOnUiThread(new Runnable() {
 								public void run() {
 									statusField.setText("Parsing UI file...");
@@ -255,14 +255,14 @@ public class vuKNOBnet extends KamoflageActivity
 						android.os.SystemClock.sleep(120 * 1000);
 						java.lang.System.exit(0);
 						return; // don't continue this thread...
-						
-					} 
+
+					}
 
 				}
 			}).start();
-		
+
 	}
-	
+
 	@Override
 	protected void onStart() {
 		super.onStart();

@@ -251,9 +251,27 @@ void LogoScreen::element_on_event(KammoGUI::SVGCanvas::SVGDocument *source,
 			ctx->select_server([]{});
 		} else if(e_ref == ctx->start_element) {
 			if(RemoteInterface::Server::is_running()) {
-				ctx->start_vuknob(false);
+				try {
+					ctx->start_vuknob(false);
+				} catch(const std::exception& e) {
+					SATAN_ERROR("Exception caught in start_vuknob(): %s\n", e.what());
+					throw;
+				} catch(...) {
+					SATAN_ERROR("Unknown exception caught in start_vuknob().\n");
+					throw;
+				}
 			} else {
-				ctx->select_server([ctx](){ ctx->start_vuknob(true); });
+				ctx->select_server([ctx](){
+						try {
+							ctx->start_vuknob(true);
+						} catch(const std::exception& e) {
+							SATAN_ERROR("Exception caught in start_vuknob(): %s\n", e.what());
+							throw;
+						} catch(...) {
+							SATAN_ERROR("Unknown exception caught in start_vuknob().\n");
+							throw;
+						}
+					});
 			}
 		}
 	}

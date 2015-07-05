@@ -34,6 +34,7 @@
 
 package com.holidaystudios.vuknobbase;
 
+import android.app.Activity;
 import android.media.AudioTrack;
 import android.media.AudioManager;
 import android.media.AudioFormat;
@@ -44,7 +45,6 @@ import android.util.Log;
 import com.toolkits.kamoflage.Kamoflage;
 
 public class VuknobAndroidAudio {
-
 	public static native void registerNativeAudioConfigurationData(int freq, int blen, int dev_class);
 	public static native boolean javaThread();
 
@@ -63,14 +63,24 @@ public class VuknobAndroidAudio {
 	}
 
 	private static AudioTrack at = null;
+	private static SamsungAudio samaud = null;
+	private static Activity creator;
 
 	private static int sampleRate, minBufferSize;
 
 	/*** THESE VALUES MUST MATCH THE VALUES IN dynlib.h ***/
 	static final int __PLAYBACK_OPENSL_DIRECT    = 14; // The device should use direct OpenSL rendering
 	static final int __PLAYBACK_OPENSL_BUFFERED  = 16; // The device should use buffered OpenSL rendering
-
+	static final int __PLAYBACK_SAMSUNG	     = 17; // The device should use Samsung Professional Audio
 	private static int getPlaybackMode() {
+		samaud = new SamsungAudio();
+		if(samaud.startUp(creator)) {
+			Log.v("VuKNOB", "VuknobAndroidAudio will use SamsungAudio.");
+			return __PLAYBACK_SAMSUNG;
+		} else {
+			Log.v("VuKNOB", "VuknobAndroidAudio reported no SamsungAudio available. Fallback to default.");
+		}
+
 		/********** CREATE HASHMAP OF KNOWN DEVICES / PLAYBACK TYPE **********/
 		HashMap<String, Integer> known_devices = new HashMap<String, Integer>();
 
@@ -84,7 +94,6 @@ public class VuknobAndroidAudio {
 		known_devices.put("zeroflte", __PLAYBACK_OPENSL_BUFFERED);
 		// flounder (aka Nexus 9)
 		known_devices.put("flounder", __PLAYBACK_OPENSL_DIRECT);
-
 
 		/** IF THE DEVICE IS UNKNOWN; RETURN DEFAULT SETTING ****/
 		// Previousoly we would default to direct mode (the recommended mode by Google - that isn't working on Nexus 5 as of September 2014... go figure...)
@@ -205,7 +214,8 @@ public class VuknobAndroidAudio {
 		}
 	}
 
-	public static void prepare(android.media.AudioManager audioManager) {
+	public static void prepare(Activity _creator, android.media.AudioManager audioManager) {
+		creator = _creator;
 		// first we try to scan for the optimal audio configuration
 		VuknobAndroidAudio.scanNativeAudioConfiguration(audioManager);
 		VuknobAndroidAudio.createThread();

@@ -4,7 +4,7 @@
 # This program is free software; you can redistribute it and/or modify it under the terms of
 # the GNU General Public License as published by the Free Software Foundation; either version 2
 # of the License, or (at your option) any later version.
-# 
+#
 # This program is distributed in the hope that it will be useful, but WITHOUT ANY WARRANTY;
 # without even the implied warranty of MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.
 # See the GNU General Public License for more details.
@@ -161,6 +161,7 @@ LOCAL_MODULE    := liveout_fallback
 LOCAL_MODULE_FILENAME    := libliveout_fallback
 LOCAL_SRC_FILES := riff_wave_output.c liveout.c  $(FRAMEWORK_SOURCES)
 LOCAL_LDLIBS += -ldl -llog
+LOCAL_SHARED_LIBRARIES := libkamoflage
 include $(BUILD_SHARED_LIBRARY)
 
 LOCAL_CFLAGS += -DUSE_OPEN_SL_ES -DHAVE_CONFIG_H -Wall -I../

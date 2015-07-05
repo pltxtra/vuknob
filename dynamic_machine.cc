@@ -48,7 +48,7 @@
 #include "build_at_seconds_since.h"
 #include "common.hh"
 
-//#define __DO_SATAN_DEBUG
+#define __DO_SATAN_DEBUG
 #include "satan_debug.hh"
 
 /*********************************************************
@@ -70,11 +70,12 @@ void DynamicMachine::ProjectEntry::generate_xml(std::ostream &output) {
 
 void DynamicMachine::ProjectEntry::parse_xml(int project_interface_level, KXMLDoc &xml_node) {
 	// we can safely ignore the project_interface_level since we are compatible with all versions currently
-	// however - if we would like we could use that value to support different stuff in different versions...	
+	// however - if we would like we could use that value to support different stuff in different versions...
 }
 
 void DynamicMachine::ProjectEntry::set_defaults() {
 	// refresh handles
+	SATAN_DEBUG("DynamicMachine::ProjectEntry::set_defaults() - refresh handles...\n");
 	try {
 		DynamicMachine::refresh_handle_set();
 	} catch(jException e) {
@@ -83,13 +84,14 @@ void DynamicMachine::ProjectEntry::set_defaults() {
 	}
 
 	// Create base machines
+	SATAN_DEBUG("DynamicMachine::ProjectEntry::set_defaults() - create base machines...\n");
 	try {
 		(void) DynamicMachine::instance("liveoutsink");
 
 		std::vector<Machine *> machines =
 			Machine::get_machine_set();
 		std::vector<Machine *>::iterator m;
-		
+
 		for(m  = machines.begin();
 		    m != machines.end();
 		    m++) {
@@ -99,6 +101,7 @@ void DynamicMachine::ProjectEntry::set_defaults() {
 		SATAN_DEBUG("exception: %s\n", e.message.c_str());
 		exit(-1);
 	}
+	SATAN_DEBUG("DynamicMachine::ProjectEntry::set_defaults() - Finished.\n");
 }
 
 /***************************
@@ -119,7 +122,7 @@ DynamicMachine::Handle::Handle(std::string _base_name, KXMLDoc decl, Handle *spa
 DynamicMachine::Handle::Handle(std::string dynamic_name) : name(""), hint(""), dynlib_is_loaded(false), set_parent(NULL) {
 
 	std::ifstream file(dynamic_name.c_str());
-	
+
 	KXMLDoc xml_proto;
 	printf("Build: %s\n", BUILD_AT_SECONDS_SINCE); fflush(0);
 	try {
@@ -139,11 +142,11 @@ DynamicMachine::Handle::Handle(std::string dynamic_name) : name(""), hint(""), d
 
 	std::string proto_name = "";
 	try {
-		proto_name = xml_proto.get_name();	
+		proto_name = xml_proto.get_name();
 	} catch(...) {
 		throw jException("XML format error in DynamicMachine::Handle::Handle().", jException::sanity_error);
 	}
-	
+
 	if(proto_name == "machine") {
 		parse_machine_declaration(xml_proto);
 	} else if(proto_name == "machineset") {
@@ -180,9 +183,9 @@ void DynamicMachine::Handle::prep_dynlib() {
 
 	if(set_parent != NULL) {
 		set_parent->prep_dynlib();
-		
-		dynlib_is_loaded = true;	
-		
+
+		dynlib_is_loaded = true;
+
 		init = set_parent->init;
 		exct = set_parent->exct;
 		rset = set_parent->rset;
@@ -193,7 +196,7 @@ void DynamicMachine::Handle::prep_dynlib() {
 	}
 
 	module = NULL;
-	
+
 	std::vector<std::string> candidate_dir;
 	std::vector<std::string>::iterator candidate_dir_entry;
 
@@ -204,7 +207,7 @@ void DynamicMachine::Handle::prep_dynlib() {
 	candidate_dir.push_back(handle_directory + "/.libs/");
 #endif
 	std::string error_message;
-	
+
 	for(candidate_dir_entry  = candidate_dir.begin();
 	    candidate_dir_entry != candidate_dir.end() && module == NULL;
 	    candidate_dir_entry++) {
@@ -212,16 +215,16 @@ void DynamicMachine::Handle::prep_dynlib() {
 		std::string extension = "lib";
 		std::string dynamic_file = *candidate_dir_entry;
 		std::string dynamic_file_fallback;
-		
+
 #ifdef __CYGWIN__
 		dynamic_file = dynamic_file + "cyg";
 #else
 		dynamic_file = dynamic_file + "lib";
 #endif
-		
+
 		dynamic_file = dynamic_file + dl_name;
 		dynamic_file_fallback = dynamic_file + "_fallback";
-		
+
 #ifdef __CYGWIN__
 		extension = "-0.dll";
 #else
@@ -229,12 +232,12 @@ void DynamicMachine::Handle::prep_dynlib() {
 #endif
 		dynamic_file = dynamic_file + extension;
 		dynamic_file_fallback = dynamic_file_fallback + extension;
-		
+
 		std::ostringstream stream;
-		
+
 		int retries = 1;
 		module = NULL;
-		
+
 		for(; (module == NULL) && (retries >= 0); retries--) {
 			std::string f = dynamic_file;
 			if(retries == 0)
@@ -245,7 +248,7 @@ void DynamicMachine::Handle::prep_dynlib() {
 			module = dlopen(f.c_str(), RTLD_LAZY);
 #else
 #define DLSYM_M lt_dlsym
-#define DLERROR_M lt_dlerror		
+#define DLERROR_M lt_dlerror
 			module = lt_dlopenext(f.c_str());
 #endif
 		}
@@ -255,7 +258,7 @@ void DynamicMachine::Handle::prep_dynlib() {
 	}
 	if(!module) throw jException(error_message, jException::syscall_error);
 
-	dynlib_is_loaded = true;	
+	dynlib_is_loaded = true;
 
 	if((init = (init_dynamic *) DLSYM_M (module, "init"))
 	   == NULL)
@@ -276,14 +279,14 @@ void DynamicMachine::Handle::prep_dynlib() {
 
 void DynamicMachine::Handle::parse_iodeclaration(const KXMLDoc &io, int &dimension, int &channels, bool &premix) {
 	std::string d;
-	
+
 	d = io.get_attr("dimension");
 	std::istringstream sin(d);
 	if(d != "midi")
 		sin >> dimension;
 	else
 		dimension = _MIDI;
-	
+
 	d = io.get_attr("channels");
 	std::istringstream san(d);
 	san >> channels;
@@ -295,8 +298,8 @@ void DynamicMachine::Handle::parse_iodeclaration(const KXMLDoc &io, int &dimensi
 		else premix = false;
 	} catch(...) {
 		premix = false;
-	}     
-		    
+	}
+
 }
 
 void DynamicMachine::Handle::parse_controller(const KXMLDoc &ctr_xml) {
@@ -304,9 +307,9 @@ void DynamicMachine::Handle::parse_controller(const KXMLDoc &ctr_xml) {
 	std::string title = "";
 	std::string name = "", type_name = "", min = "", max = "", step = "", group = "";
 	std::string controller_has_midi_s = "";
-	
+
 	Controller::Type tp = Controller::c_int;
-	
+
 	name = ctr_xml.get_attr("name");
 	type_name = ctr_xml.get_attr("type");
 
@@ -319,7 +322,7 @@ void DynamicMachine::Handle::parse_controller(const KXMLDoc &ctr_xml) {
 	// title is the user displayed name of the controller
 	title = name; // we set that to the "name" given by the XML
 	// however - the name variable MUST BE UNIQUE so we concatenate the group name with the name from the XML
-	name = group + ":" + name;       
+	name = group + ":" + name;
 
 	controller_group[name] = group;
 
@@ -328,11 +331,11 @@ void DynamicMachine::Handle::parse_controller(const KXMLDoc &ctr_xml) {
 		for(auto k : groups) if(k == group) group_existed = true;
 		if(!group_existed) groups.push_back(group);
 	}
-	
+
 	controllers.push_back(name);
 
 	int cr = -1, fn = -1;
-	
+
 	KXML_GET_NUMBER(ctr_xml,"coarse",cr,-1);
 	KXML_GET_NUMBER(ctr_xml,"fine",fn,-1);
 
@@ -341,7 +344,7 @@ void DynamicMachine::Handle::parse_controller(const KXMLDoc &ctr_xml) {
 		coarse_midi_controller[name] = cr;
 		fine_midi_controller[name] = fn;
 	} else controller_has_midi[name] = false;
-	
+
 	if(type_name == "integer") tp = Machine::Controller::c_int;
 	else if(type_name == "FTYPE") tp = Machine::Controller::c_float;
 	else if(type_name == "float") tp = Machine::Controller::c_float;
@@ -364,10 +367,10 @@ void DynamicMachine::Handle::parse_controller(const KXMLDoc &ctr_xml) {
 		for(i = 0; i < nr_enums; i++) {
 			KXMLDoc e = ctr_xml["enum"][i];
 			evl = ""; nam = "";
-			
+
 			try { evl = e.get_attr("value"); } catch(...) { /* ignore */ }
 			try { nam = e.get_attr("name"); } catch(...) { /* ignore */ }
-			
+
 			if(evl == "" || name == "") {
 				std::string emsg = "Enumerated controller ";
 				emsg = emsg + name + " did not define a proper value name pair.";
@@ -375,7 +378,7 @@ void DynamicMachine::Handle::parse_controller(const KXMLDoc &ctr_xml) {
 			}
 
 			std::istringstream st(evl);
-			st >> val; 
+			st >> val;
 
 			if(val == 0) low_is_zero = true;
 			if(val > hi) {
@@ -414,7 +417,7 @@ void DynamicMachine::Handle::parse_controller(const KXMLDoc &ctr_xml) {
 
 	if(type_name == "FTYPE") controller_is_FTYPE[name] = true;
 	else controller_is_FTYPE[name] = false;
-	
+
 	if(min != "") controller_min[name] = min;
 	if(max != "") controller_max[name] = max;
 	if(step != "") controller_step[name] = step;
@@ -426,7 +429,7 @@ void DynamicMachine::Handle::parse_machine_declaration(const KXMLDoc &xml_proto)
 		dl_name = name;
 		name += xml_proto["name"].get_value();
 		if(dl_name == "") dl_name = name;
-		
+
 		try {
 			std::string sink;
 			sink = xml_proto.get_attr("sink");
@@ -435,19 +438,19 @@ void DynamicMachine::Handle::parse_machine_declaration(const KXMLDoc &xml_proto)
 			} else act_as_sink = false;
 		} catch(...) {
 			act_as_sink = false;
-		}     
-		
+		}
+
 		try {
 			hint = xml_proto.get_attr("hint");
 		} catch(...) {
 			hint = ""; // no hint about what this is...
-		}     
-		
+		}
+
 		int i;
 		int dimension, channels;
 		int nr_ios;
 		bool premix;
-		
+
 		try {
 			nr_ios = xml_proto["output"].get_count();
 			for(i = 0; i < nr_ios; i++) {
@@ -619,7 +622,7 @@ std::string DynamicMachine::Handle::get_hint() {
 }
 
 /* static handle data/functions */
-std::map<std::string, DynamicMachine::Handle *> DynamicMachine::dynamic_file_handle;       
+std::map<std::string, DynamicMachine::Handle *> DynamicMachine::dynamic_file_handle;
 std::map<std::string, DynamicMachine::Handle *> DynamicMachine::handle_map;
 
 std::map<std::string, DynamicMachine::Handle *> DynamicMachine::Handle::declaration2handle;
@@ -652,8 +655,8 @@ void DynamicMachine::Handle::load_handle(std::string fname) {
 	} else { /* we have ourselves a set... */
 		Handle *set_parent = NULL, *current = NULL;
 		int nr_machines, i;
-		
-		try {			
+
+		try {
 			nr_machines = handle_set["machine"].get_count();
 			for(i = 0; i < nr_machines; i++) {
 				current = new Handle(
@@ -696,7 +699,7 @@ void DynamicMachine::Handle::refresh_handle_set() {
 	for(try_list_entry  = try_list.begin();
 	    try_list_entry != try_list.end();
 	    try_list_entry++) {
-	
+
 		handle_directory = *try_list_entry;
 		std::cout << "Trying to read handles in ]" << handle_directory << "[ ...\n";
 
@@ -708,12 +711,12 @@ void DynamicMachine::Handle::refresh_handle_set() {
 			while((dire = readdir(dir)) != NULL) {
 				std::string filename = dire->d_name;
 				filename = handle_directory + "/" + filename;
-				
+
 				if(lstat(filename.c_str(), &stb) != 0) {
 					closedir(dir);
 					throw jException("Failed to stat file during refresh.", jException::syscall_error);
 				}
-				
+
 				if((stb.st_mode & S_IFMT) == S_IFREG) {
 					// get extension..
 					const char *f = filename.c_str();
@@ -806,7 +809,7 @@ std::vector<std::string> DynamicMachine::internal_get_controller_names() {
 
 std::vector<std::string> DynamicMachine::internal_get_controller_names(const std::string &group_name) {
 	std::vector<std::string> result;
-	
+
 	for(auto k : dh->get_controller_names()) {
 		if(dh->get_controller_group(k) == group_name) {
 			result.push_back(k);
@@ -818,12 +821,12 @@ std::vector<std::string> DynamicMachine::internal_get_controller_names(const std
 
 Machine::Controller *DynamicMachine::internal_get_controller(const std::string &name) {
 	void *ptr = controller_ptr[name];
-	
+
 	if(ptr == NULL)
 		throw jException(
 			std::string("No such controller [") + name + "] available.",
 			jException::sanity_error);
-	
+
 	Controller::Type tp =
 		dh->get_controller_type(name);
 	bool is_FTYPE =
@@ -836,22 +839,22 @@ Machine::Controller *DynamicMachine::internal_get_controller(const std::string &
 		dh->get_controller_max(name);
 	std::string step =
 		dh->get_controller_step(name);
-	
+
 	std::map<int, std::string> enumnames =
 		dh->get_controller_enumnames(name);
-	
+
 	bool has_midi_controller = dh->get_controller_has_midi(name);
-	
+
 	Controller *ctr = create_controller(tp, name, title, ptr, min, max, step, enumnames, is_FTYPE);
-	
+
 	if(has_midi_controller) {
 		int crs, fn;
 		crs = dh->get_coarse_midi_controller(name);
 		fn = dh->get_fine_midi_controller(name);
-		
+
 		set_midi_controller(ctr, crs, fn);
 	}
-	
+
 	return ctr;
 }
 
@@ -873,7 +876,7 @@ DynamicMachine::DynamicMachine(Handle *dhandle, float _xpos, float _ypos) : Mach
 	input_descriptor = dhandle->get_input_descriptions();
 	output_descriptor = dhandle->get_output_descriptions();
 	dh = dhandle;
-	
+
 	std::cout << "  dynamic created with " << output_descriptor.size() << " outputs, not using base name as name.\n";
 
 	DYN_MACHINE_SETUP_BLOCK();
@@ -885,7 +888,7 @@ DynamicMachine::DynamicMachine(
 	input_descriptor = dhandle->get_input_descriptions();
 	output_descriptor = dhandle->get_output_descriptions();
 	dh = dhandle;
-	
+
 	std::cout << "  dynamic created with " << output_descriptor.size() << " outputs.\n";
 
 	DYN_MACHINE_SETUP_BLOCK();
@@ -909,7 +912,7 @@ void DynamicMachine::setup_dynamic_machine() {
 	if(dh->is_sink()) {
 		register_this_sink(this);
 	}
-	
+
 	std::cout << "MachineTable: " << &dt << " points to " << this << "\n";
 	dt.mp = (MachinePointer *)this;
 
@@ -919,7 +922,7 @@ void DynamicMachine::setup_dynamic_machine() {
 	dt.disable_low_latency_mode = &(DynamicMachine::disable_low_latency_mode);
 
 	dt.set_signal_defaults = &(DynamicMachine::set_signal_defaults);
-	
+
 	dt.get_output_signal = &(DynamicMachine::get_output_signal);
 	dt.get_input_signal = &(DynamicMachine::get_input_signal);
 	dt.get_next_signal = &(DynamicMachine::get_next_signal);
@@ -933,7 +936,7 @@ void DynamicMachine::setup_dynamic_machine() {
 	dt.get_signal_buffer = &(DynamicMachine::get_signal_buffer);
 
 	dt.run_simple_thread = &(DynamicMachine::run_simple_thread);
-	
+
 	dt.get_recording_filename = &(DynamicMachine::get_recording_filename);
 
 	dt.register_failure = &(DynamicMachine::register_failure);
@@ -944,15 +947,15 @@ void DynamicMachine::setup_dynamic_machine() {
 	dt.do_fft = &(DynamicMachine::do_fft);
 	dt.inverse_fft = &(DynamicMachine::inverse_fft);
 	dt.run_async_operation = &(Machine::run_async_operation);
-	
+
 #ifdef ANDROID
 	dt.VuknobAndroidAudio__CLEANUP_STUFF = VuknobAndroidAudio__CLEANUP_STUFF;
 	dt.VuknobAndroidAudio__SETUP_STUFF = VuknobAndroidAudio__SETUP_STUFF;
 	dt.VuknobAndroidAudio__get_native_audio_configuration_data = VuknobAndroidAudio__get_native_audio_configuration_data;
 #endif
-	
+
 	init_dynamic *init = ((Handle *)dh)->init;
-	
+
 	dynamic_data =
 		(void *)(*init)(&dt, ((Handle *)dh)->get_name().c_str());
 	if(dynamic_data == NULL)
@@ -1011,12 +1014,13 @@ void DynamicMachine::refresh_handle_set() {
 
 Machine *DynamicMachine::instance(const std::string &_dmname, float _xpos, float _ypos) {
 	Machine *retval;
+
 	Machine::machine_operation_enqueue(
 		[&retval, &_dmname, _xpos, _ypos] (void* /*d*/) {
 			retval = new DynamicMachine(Handle::get_handle(_dmname), _xpos, _ypos);
 		},
 		NULL, true);
-	
+
 	return retval;
 }
 
@@ -1031,15 +1035,15 @@ void DynamicMachine::instance_from_xml(const KXMLDoc &_dyn_xml) {
 		[] (void *d) {
 			Param *p = (Param *)d;
 			const KXMLDoc &dyn_xml = p->dxml;
-			
+
 			std::string machine_name = dyn_xml.get_attr("name");
 			std::string handle_name = dyn_xml["dynamicmachine"].get_attr("handle");
-			
+
 			DynamicMachine *dm = NULL;
 			dm = new DynamicMachine(
 				Handle::get_handle(handle_name),
 				machine_name);
-			
+
 			dm->setup_using_xml(dyn_xml);
 		},
 		&param, true);
@@ -1086,7 +1090,7 @@ SignalPointer *DynamicMachine::get_output_signal(MachineTable *mt, const char *n
 	std::map<std::string, Signal *>::iterator i;
 	i = m->output.find(nam);
 
-	if(i == m->output.end()) {		
+	if(i == m->output.end()) {
 		printf(" XXXXXXXXXXXXXXX: ]%s[ - no such signal!\n", nam);
 		for(i = m->output.begin(); i!= m->output.end(); i++) {
 			printf("     ]%s[\n", (*i).first.c_str());
@@ -1164,7 +1168,7 @@ private:
 
 public:
 	DynamicMachineSimpleThread(void (*f)(void *), void *d) : jThread("DynamicMachineSimpleThread"), funcbod(f), data(d) {}
-	
+
 	virtual void thread_body() {
 		(void)funcbod(data);
 		delete this; // hmmm... delete your self, Atari Teenage Riot
@@ -1199,10 +1203,10 @@ void DynamicMachine::register_failure(
 
 #include "fixedpointmath.h"
 FTYPE satan_powfp8p24(FTYPE x, FTYPE y);
-	
+
 bool __internal_satan_sine_table_initiated = false;
 float __internal_satan_sine_table[SAT_SIN_TABLE_LEN];
-FTYPE __internal_satan_sine_table_FTYPE[SAT_SIN_FTYPE_TABLE_LEN << 1]; 
+FTYPE __internal_satan_sine_table_FTYPE[SAT_SIN_FTYPE_TABLE_LEN << 1];
 #endif
 
 void DynamicMachine::get_math_tables(
@@ -1230,7 +1234,7 @@ void DynamicMachine::get_math_tables(
 		}
 		__internal_satan_sine_table_initiated = true;
 	}
-	
+
 	 *sine_table = __internal_satan_sine_table;
 	 *__pow_fun = satan_powfp8p24;
 	 *sine_table_FTYPE = __internal_satan_sine_table_FTYPE;
@@ -1258,4 +1262,3 @@ void DynamicMachine::do_fft(kiss_fftr_cfg cfg, FTYPE *timedata, kiss_fft_cpx *fr
 void DynamicMachine::inverse_fft(kiss_fftr_cfg cfg, kiss_fft_cpx *freqdata, FTYPE *timedata) {
 	kiss_fftri(cfg, freqdata, timedata);
 }
-

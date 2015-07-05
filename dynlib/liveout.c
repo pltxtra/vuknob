@@ -1550,6 +1550,13 @@ typedef struct __playBuffer {
 	short *data;
 } playBuffer_t;
 
+
+extern void (*samsung_jack_set_playbackfunction)(void(*func)(unsigned int framesize,
+							     unsigned int frequency,
+							     void *data_ptr,
+							     float *buffer_left,
+							     float *buffer_right), void *data_ptr);
+
 typedef struct OpenSLInstance_ {
 	/*
 	 *
@@ -1574,6 +1581,8 @@ typedef struct OpenSLInstance_ {
 	int buffer_segment_to_play;
 	int unlock_me;
 
+	int playback_mode;
+
 	/**********
 	 *
 	 * Data used for writing audio output to a file
@@ -1593,7 +1602,12 @@ static OpenSLInstance *singleton_instance = NULL;
 void finalize_audio(OpenSLInstance *p, FTYPE *buffer, FTYPE vol) {
 	if(p == NULL) return;
 
-	int size = __opensl_buffer_factor * p->stream->outBufSamples;
+	int size = 0;
+	if(p->stream) {
+		size = __opensl_buffer_factor * p->stream->outBufSamples;
+	} else {
+		size = p->period_size * 2;
+	}
 
 	if(buffer == NULL) {
 		buffer = p->empty_buffer;
@@ -1623,13 +1637,35 @@ void finalize_audio(OpenSLInstance *p, FTYPE *buffer, FTYPE vol) {
 	}
 }
 
+void samsung_thread_callback(unsigned int framesize, unsigned int frequency,
+			     void *data_ptr,
+			     float *buffer_left,
+			     float *buffer_right);
+void openSL_thread_callback_standard(void *data);
+void openSL_thread_callback_minimum_latency(void *data);
+void *openSL_feeder_thread(void *data);
+
 OpenSLInstance *init_OpenSL(MachineTable *mt) {
 	int period_size = 44100 / 40, rate = 44100;
 
 	int playback_mode = mt->VuknobAndroidAudio__get_native_audio_configuration_data(&rate, &period_size);
-	DYNLIB_DEBUG("   -------------- playback mode: %s\n", playback_mode == __PLAYBACK_OPENSL_BUFFERED ? "OpenSL Buffered" : "OpenSL Direct");
-	DYNLIB_DEBUG("   -------------- rate %d\n", rate);
-	DYNLIB_DEBUG("   -------------- period size %d\n", period_size);
+	{
+		const char *mode_name = "UNKNOWN";
+		switch(playback_mode) {
+		case __PLAYBACK_OPENSL_DIRECT:
+			mode_name = "OpenSL Direct";
+			break;
+		case __PLAYBACK_OPENSL_BUFFERED:
+			mode_name = "OpenSL Buffered";
+			break;
+		case __PLAYBACK_SAMSUNG:
+			mode_name = "Samsung Professional Audio";
+			break;
+		}
+		DYNLIB_DEBUG("   -------------- playback mode: %s\n", mode_name);
+		DYNLIB_DEBUG("   -------------- rate %d\n", rate);
+		DYNLIB_DEBUG("   -------------- period size %d\n", period_size);
+	}
 
 	float rate_f = (float)rate;
 	float period_size_f = (float)period_size;
@@ -1663,6 +1699,13 @@ OpenSLInstance *init_OpenSL(MachineTable *mt) {
 	}
 	break;
 
+	case __PLAYBACK_SAMSUNG:
+	{
+		__opensl_buffer_factor = 1;
+		__opensl_buffer_queue_size = 1;
+	}
+	break;
+
 	default:
 		DYNLIB_INFORM("    init_OpenSL() - unknown playback mode: %d\n", playback_mode);
 		exit(0);
@@ -1673,61 +1716,104 @@ OpenSLInstance *init_OpenSL(MachineTable *mt) {
 		     __opensl_buffer_factor,
 		     __opensl_buffer_queue_size);
 
+	short *buffers = NULL;
+	FTYPE *_empty_buffer = NULL;
 	OpenSLInstance *inst = (OpenSLInstance *)malloc(sizeof(OpenSLInstance));
-	short *buffers = (short *)malloc(sizeof(short) * 2 * __opensl_buffer_factor * __opensl_buffer_queue_size * period_size); // 2 channels, __opensl_buffer_factor, __opensl_buffer_queue_size times the period size
-	FTYPE *_empty_buffer = (FTYPE *)malloc(sizeof(FTYPE) * 2 * __opensl_buffer_factor * period_size); // 2 channels, __opensl_buffer_factor, period size
+	if(inst == NULL) return NULL;
+	memset(inst, 0, sizeof(OpenSLInstance));
 
-	if((inst != NULL) && (buffers != NULL) && (_empty_buffer != NULL)) {
-		memset(buffers, 0, sizeof(short) * 2 * __opensl_buffer_factor * __opensl_buffer_queue_size * period_size);
-		memset(inst, 0, sizeof(OpenSLInstance));
-		memset(_empty_buffer, 0, sizeof(FTYPE) * 2 * __opensl_buffer_factor * period_size);
+	inst->playback_mode = playback_mode;
 
-		if((inst->stream = android_OpenAudioDevice(rate, 2, period_size, number_of_buffers)) != NULL) {
+	if(inst->playback_mode != __PLAYBACK_SAMSUNG) {
+		buffers = (short *)malloc(sizeof(short) * 2 * __opensl_buffer_factor * __opensl_buffer_queue_size * period_size); // 2 channels, __opensl_buffer_factor, __opensl_buffer_queue_size times the period size
+		_empty_buffer = (FTYPE *)malloc(sizeof(FTYPE) * 2 * __opensl_buffer_factor * period_size); // 2 channels, __opensl_buffer_factor, period size
 
-			/* set audio signal defaults */
-			mt->set_signal_defaults(mt, _0D, __opensl_buffer_factor * period_size, FTYPE_RESOLUTION, rate);
-			/* set midi signal defaults */
-			mt->set_signal_defaults(mt, _MIDI, __opensl_buffer_factor * period_size, _PTR, rate);
+		if((buffers != NULL) && (_empty_buffer != NULL)) {
+			memset(buffers, 0, sizeof(short) * 2 * __opensl_buffer_factor * __opensl_buffer_queue_size * period_size);
+			memset(_empty_buffer, 0, sizeof(FTYPE) * 2 * __opensl_buffer_factor * period_size);
 
-			RIFF_prepare(mt, inst, __opensl_buffer_factor * period_size * 2, &(inst->riff_file), rate);
+			if((inst->stream = android_OpenAudioDevice(rate, 2, period_size, number_of_buffers)) != NULL) {
+
+				/* set audio signal defaults */
+				mt->set_signal_defaults(mt, _0D, __opensl_buffer_factor * period_size, FTYPE_RESOLUTION, rate);
+				/* set midi signal defaults */
+				mt->set_signal_defaults(mt, _MIDI, __opensl_buffer_factor * period_size, _PTR, rate);
+
+				RIFF_prepare(mt, inst, __opensl_buffer_factor * period_size * 2, &(inst->riff_file), rate);
+			} else {
+				// android_OpenAudioDevice() failed..
+				free(inst);
+				return NULL;
+			}
+			inst->buffer_to_play = __opensl_buffer_queue_size - 1;
+			inst->buffer_segment_to_play = 0;
+			inst->buffer_to_render = 0;
+
+			int k;
+			for(k = 0; k < __opensl_buffer_queue_size; k++) {
+				inst->playback_buffer[k].data = &buffers[2 * k * __opensl_buffer_factor * period_size];
+			}
+
+			inst->empty_buffer = _empty_buffer;
+			inst->temp_buffer = inst->playback_buffer[0].data;
+
+			inst->period_size = period_size;
+
+			if(__opensl_buffer_queue_size == 1 &&
+			   __opensl_buffer_factor == 1) {
+				// minimum latency mode
+				android_StartStream(inst->stream, openSL_thread_callback_minimum_latency, inst);
+			} else {
+				// standard mode
+				{ // create feeder thread (the thread that actually generates data, but feeds the openSL which plays it)
+					pthread_mutexattr_init(&(inst->attr));
+					pthread_mutex_init(&(inst->mutex), &(inst->attr));
+
+					pthread_cond_init (&(inst->signal), NULL);
+
+					pthread_attr_init(&(inst->pta));
+					if(pthread_create(
+						   &(inst->thread),
+						   &(inst->pta),
+						   openSL_feeder_thread,
+						   inst) != 0)
+						goto failure;
+				}
+				android_StartStream(inst->stream, openSL_thread_callback_standard, inst);
+			}
 		} else {
-			// android_OpenAudioDevice() failed..
-			free(inst);
-			return NULL;
+			goto failure;
 		}
-		inst->buffer_to_play = __opensl_buffer_queue_size - 1;
-		inst->buffer_segment_to_play = 0;
-		inst->buffer_to_render = 0;
-
-		int k;
-		for(k = 0; k < __opensl_buffer_queue_size; k++) {
-			inst->playback_buffer[k].data = &buffers[2 * k * __opensl_buffer_factor * period_size];
-		}
-
-		inst->empty_buffer = _empty_buffer;
-		inst->temp_buffer = inst->playback_buffer[0].data;
-
-		inst->period_size = period_size;
 	} else {
-		if(inst) free(inst);
-		if(buffers) free(buffers);
-		if(_empty_buffer) free(_empty_buffer);
-
-		// make sure the return value is NULL
-		inst = NULL;
+		DYNLIB_DEBUG("Will register playbackfunction.");
+		inst->period_size = -1;
+		inst->stream = NULL;
+		samsung_jack_set_playbackfunction(samsung_thread_callback, inst);
 	}
 
 	return inst;
+
+failure:
+	if(inst) free(inst);
+	if(buffers) free(buffers);
+	if(_empty_buffer) free(_empty_buffer);
+
+	return NULL;
 }
 
 void cleanup_OpenSL(OpenSLInstance *inst) {
 	if(inst) {
-		android_CloseAudioDevice(inst->stream);
-		if(inst->playback_buffer[0].data)
-			free(inst->playback_buffer[0].data);
-		if(inst->empty_buffer)
-			free(inst->empty_buffer);
+		if(inst->playback_mode != __PLAYBACK_SAMSUNG) {
+			android_CloseAudioDevice(inst->stream);
+			if(inst->playback_buffer[0].data)
+				free(inst->playback_buffer[0].data);
+			if(inst->empty_buffer)
+				free(inst->empty_buffer);
+		} else {
+		}
+
 		free(inst);
+
 	}
 }
 
@@ -1802,6 +1888,58 @@ void analyzis_thread(void *non_used) {
 }
 
 #endif
+
+void samsung_thread_callback(unsigned int framesize, unsigned int frequency,
+			     void *data_ptr,
+			     float *buffer_left,
+			     float *buffer_right) {
+	OpenSLInstance *inst = (OpenSLInstance *)data_ptr;
+	MachineTable *mt = inst->mt;
+	static MachineTable *last_mt = NULL;
+
+	if(inst->period_size != framesize) {
+		inst->period_size = framesize;
+
+		inst->temp_buffer = (short *)malloc(sizeof(short) * 2 * framesize);
+		inst->empty_buffer = (FTYPE *)malloc(sizeof(FTYPE) * 2 * framesize);
+
+		if(inst->temp_buffer == NULL || inst->empty_buffer == NULL) {
+			DYNLIB_INFORM("samsung_thread_callback() failed to allocate memory. Good bye!\n");
+			exit(0);
+		}
+
+		memset(inst->empty_buffer, 0, sizeof(FTYPE) * 2 * framesize);
+	}
+
+	if(mt != NULL) {
+		if(last_mt != mt) {
+			DYNLIB_DEBUG("samsung_thread_callback() setting defaults. Frame size: %d, Frequency: %d\n",
+				     framesize, frequency);
+
+			/* set audio signal defaults */
+			mt->set_signal_defaults(mt, _0D, inst->period_size, FTYPE_RESOLUTION, frequency);
+			/* set midi signal defaults */
+			mt->set_signal_defaults(mt, _MIDI, inst->period_size, _PTR, frequency);
+
+			DYNLIB_DEBUG("    calling enable_low_latency_mode() (%d)\n", gettid());
+			mt->enable_low_latency_mode();
+		}
+		last_mt = mt;
+		(void) mt->fill_sink(mt, fill_sink_callback, inst);
+	}
+
+	if(mt == NULL || inst->isPlaying == 0) {
+		// either we are not playing, or
+		// we have a non valid mt (i.e. == NULL) we should just finalize using NULL, then write the resulting empty audio.
+		(void) finalize_audio(inst, NULL, ftoFTYPE(0.0f));
+	}
+
+	int k = 0, l = 0;
+	for(; k < framesize; k++, l += 2) {
+		buffer_left[k] = ((float)inst->temp_buffer[l]) / 32767.0f;
+		buffer_right[k] = ((float)inst->temp_buffer[l + 1]) / 32767.0f;
+	}
+}
 
 void openSL_thread_callback_standard(void *data) {
 	OpenSLInstance *inst = (OpenSLInstance *)data;
@@ -1912,29 +2050,6 @@ void *init(MachineTable *mt, const char *name) {
 		if((inst = init_OpenSL(mt)) == NULL) {
 			DYNLIB_DEBUG("android OpenSL audio instance NOT CREATED\n"); fflush(0);
 			goto failure;
-		}
-
-		if(__opensl_buffer_queue_size == 1 &&
-		   __opensl_buffer_factor == 1) {
-			// minimum latency mode
-			android_StartStream(inst->stream, openSL_thread_callback_minimum_latency, inst);
-		} else {
-			// standard mode
-			{ // create feeder thread (the thread that actually generates data, but feeds the openSL which plays it)
-				pthread_mutexattr_init(&(inst->attr));
-				pthread_mutex_init(&(inst->mutex), &(inst->attr));
-
-				pthread_cond_init (&(inst->signal), NULL);
-
-				pthread_attr_init(&(inst->pta));
-				if(pthread_create(
-					   &(inst->thread),
-					   &(inst->pta),
-					   openSL_feeder_thread,
-					   inst) != 0)
-					goto failure;
-			}
-			android_StartStream(inst->stream, openSL_thread_callback_standard, inst);
 		}
 
 		singleton_instance = inst;

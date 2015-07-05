@@ -63,7 +63,7 @@ void CornerButton::transition_progressed(CornerButton *ctx, float progress) {
 	if(ctx->hidden)
 		ctx->offset_factor = (double)progress;
 	else
-		ctx->offset_factor = 1.0 - ((double)progress);	
+		ctx->offset_factor = 1.0 - ((double)progress);
 }
 
 void CornerButton::run_transition() {
@@ -85,7 +85,7 @@ void CornerButton::on_event(KammoGUI::SVGCanvas::SVGDocument *source,
 
 	double now_x = event.get_x();
 	double now_y = event.get_y();
-	
+
 	switch(event.get_action()) {
 	case KammoGUI::SVGCanvas::MotionEvent::ACTION_CANCEL:
 	case KammoGUI::SVGCanvas::MotionEvent::ACTION_OUTSIDE:
@@ -136,7 +136,7 @@ void CornerButton::on_resize() {
 	int canvas_w, canvas_h;
 	float canvas_w_inches, canvas_h_inches;
 	KammoGUI::SVGCanvas::SVGRect document_size;
-	
+
 	// get data
 	KammoGUI::SVGCanvas::ElementReference root(this);
 	root.get_viewport(document_size);
@@ -146,19 +146,19 @@ void CornerButton::on_resize() {
 	{ // calculate transform for the main part of the document
 		double tmp;
 
-		// calculate the width of the canvas in "fingers" 
+		// calculate the width of the canvas in "fingers"
 		tmp = canvas_w_inches / INCHES_PER_FINGER;
 		double canvas_width_fingers = tmp;
 
 		// calculate the size of a finger in pixels
 		tmp = canvas_w / (canvas_width_fingers);
 		double finger_width = tmp;
-				
+
 		// calculate scaling factor
 		double scaling = (1.5 * finger_width) / (double)document_size.width;
-				
+
 		// calculate translation
-		double translate_x, translate_y;
+		double translate_x = 0.0, translate_y = 0.0;
 
 		switch(my_corner) {
 		case top_left:
@@ -189,7 +189,7 @@ void CornerButton::on_resize() {
 		}
 		break;
 		}
-		
+
 		// initiate transform_m
 		base_transform_t.init_identity();
 		base_transform_t.scale(scaling, scaling);

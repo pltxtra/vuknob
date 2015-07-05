@@ -43,6 +43,7 @@ LOCAL_CPP_EXTENSION := .cc
 
 LOCAL_MODULE    := kamoflage
 DEPENDENCY_DIRECTORY := ../../vuknob_dependencies
+I_DEPENDENCY_DIRECTORY := ../vuknob_dependencies
 
 ifeq ($(TARGET_ARCH_ABI),armeabi-v7a)
 #        LOCAL_ARM_NEON  := true
@@ -200,5 +201,30 @@ LOCAL_SHARED_LIBRARIES := libpathvariable
 include $(BUILD_SHARED_LIBRARY)
 
 include $(LOCAL_PATH)/dynlib/Android.mk
+
+include $(CLEAR_VARS)
+LOCAL_MODULE    := libsapaclient
+LOCAL_SRC_FILES := $(DEPENDENCY_DIRECTORY)/samsung_apa/lib/libsapaclient.a
+include $(PREBUILT_STATIC_LIBRARY)
+
+include $(CLEAR_VARS)
+LOCAL_MODULE := libjack
+LOCAL_SRC_FILES := $(DEPENDENCY_DIRECTORY)/samsung_apa/lib/libjack.so
+include $(PREBUILT_SHARED_LIBRARY)
+
+include $(CLEAR_VARS)
+LOCAL_MODULE    := wave
+LOCAL_C_INCLUDES := $(DEPENDENCY_DIRECTORY)/samsung_apa/include
+LOCAL_SRC_FILES := \
+	../samsung_pa.cc \
+	../samsung_jack.cc
+#LOCAL_CPP_FEATURES := exceptions
+LOCAL_MODULE_TAGS := eng optional
+LOCAL_LDLIBS := -llog
+LOCAL_SHARED_LIBRARIES := libjack libkamoflage
+LOCAL_STATIC_LIBRARIES := libsapaclient
+#LOCAL_ARM_MODE := arm
+#LOCAL_CFLAGS := -g
+include $(BUILD_SHARED_LIBRARY)
 
 $(call import-module,cpufeatures)

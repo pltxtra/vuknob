@@ -62,7 +62,7 @@ extern "C" {
 #error "You must define either __SATAN_USES_FXP or __SATAN_USES_FLOATS"
 #endif
 #endif
-	
+
 #ifdef __SATAN_USES_FXP
 #include <fixedpointmath.h>
 #else
@@ -70,7 +70,7 @@ extern "C" {
 #endif
 
 #include "../kiss_fftr.h"
-	
+
 #define VALUE_NOT_SET 0xffffffff
 
 #define STRING_CONTROLLER_SIZE 2048
@@ -78,7 +78,7 @@ extern "C" {
 // low latency treshold, in seconds - this is where it is useful to enable low latency related features
 #define LOW_LATENCY_THRESHOLD 0.09f
 #define MINIMUM_LATENCY 0.08f
-	
+
 #ifdef __SATAN_USES_FXP
 
 #define FTYPE fp8p24_t
@@ -92,9 +92,9 @@ extern "C" {
 #define FTYPE_RESOLUTION _fx8p24bit
 
 #define FTYPE_IS_FP8P24
-	
+
 #else
-	
+
 #define FTYPE float
 #define itoFTYPE(x) ((float)(x))
 #define ftoFTYPE(x) ((float)(x))
@@ -106,9 +106,9 @@ extern "C" {
 #define FTYPE_RESOLUTION _fl32bit
 
 #define FTYPE_IS_FLOAT
-	
+
 #endif
-	
+
 	enum Dimension {
 		_0D = 0,
 		_1D = 1,
@@ -140,7 +140,7 @@ extern "C" {
 		_sinkCallbackFAIL = 3
 
 	};
-	
+
 	typedef void MachinePointer;
 	typedef void SignalPointer;
 	typedef uint32_t Parameter;
@@ -151,7 +151,7 @@ extern "C" {
 		int i_data1; // generic integer data storage
 		int finished; // indicate if operation is finished
 	} AsyncOp;
-	
+
 	typedef struct _MachineTable {
 		MachinePointer *mp;
 
@@ -166,8 +166,8 @@ extern "C" {
 
 		void (*enable_low_latency_mode)();
 		void (*disable_low_latency_mode)();
-		
-		void (*set_signal_defaults)(struct _MachineTable *, 
+
+		void (*set_signal_defaults)(struct _MachineTable *,
 					    int dim,
 					    int len, int res,
 					    int frequency);
@@ -190,7 +190,7 @@ extern "C" {
 		void (*run_simple_thread)(void (*thread_function)(void *), void *);
 
 		// copies the filename to dst, maximum len chars, returns 0 on OK
-		int (*get_recording_filename)(struct _MachineTable *, char *dst, unsigned int len); 
+		int (*get_recording_filename)(struct _MachineTable *, char *dst, unsigned int len);
 
 		void (*register_failure)(void *machine_instance, const char *);
 
@@ -208,7 +208,7 @@ extern "C" {
 
 		// Async Operations
 		void (*run_async_operation)(AsyncOp *op);
-		
+
 #ifdef ANDROID
 		// I don't like this hack either...
 		void (*VuknobAndroidAudio__CLEANUP_STUFF)();
@@ -223,12 +223,13 @@ extern "C" {
 /*** THESE VALUES MUST MATCH THE VALUES IN SatanAudio.java ***/
 #define __PLAYBACK_OPENSL_DIRECT 14
 #define __PLAYBACK_OPENSL_BUFFERED 16
-		
+#define __PLAYBACK_SAMSUNG 17
+
 		// return one of the __OPENSL_*_MODE values
 		int (*VuknobAndroidAudio__get_native_audio_configuration_data)(int *frequency, int *buffersize);
 #endif
 
-		
+
 	} MachineTable;
 
 /*******************************************
@@ -242,14 +243,14 @@ extern "C" {
 // we use the pointer to get an offset, we don't want all machines to recalculate the filter simultaneously..
 #define DO_FILTER_RECALC(a) (a->__filter_recalc_step == ((unsigned int)a % FILTER_RECALC_PERIOD))
 #define STEP_FILTER_RECALC(a) a->__filter_recalc_step = (a->__filter_recalc_step + 1) % FILTER_RECALC_PERIOD
-	
-	
+
+
 /*******************************************
  *
  *     MIDI stuff
  *
  *******************************************/
-	
+
 #define MIDI_MESSAGE_TYPE_MASK	0xf0
 #define MIDI_NOTE_OFF		0x80
 #define MIDI_NOTE_ON		0x90
@@ -259,7 +260,7 @@ extern "C" {
 #define MIDI_PROGRAM_CHANGE    	0xc0
 #define MIDI_CHANNEL_AFTERTOUCH	0xd0
 #define MIDI_PITCH_BEND		0xe0
-	
+
 	typedef struct _MidiEvent {
 		size_t length;
 		uint8_t data[1];
@@ -272,7 +273,7 @@ extern "C" {
 			mev->data[0] = a; \
 			mev->data[1] = b; \
 			mev->data[2] = c;
-	
+
 /********************************************
  *
  *     Satan's "portable" math library
@@ -281,13 +282,13 @@ extern "C" {
  * depending on if we use fixed point math or not.
  *
  ********************************************/
-		
+
 #ifdef __SATAN_USES_FXP
 	// USING fixed point math
-	
+
 #define SAT_SIN_TABLE_LEN 8192
 #define SAT_SIN_FTYPE_TABLE_LEN 0x1001
-	
+
 /** This stuff is usable if we have a CPU that lacks a proper FPU **/
 #define USE_SATANS_MATH \
 	float *__satan_sine_table; \
@@ -309,7 +310,7 @@ extern "C" {
 #define SAT_COS_SCALAR(x) \
  __satan_sine_table[\
   (((int)(x*SAT_SIN_TABLE_LEN))+(SAT_SIN_TABLE_LEN>>2))&(SAT_SIN_TABLE_LEN-1)]
-	
+
 #define SAT_SIN_SCALAR_FTYPE(x) \
 	__satan_sine_table_FTYPE[((x & 0x01fff000) >> 12)]
 #define SAT_COS_SCALAR_FTYPE(x) \
@@ -322,15 +323,15 @@ extern "C" {
 	SAT_COS_SCALAR_FTYPE(divFTYPE(x, ftoFTYPE(2.0f * M_PI)))
 #define SAT_TAN_FTYPE(x) \
 	SAT_TAN_SCALAR_FTYPE(divFTYPE(x, ftoFTYPE(2.0f * M_PI)))
-	
+
 #define SAT_POW_FTYPE(x,y) __satan_pow_function(x,y)
 
 #define ABS_FTYPE(x) ((((x & 0x80000000) >> 31) * (-x) + ((x ^ 0x80000000) >> 31)  * (x)))
 
 #define SAT_FLOOR(x) (x & 0xff000000)
-	
+
 #else // not using fixed point math
-	
+
 /** If we have a FPU, there is not much reason not to use the standard C math library ****/
 #define USE_SATANS_MATH
 #define SETUP_SATANS_MATH(m)
@@ -345,15 +346,15 @@ extern "C" {
 #define SAT_SIN_FTYPE(x) sin(x)
 #define SAT_COS_FTYPE(x) cos(x)
 #define SAT_TAN_FTYPE(x) tan(x)
-	
+
 #define SAT_POW_FTYPE(x,y) pow(x,y)
-	
+
 #define ABS_FTYPE(x) fabs(x)
 
 #define SAT_FLOOR(x) floorf(x)
 
 #endif
-	
+
 #ifdef __cplusplus
 };
 #endif

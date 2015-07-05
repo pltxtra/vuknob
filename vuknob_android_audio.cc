@@ -38,7 +38,7 @@
 
 #include "vuknob_android_audio.hh"
 
-//#define __DO_SATAN_DEBUG
+#define __DO_SATAN_DEBUG
 #include "satan_debug.hh"
 
 #include <pthread.h>
@@ -78,9 +78,9 @@ void VuknobAndroidAudio::java_thread_loop(JNIEnv *e, jclass sac) {
 	int (*__dme)(void *data);
 	__dme = dynamic_machine_entry;
 	void *__dmd = dynamic_machine_data;
-	
+
 	leave();
-	
+
 	fill_buffers(0, NULL, 0, 0);
 	if(__dme) {
 		// XXX check for error status (return value != 0)
@@ -90,7 +90,7 @@ void VuknobAndroidAudio::java_thread_loop(JNIEnv *e, jclass sac) {
 	// move data to java array
 	android_audio_env->SetShortArrayRegion(
 		bridge_buffer, (jint)0, (jint)bfsiz , (jshort*)java_target_buffer);
-	
+
 	// write data to android
 	int written = 0, result;
 
@@ -98,7 +98,7 @@ void VuknobAndroidAudio::java_thread_loop(JNIEnv *e, jclass sac) {
 		result = android_audio_env->CallIntMethod(
 			audio_bridge, bridge_write,
 			bridge_buffer, written, bfsiz - written);
-		
+
 		if(result < 0) {
 			printf("Failure in VuknobAndroidAudio::java_thread_loop()\n");
 			fflush(0);
@@ -114,16 +114,16 @@ void __setup_env_for_thread(JNIEnv *env);
 
 extern "C" {
 
-	static int native_frequency = 44100;
-	static int native_buffer_size = 4410;
-	static int playback_mode = __PLAYBACK_OPENSL_DIRECT;
-	
+	static volatile int native_frequency = 44100;
+	static volatile int native_buffer_size = 4410;
+	static volatile int playback_mode = __PLAYBACK_OPENSL_DIRECT;
+
 	JNIEXPORT void Java_com_holidaystudios_vuknobbase_VuknobAndroidAudio_registerNativeAudioConfigurationData
 	(JNIEnv *env, jclass jc, jint freq, jint blen, jint _playback_mode) {
 		native_frequency = freq;
 		native_buffer_size = blen;
 		playback_mode = _playback_mode;
-		
+
 		SATAN_DEBUG("  !!!! Frequency: %d\n", native_frequency);
 		SATAN_DEBUG("  !!!! Buffer Size: %d\n", native_buffer_size);
 		SATAN_DEBUG("  !!!! Playback mode: %d\n", playback_mode);
@@ -146,12 +146,12 @@ extern "C" {
 		VuknobAndroidAudio *i = VuknobAndroidAudio::instance();
 
 		// call this kamoflage internal routine to register this thread.. yes, a bit ugly.
-		
+
 		__setup_env_for_thread(env);
 
 		if(i->stop_using_audiotrack)
 			return JNI_FALSE;
-		
+
 		i->java_thread_loop(env, jc);
 
 		return JNI_TRUE;
@@ -164,7 +164,7 @@ extern "C" {
 		i->dynamic_machine_data = NULL;
 		i->leave();
 	}
-	
+
 	void VuknobAndroidAudio__SETUP_STUFF(int *period_size, int *rate,
 				       int (*__entry)(void *data),
 				       void *__data,
@@ -179,12 +179,17 @@ extern "C" {
 		i->dynamic_machine_data = __data;
 		*(android_audio_callback) = i->fill_buffers;
 		*(android_audio_stop_f) = i->stop_audio;
-		
+
 		*period_size = i->bfsiz/2;
 		*rate = i->srate;
 		i->leave();
 	}
 
+	void (*samsung_jack_set_playbackfunction)(void(*func)(unsigned int framesize,
+							      unsigned int frequency,
+							      void *data_ptr,
+							      float *buffer_left,
+							      float *buffer_right), void *data_ptr) = NULL;
 };
 
 VuknobAndroidAudio::VuknobAndroidAudio() : java_bridge_created(false), stop_using_audiotrack(false) {
@@ -202,7 +207,7 @@ VuknobAndroidAudio *VuknobAndroidAudio::instance() {
 
 bool VuknobAndroidAudio::setup_audio_bridge() {
 	printf("   VuknobAndroidAudio::setup_audio_bridge()\n"); fflush(0);
-	
+
 	android_audio_thread = pthread_self();
 
 	jmethodID getAudioBridge = android_audio_env->GetStaticMethodID(
@@ -213,7 +218,7 @@ bool VuknobAndroidAudio::setup_audio_bridge() {
 	audio_bridge = android_audio_env->CallStaticObjectMethod(
 		satan_audio_class,
 		getAudioBridge);
-		
+
 	srate = android_audio_env->CallStaticIntMethod(
 		satan_audio_class,
 		getAudioParameter,
@@ -232,12 +237,12 @@ bool VuknobAndroidAudio::setup_audio_bridge() {
 	if(bytesPsample != 2) return false;
 
 	SATAN_DEBUG("    ANDROID AUDIO BUFFER: %d\n", bfsiz);
-	
+
 	java_target_buffer = (jshort *)malloc(bfsiz * 2);
 	if(java_target_buffer == NULL) return false;
 	bridge_buffer = android_audio_env->NewShortArray(bfsiz);
 	bridge_buffer = (jshortArray)android_audio_env->NewGlobalRef((jobject)bridge_buffer);
-	
+
 	audio_bridge =
 		android_audio_env->NewGlobalRef(audio_bridge);
 
@@ -251,7 +256,7 @@ bool VuknobAndroidAudio::setup_audio_bridge() {
 		"()V");
 
 	java_bridge_created = true;
-	
+
 	return true;
 }
 
@@ -259,14 +264,14 @@ int VuknobAndroidAudio::fill_buffers(fp8p24_t vol, fp8p24_t *in, int il, int ic)
 	if(in == NULL) {
 		// no attached signals, just zero out
 		memset(java_target_buffer, 0, bfsiz * 2);
-	} else {		
+	} else {
 		if(ic != 2) {
 			printf("VuknobAndroidAudio expects stereo output"
 			       ", found mono or multi-channel.\n");
 			fflush(0);
 			return -1;
 		}
-		
+
 		// mix input into android buffer
 		int i;
 
@@ -274,13 +279,13 @@ int VuknobAndroidAudio::fill_buffers(fp8p24_t vol, fp8p24_t *in, int il, int ic)
 			int32_t out;
 
 			in[i] = mulfp8p24(in[i], vol);
-			
+
 			if(in[i] < itofp8p24(-1)) in[i] = itofp8p24(-1);
 			if(in[i] > itofp8p24(1)) in[i] = itofp8p24(1);
-			
+
 			out = (in[i] << 7);
 			out = (out & 0xffff0000) >> 16;
-			
+
 			java_target_buffer[i] = (int16_t)out;
 		}
 

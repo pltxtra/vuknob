@@ -48,7 +48,7 @@
 #include "build_at_seconds_since.h"
 #include "common.hh"
 
-#define __DO_SATAN_DEBUG
+//#define __DO_SATAN_DEBUG
 #include "satan_debug.hh"
 
 /*********************************************************

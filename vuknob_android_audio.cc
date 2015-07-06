@@ -38,7 +38,7 @@
 
 #include "vuknob_android_audio.hh"
 
-#define __DO_SATAN_DEBUG
+//#define __DO_SATAN_DEBUG
 #include "satan_debug.hh"
 
 #include <pthread.h>

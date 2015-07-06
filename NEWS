@@ -1,3 +1,6 @@
+--------- Market Version 61 (2.11) --------------
+ * for vuKNOBnet - detect if vuKNOB is already playing when connecting.
+
 --------- Market Version 60 (2.10) --------------
  * for vuKNOB - support for Samsung Professional Audio, giving much improved latency on certain Samsung devices.
 

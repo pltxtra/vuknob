@@ -64,7 +64,7 @@
 #define __FCT_RIMACHINE			"RIMachine"
 #define __FCT_SAMPLEBANK	        "SampleBank"
 
-#define __VUKNOB_PROTOCOL_VERSION__ 3
+#define __VUKNOB_PROTOCOL_VERSION__ 4
 
 //#define VUKNOB_UDP_SUPPORT
 //#define VUKNOB_UDP_USE
@@ -412,11 +412,9 @@ void RemoteInterface::Message::set_value(const std::string &key, const std::stri
 std::string RemoteInterface::Message::get_value(const std::string &key) const {
 	auto result = key2val.find(key);
 	if(result == key2val.end()) {
-#ifdef __DO_SATAN_DEBUG
 		for(auto k2v : key2val) {
 			SATAN_DEBUG("[%s] does not match [%s] -> %s.\n", key.c_str(), k2v.first.c_str(), k2v.second.c_str());
 		}
-#endif
 		throw NoSuchKey(key.c_str());
 	}
 	return result->second;
@@ -1002,6 +1000,8 @@ RemoteInterface::GlobalControlObject::GlobalControlObject(const Factory *factory
 	// get basics
 	bpm = std::stoi(serialized.get_value("bpm"));
 	lpb = std::stoi(serialized.get_value("lpb"));
+	is_playing = serialized.get_value("is_playing") == "true" ? true : false;
+	is_recording = serialized.get_value("is_recording") == "true" ? true : false;
 
 	// parse scale list
 	std::stringstream scales_s(serialized.get_value("scales"));
@@ -1216,6 +1216,8 @@ void RemoteInterface::GlobalControlObject::serialize(std::shared_ptr<Message> &t
 
 	target->set_value("bpm", std::to_string(Machine::get_bpm()));
 	target->set_value("lpb", std::to_string(Machine::get_lpb()));
+	target->set_value("is_playing", Machine::is_it_playing() ? "true" : "false");
+	target->set_value("is_recording", Machine::get_record_state() ? "true" : "false");
 }
 
 void RemoteInterface::GlobalControlObject::on_delete(Client *context) { /* noop */ }

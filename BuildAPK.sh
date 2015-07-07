@@ -1,7 +1,9 @@
 #!/bin/bash
 
 SECONDS_SINCE_EPOCH="`date +%s`"
-printf "#define BUILD_AT_SECONDS_SINCE \"$SECONDS_SINCE_EPOCH\"\n" > build_at_seconds_since.h
+VERSION_NAME="`cat Android/AndroidManifest.xml | grep versionName | cut -d '=' -f 2-2`"
+printf "#define BUILD_AT_SECONDS_SINCE \"$SECONDS_SINCE_EPOCH\"\n" > build_time_data.hh
+printf "#define VERSION_NAME $VERSION_NAME" >> build_time_data.hh
 
 # step into the Android directory
 cd Android
@@ -18,7 +20,7 @@ if [ ! -f ".ANDROID_PROJECT_CREATED" ]; then
 
 	echo "To list available targets run:"
 	echo "android list targets"
-	
+
 	exit 1;
     fi
 
@@ -28,7 +30,7 @@ if [ ! -f ".ANDROID_PROJECT_CREATED" ]; then
 	android list targets
 	exit 1;
     fi
-    
+
     android update project --name vuknob --target $2 --path ./
 
     if [ $? -ne 0 ]; then
@@ -38,7 +40,7 @@ if [ ! -f ".ANDROID_PROJECT_CREATED" ]; then
     touch .ANDROID_PROJECT_CREATED
 
     echo "Project created, re-run script to build."
-    
+
     exit 0;
 fi
 
@@ -49,7 +51,7 @@ if [ "$1" = "-ud" ]; then
 	echo "Failed to uninstall - perhaps already uninstalled?"
 	exit 1
     fi
-    
+
     echo "Package uninstalled."
     exit 0
 fi

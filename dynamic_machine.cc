@@ -45,7 +45,6 @@
 
 #include "dynamic_machine.hh"
 #include "machine_sequencer.hh"
-#include "build_at_seconds_since.h"
 #include "common.hh"
 
 //#define __DO_SATAN_DEBUG
@@ -124,7 +123,6 @@ DynamicMachine::Handle::Handle(std::string dynamic_name) : name(""), hint(""), d
 	std::ifstream file(dynamic_name.c_str());
 
 	KXMLDoc xml_proto;
-	printf("Build: %s\n", BUILD_AT_SECONDS_SINCE); fflush(0);
 	try {
 		file >> xml_proto;
 	} catch(jException e) {

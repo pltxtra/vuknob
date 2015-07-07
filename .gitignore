@@ -38,3 +38,4 @@ pathvariable.cc~
 *.png
 *~
 Android/.ANDROID_PROJECT_CREATED
+build_time_data.hh

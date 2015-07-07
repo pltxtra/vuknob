@@ -135,6 +135,9 @@ public class vuKNOBnet extends KamoflageActivity
 		this.getWindow().setFlags(
 			android.view.WindowManager.LayoutParams.FLAG_FULLSCREEN,
 			android.view.WindowManager.LayoutParams.FLAG_FULLSCREEN);
+		this.getWindow().setFlags(
+			android.view.WindowManager.LayoutParams.FLAG_KEEP_SCREEN_ON,
+			android.view.WindowManager.LayoutParams.FLAG_KEEP_SCREEN_ON);
 
 		Log.v("VuKNOB", "Bringing up VuKNOB - get android layout");
 		k = new Kamoflage(this, R.layout.listrow, R.id.listlayout);

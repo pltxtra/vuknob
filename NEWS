@@ -1,5 +1,8 @@
 --------- Market Version 61 (2.11) --------------
  * for vuKNOBnet - detect if vuKNOB is already playing when connecting.
+ * Keep screen always on
+ * Warn user of vuKNOBnet if there is no server found
+ * Bugfixes
 
 --------- Market Version 60 (2.10) --------------
  * for vuKNOB - support for Samsung Professional Audio, giving much improved latency on certain Samsung devices.

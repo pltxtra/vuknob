@@ -45,6 +45,7 @@ using namespace std;
 #include "svg_loader.hh"
 #include "remote_interface.hh"
 #include "controller_handler.hh"
+#include "build_time_data.hh"
 
 #ifdef ANDROID
 #include "android_java_interface.hh"
@@ -151,6 +152,8 @@ void LogoScreen::on_render() {
 
 	KammoGUI::SVGCanvas::ElementReference root_element(this);
 	root_element.set_transform(transform_m);
+
+	KammoGUI::SVGCanvas::ElementReference(this, "versionString").set_text_content("v" VERSION_NAME);
 }
 
 void remote_interface_disconnected() {
@@ -209,6 +212,10 @@ void LogoScreen::select_server(std::function<void()> on_select_callback) {
 
 #ifdef ANDROID
 	auto list_content = AndroidJavaInterface::list_services();
+	if(list_content.size() == 0) {
+		jInformer::inform("Please make sure there is a vuKNOB server running on the local network first...");
+		return;
+	}
 	for(auto srv : list_content) {
 		SATAN_DEBUG("   SRVC ---> %s\n", srv.first.c_str());
 		server_list.add_row(srv.first);

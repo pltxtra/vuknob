@@ -32,7 +32,6 @@
 
 #include "machine_sequencer.hh"
 #include "dynlib/dynlib.h"
-#include "build_at_seconds_since.h"
 
 #include <stddef.h>
 

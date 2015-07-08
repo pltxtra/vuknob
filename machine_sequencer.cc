@@ -1895,6 +1895,7 @@ void MachineSequencer::Pad::reset() {
 			current_session = NULL;
 		} else {
 			(*session_iterator)->reset();
+			session_iterator++;
 		}
 	}
 }
@@ -2026,7 +2027,9 @@ void MachineSequencer::Pad::export_to_loop(int start_tick, int stop_tick, Machin
 	std::vector<PadSession *> active_sessions;
 
 	// reset all prior to exporting
+	SATAN_DEBUG("Start export...\n");
 	reset();
+	SATAN_DEBUG("Reset pre export...\n");
 
 	// copy all the recorded sessions that we should
 	// export to the remaining sessions vector
@@ -2075,7 +2078,7 @@ void MachineSequencer::Pad::export_to_loop(int start_tick, int stop_tick, Machin
 	// we also reset all after exporting
 	SATAN_DEBUG("Reset post export...\n");
 	reset();
-	SATAN_DEBUG("Done export...\n");
+	SATAN_DEBUG("Done export!\n");
 }
 
 void MachineSequencer::Pad::set_pad_resolution(int width, int height) {
@@ -2295,6 +2298,7 @@ int MachineSequencer::internal_add_new_loop() {
 		if(loop_store[k] == NULL) {
 			loop_store[k] = new_loop;
 			last_free_loop_store_position = k + 1;
+			SATAN_DEBUG("New loop added - nr loops: %d\n", last_free_loop_store_position);
 			return k;
 		}
 	}
@@ -2307,6 +2311,7 @@ int MachineSequencer::internal_add_new_loop() {
 
 	loop_store[k] = new_loop;
 	last_free_loop_store_position = k + 1;
+	SATAN_DEBUG("New loop added (store doubled) - nr loops: %d\n", last_free_loop_store_position);
 	return k;
 }
 
@@ -2786,10 +2791,11 @@ void MachineSequencer::set_pad_chord_mode(PadConfiguration::ChordMode pconf) {
 		&param, true);
 }
 
-int MachineSequencer::export_pad_to_loop(int loop_id) {
+void MachineSequencer::export_pad_to_loop(int loop_id) {
 	if(loop_id == LOOP_NOT_SET)
 		loop_id = add_new_loop();
 
+	SATAN_DEBUG("Will export to loop number %d\n", loop_id);
 	Loop *loop = get_loop(loop_id);
 
 	loop->clear_loop();
@@ -2815,11 +2821,14 @@ int MachineSequencer::export_pad_to_loop(int loop_id) {
 			}
 
 			Param *p = (Param *)d;
-			p->thiz->pad.export_to_loop(start_tick, stop_tick, p->l);
+			try {
+				p->thiz->pad.export_to_loop(start_tick, stop_tick, p->l);
+			} catch(...) {
+				SATAN_DEBUG("MachineSequencer::export_to_loop() - Exception caught.\n");
+				throw;
+			}
 		},
 		&param, true);
-
-	return loop_id;
 }
 
 std::vector<std::string> MachineSequencer::get_pad_arpeggio_patterns() {
@@ -3005,8 +3014,11 @@ MachineSequencer::MachineSequencer(int project_interface_level, const KXMLDoc &m
 		if(loop_id != -1) {
 			Loop *new_loop = LoopCreator::create(loop_xml);
 			loop_store[loop_id] = new_loop;
+			if(loop_id > last_free_loop_store_position)
+				last_free_loop_store_position = loop_id;
 		}
 	}
+	last_free_loop_store_position++;
 
 	/*****************
 	 *

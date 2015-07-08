@@ -22,7 +22,7 @@
 #error "CAN'T FIND config.h"
 #endif
 
-#define __DO_DYNLIB_DEBUG
+//#define __DO_DYNLIB_DEBUG
 #include "dynlib_debug.h"
 
 #include "dynlib.h"
@@ -53,7 +53,7 @@ typedef struct silverbox_instance {
 
 	FTYPE decay_crnt, decay_target, decay_change_per_tick;
 	int decay_change_ticks;
-	
+
 	// controls
 	int midi_channel, wave;
 	FTYPE volume, cutoff, resonance, envmod, decay;  // envmod = envelope modulation
@@ -87,30 +87,30 @@ inline float sdrop(float x, float margin, float width) {
 
 inline FTYPE sigSaw(FTYPE x_fixed) {
 	float x = FTYPEtof(x_fixed);
-	
+
 	x = x - floorf(x);
 
 	float lim = 0.25 / (1 + 19.0f * cutoff);
-	
+
 	float amplitude = sdrop(x, lim, 2.0f * lim);
 	amplitude = ((1 - resonance) * amplitude) + resonance * (1.0f - x);
 	amplitude = 0.5 + 0.5 * cos((1-amplitude) * M_PI);
 
 	float w = swindow(x, lim);
-	
+
 	float output = -amplitude * sin((1 + 19.0f * cutoff) * x * 2.0f * M_PI);
 	output = - w * (1 - x) * 0.2 + 0.8 * output * w;
 
 	float sig = -sinf((powf(sinf(x * M_PI / 2.0), (0.8 - 0.4 * cutoff))) * 2.0 * M_PI) * (1.0f - powf(x, (0.8 - 0.4 * cutoff))) * (1.0f - x) * w;
 	output = sig - w * (pow(1.0f - x, 4.0f)) * resonance * sinf((1.0f + cutoff * 40.0f) * 2.0f * M_PI * x);
-	
+
 //	printf("output: %f\n", output);
-	
+
 	return ftoFTYPE(output);
 }
 
 inline FTYPE sigSqr(FTYPE x_fixed) {
-	FTYPE limit = SAT_FLOOR(mulFTYPE(ftoFTYPE(2.0f), (x_fixed - SAT_FLOOR(x_fixed))));	
+	FTYPE limit = SAT_FLOOR(mulFTYPE(ftoFTYPE(2.0f), (x_fixed - SAT_FLOOR(x_fixed))));
 	FTYPE output = sigSaw(mulFTYPE(ftoFTYPE(2.0f), x_fixed));
 	output = mulFTYPE((ftoFTYPE(1.0f) - limit), output) - mulFTYPE(limit, output);
 	return output;
@@ -121,7 +121,7 @@ void *init(MachineTable *mt, const char *name) {
 	silverbox_t *silverbox = (silverbox_t *)malloc(sizeof(silverbox_t));
 
 	if(silverbox == NULL) return NULL;
-	
+
 	memset(silverbox, 0, sizeof(silverbox_t));
 
 	silverbox->midi_channel = SILVERBOX_CHANNEL;
@@ -131,17 +131,17 @@ void *init(MachineTable *mt, const char *name) {
 	SETUP_SATANS_MATH(mt);
 	silverbox->cutoff = ftoFTYPE(1.0f);
 	silverbox->resonance = ftoFTYPE(0.0f);
-	
+
 	los_init_oscillator(&(silverbox->vco));
 	envelope_init(&(silverbox->amp_env), 44100);
 	envelope_init(&(silverbox->flt_env), 44100);
 
 	silverbox->key = -1;
-	
+
 	/* return pointer to instance data */
 	return (void *)silverbox;
 }
- 
+
 void *get_controller_ptr(MachineTable *mt, void *void_silverbox,
 			 const char *name,
 			 const char *group) {
@@ -160,8 +160,8 @@ void *get_controller_ptr(MachineTable *mt, void *void_silverbox,
 		return &(silverbox->envmod);
 	} else if(strcmp("decay", name) == 0) {
 		return &(silverbox->decay);
-	} 
-	
+	}
+
 	return NULL;
 }
 
@@ -173,7 +173,7 @@ void reset(MachineTable *mt, void *void_silverbox) {
 
 inline void trigger_voice_envelope(envelope_t *env, int Fs, FTYPE a, FTYPE d, FTYPE s, FTYPE r) {
 	envelope_init(env, Fs);
-	
+
 	envelope_set_attack(env, a);
 	envelope_set_hold(env, ftoFTYPE(0.0f));
 	envelope_set_decay(env, d);
@@ -220,13 +220,13 @@ void execute(MachineTable *mt, void *void_silverbox) {
 	outsig = mt->get_output_signal(mt, "Mono");
 	if(outsig == NULL)
 		return;
-	
+
 	void **midi_in = (void **)mt->get_signal_buffer(insig);
 	if(midi_in == NULL)
 		return;
-	
+
 	int midi_l = mt->get_signal_samples(insig);
-		
+
 	FTYPE *out =
 		(FTYPE *)mt->get_signal_buffer(outsig);
 	int out_l = mt->get_signal_samples(outsig);
@@ -235,7 +235,7 @@ void execute(MachineTable *mt, void *void_silverbox) {
 		return; // we expect equal lengths..
 
 	int Fs = mt->get_signal_frequency(outsig);
-	
+
 	static int Fs_CURRENT = 0;
 	if(Fs_CURRENT != Fs) {
 		Fs_CURRENT = Fs;
@@ -245,13 +245,13 @@ void execute(MachineTable *mt, void *void_silverbox) {
 	}
 
 	int t;
-	
+
 	for(t = 0; t < out_l; t++) {
 		// check for midi events
 		MidiEvent *mev = (MidiEvent *)midi_in[t];
 		if(
 			(mev != NULL)
-			&&	
+			&&
 			((mev->data[0] & 0xf0) == MIDI_CONTROL_CHANGE)
 			&&
 			((mev->data[0] & 0x0f) == silverbox->midi_channel)
@@ -296,7 +296,7 @@ void execute(MachineTable *mt, void *void_silverbox) {
 						       ftoFTYPE(0.0),
 						       mulFTYPE(ftoFTYPE(2.0f), silverbox->decay),
 						       ftoFTYPE(0.0),
-						       ftoFTYPE(0.1));				
+						       ftoFTYPE(0.1));
 				set_voice_to_key(silverbox,
 						 key,
 						 0,
@@ -332,7 +332,7 @@ void execute(MachineTable *mt, void *void_silverbox) {
 				silverbox->cutoff_change_per_tick = divFTYPE((silverbox->cutoff_target - silverbox->cutoff_crnt),
 									     itoFTYPE(silverbox->cutoff_change_ticks));
 			}
-			
+
 			if(silverbox->cutoff_change_ticks) {
 				silverbox->cutoff_change_ticks--;
 				silverbox->cutoff_crnt += silverbox->cutoff_change_per_tick;
@@ -348,7 +348,7 @@ void execute(MachineTable *mt, void *void_silverbox) {
 				silverbox->resonance_change_per_tick = divFTYPE((silverbox->resonance_target - silverbox->resonance_crnt),
 									     itoFTYPE(silverbox->resonance_change_ticks));
 			}
-			
+
 			if(silverbox->resonance_change_ticks) {
 				silverbox->resonance_change_ticks--;
 				silverbox->resonance_crnt += silverbox->resonance_change_per_tick;
@@ -356,7 +356,7 @@ void execute(MachineTable *mt, void *void_silverbox) {
 					silverbox->resonance_crnt = silverbox->resonance_target;
 				}
 			}
-		}		
+		}
 		{ /* update envmod properly */
 			if(silverbox->envmod_target != silverbox->envmod) {
 				silverbox->envmod_target = silverbox->envmod;
@@ -364,7 +364,7 @@ void execute(MachineTable *mt, void *void_silverbox) {
 				silverbox->envmod_change_per_tick = divFTYPE((silverbox->envmod_target - silverbox->envmod_crnt),
 									     itoFTYPE(silverbox->envmod_change_ticks));
 			}
-			
+
 			if(silverbox->envmod_change_ticks) {
 				silverbox->envmod_change_ticks--;
 				silverbox->envmod_crnt += silverbox->envmod_change_per_tick;
@@ -380,7 +380,7 @@ void execute(MachineTable *mt, void *void_silverbox) {
 				silverbox->decay_change_per_tick = divFTYPE((silverbox->decay_target - silverbox->decay_crnt),
 									     itoFTYPE(silverbox->decay_change_ticks));
 			}
-			
+
 			if(silverbox->decay_change_ticks) {
 				silverbox->decay_change_ticks--;
 				silverbox->decay_crnt += silverbox->decay_change_per_tick;
@@ -389,7 +389,7 @@ void execute(MachineTable *mt, void *void_silverbox) {
 				}
 			}
 		}
-		
+
 		/* zero out */
 		out[t] = itoFTYPE(0);
 
@@ -414,7 +414,7 @@ void execute(MachineTable *mt, void *void_silverbox) {
 										   ftoFTYPE(1.0f) - silverbox->cutoff_crnt
 										  )
 						);
-				
+
 				if(silverbox->wave == 0) {
 					cutoff = FTYPEtof(crnt_cutoff);
 					vco = los_get_alternate_sample(&(silverbox->vco), sigSaw);

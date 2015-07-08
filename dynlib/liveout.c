@@ -36,7 +36,7 @@
 #include <sys/stat.h>
 #include <fcntl.h>
 
-#define __DO_DYNLIB_DEBUG
+//#define __DO_DYNLIB_DEBUG
 #include "dynlib_debug.h"
 
 #include "riff_wave_output.h"
@@ -1534,9 +1534,6 @@ static int __opensl_buffer_factor = 2;
 #include <math.h>
 #include <fcntl.h>
 #include <sys/prctl.h>
-
-#define __DO_DYNLIB_DEBUG
-#include "dynlib_debug.h"
 
 #ifdef HAVE_CONFIG_H
 #include "config.h"

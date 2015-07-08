@@ -30,7 +30,7 @@
 #include "config.h"
 #endif
 
-#define __DO_DYNLIB_DEBUG
+//#define __DO_DYNLIB_DEBUG
 #include "dynlib_debug.h"
 
 #include "dynlib.h"
@@ -114,10 +114,10 @@ void *init(MachineTable *mt, const char *name) {
 
 	instance->tuning = 440.0f;
 	instance->volume = 1.0f;
-	
+
 	return (LADSPA_Handle)instance;
 }
- 
+
 void *get_controller_ptr(MachineTable *mt, void *void_instance,
 			 const char *name,
 			 const char *group) {
@@ -131,7 +131,7 @@ void *get_controller_ptr(MachineTable *mt, void *void_instance,
 			return &(instance->volume);
 		}
 	}
-	
+
 	return NULL;
 }
 
@@ -148,7 +148,7 @@ void execute(MachineTable *mt, void *void_instance) {
 		tables_initiated = 1;
 		dx7_voice_init_tables();
 	}
-	
+
 	hexter_instance_t *instance = (hexter_instance_t *)void_instance;
 
 	SignalPointer *outsig = NULL;
@@ -160,13 +160,13 @@ void execute(MachineTable *mt, void *void_instance) {
 	outsig = mt->get_output_signal(mt, "Mono");
 	if(outsig == NULL)
 		return;
-	
+
 	void **midi_in = (void **)mt->get_signal_buffer(insig);
 	if(midi_in == NULL)
 		return;
-	
+
 	int midi_l = mt->get_signal_samples(insig);
-		
+
 	FTYPE *out =
 		(FTYPE *)mt->get_signal_buffer(outsig);
 	int sample_count = mt->get_signal_samples(outsig);
@@ -175,7 +175,7 @@ void execute(MachineTable *mt, void *void_instance) {
 		return; // we expect equal lengths..
 
 	int Fs = mt->get_signal_frequency(outsig);
-	
+
 	if(instance->sample_rate != Fs) {
 		instance->sample_rate = (float)Fs;
 		dx7_eg_init_constants(instance);  /* depends on sample rate */
@@ -195,7 +195,7 @@ void execute(MachineTable *mt, void *void_instance) {
 	static float *temp_buffer = NULL;
 	if(temp_buffer == NULL || temp_buffer_size != sample_count) {
 		if(temp_buffer != NULL) free(temp_buffer);
-		
+
 		temp_buffer = (float *)malloc(sizeof(float) * sample_count);
 		if(temp_buffer == NULL) {
 			mt->register_failure(instance, "Failed to allocate temporary buffer in dx7.c.");
@@ -204,7 +204,7 @@ void execute(MachineTable *mt, void *void_instance) {
 		temp_buffer_size = sample_count;
 	}
 	instance->output = temp_buffer;
-#else	
+#else
 	instance->output = out;
 #endif
 	unsigned int samples_done = 0, samples_left = sample_count;
@@ -214,12 +214,12 @@ void execute(MachineTable *mt, void *void_instance) {
 	memset(instance->output, 0, sizeof(float) * sample_count);
 
 	while(samples_left > 0) {
-		unsigned int burst_size = samples_left < HEXTER_NUGGET_SIZE ? samples_left : HEXTER_NUGGET_SIZE; 
+		unsigned int burst_size = samples_left < HEXTER_NUGGET_SIZE ? samples_left : HEXTER_NUGGET_SIZE;
 		unsigned int k, k_max = samples_done + burst_size;
 
 		for(k = samples_done; k < k_max; k++) {
 			mev = midi_in[k];
-			if(mev != NULL) {			
+			if(mev != NULL) {
 				switch((mev->data[0] & 0xf0)) {
 				case MIDI_NOTE_ON:
 				{
@@ -251,8 +251,8 @@ void execute(MachineTable *mt, void *void_instance) {
 					break;
 				}
 			}
-		} 
-		
+		}
+
 		/* render the burst */
 //		start_measure(&timebob);
 		hexter_synth_render_instance_voices(instance, samples_done, burst_size, 0 == 0);
@@ -266,13 +266,13 @@ void execute(MachineTable *mt, void *void_instance) {
 			exit(0);
 		}
 #endif
-			
+
 		samples_done += burst_size;
 		samples_left -= burst_size;
 	}
 
 	// if __SATAN_USES_FXP we will have to do a time consuming float to fixed conversion here
-	// currently.. 
+	// currently..
 #ifdef __SATAN_USES_FXP
 	{
 		int i;
@@ -295,12 +295,12 @@ void execute(MachineTable *mt, void *void_instance) {
 
 void delete(void *data) {
 	hexter_instance_t *instance = (hexter_instance_t *)data;
-	
+
 	if (instance) {
 		hexter_instance_t *inst, *prev;
-		
+
 		reset(NULL, instance);  /* stop all sounds immediately */
-		
+
 		prev = NULL;
 		for (inst = hexter_synth.instances; inst; inst = inst->next) {
 			if (inst == instance) {
@@ -316,9 +316,9 @@ void delete(void *data) {
 
 		if (instance->patches) free(instance->patches);
 		free(instance);
-		
+
 	}
-	
+
 	if (!hexter_synth.instance_count && hexter_synth.initialized) {
 		int i;
 		for (i = 0; i < HEXTER_MAX_POLYPHONY; i++) {
@@ -327,7 +327,7 @@ void delete(void *data) {
 				hexter_synth.voice[i] = NULL;
 			}
 		}
-		
+
 		hexter_synth.initialized = 0;
 	}
 }

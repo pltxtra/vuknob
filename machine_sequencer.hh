@@ -95,7 +95,7 @@ public:
 	/*
 	 * exception classes
 	 *
-	 */	
+	 */
 	class NoFreeLoopsAvailable : public std::exception {
 	public:
 		virtual const char* what() const noexcept {
@@ -115,14 +115,14 @@ public:
 	class Pad;
 	class Arpeggiator;
 	class NoteEntry;
-	
+
 private:
-	
+
 	class MidiEventChainControler {
 	private:
 		static MidiEventChain *separation_zone;
 		static MidiEventChain *next_free_midi_event;
-		
+
 		static void init_free_midi_event_chain();
 	public:
 		static void check_separation_zone();
@@ -148,7 +148,7 @@ private:
 		void **buffer;
 		int buffer_size;
 		int buffer_position;
-		
+
 		// chain of remaining midi events that need to be
 		// transmitted ASAP
 		MidiEventChain *remaining_midi_chain;
@@ -161,14 +161,14 @@ private:
 		void process_freeable_chain();
 		void process_remaining_chain();
 
-		
+
 	public:
 		MidiEventBuilder();
-		
+
 		void use_buffer(void **buffer, int buffer_size);
 		void skip_to(int new_buffer_position);
 		int tell();
-		
+
 		virtual void queue_note_on(int note, int velocity, int channel = 0);
 		virtual void queue_note_off(int note, int velocity, int channel = 0);
 		virtual void queue_controller(int controller, int value, int channel = 0);
@@ -181,27 +181,27 @@ private:
 		int export_tick;
 	public:
 		int current_tick;
-		
+
 		PadMidiExportBuilder(int loop_offset, Loop *loop);
 		~PadMidiExportBuilder();
-		
+
 		virtual void queue_note_on(int note, int velocity, int channel = 0);
 		virtual void queue_note_off(int note, int velocity, int channel = 0);
 		virtual void queue_controller(int controller, int value, int channel = 0);
 
 		void step_tick();
 	};
-	
+
 public:
 	class NoSuchController : public jException {
 	public:
 		NoSuchController(const std::string &name);
 	};
-	
+
 	enum PadEvent_t {
 		ms_pad_press, ms_pad_slide, ms_pad_release, ms_pad_no_event
 	};
-	
+
 	class NoteEntry {
 	public:
 		uint8_t channel, // only values that are within (channel & 0x0f)
@@ -211,7 +211,7 @@ public:
 
 		// note on position and length in the loop, encoded with PAD_TIME(line,tick)
 		int on_at, length;
-		
+
 		// double linked list of notes in a Loop object
 		// please observe that the last note in the loop does _NOT_ link
 		// to the first to actually create a looping linked list..
@@ -220,7 +220,7 @@ public:
 
 		// playback counters
 		int ticks2off;
-		
+
 		NoteEntry(const NoteEntry *original);
 		NoteEntry();
 		virtual ~NoteEntry();
@@ -235,8 +235,8 @@ public:
 		std::map<int,int>::iterator next_c; // next control point
 		std::map<int,int>::iterator previous_c; // previous control point
 
-		
-		
+
+
 		// control_point maps t to y, where
 		// t = PAD_TIME(line,tick)
 		// y = 14 bit value (coarse + fine, as defined by the MIDI standard)
@@ -279,8 +279,8 @@ public:
 		// get a const reference to the content of this envelope
 		const std::map<int, int> &get_control_points();
 
-		void write_to_xml(const std::string &id, std::ostringstream &stream); 
-		std::string read_from_xml(const KXMLDoc &env_xml);	
+		void write_to_xml(const std::string &id, std::ostringstream &stream);
+		std::string read_from_xml(const KXMLDoc &env_xml);
 	};
 
 	class PadConfiguration {
@@ -296,10 +296,10 @@ public:
 			chord_off = 0,
 			chord_triad = 1
 		};
-		
+
 		PadConfiguration(PadMode mode, int scale, int octave);
 		PadConfiguration(const PadConfiguration *config);
-		
+
 		PadMode mode;
 		ChordMode chord_mode;
 		int scale, octave, arpeggio_pattern;
@@ -308,7 +308,7 @@ public:
 		int pad_controller_coarse, pad_controller_fine;
 
 		void set_coarse_controller(int c);
-		void set_fine_controller(int c);		
+		void set_fine_controller(int c);
 		void set_mode(PadMode mode);
 		void set_arpeggio_pattern(int arp_pattern);
 		void set_chord_mode(ChordMode mode);
@@ -341,50 +341,50 @@ private:
 	class PadMotion : public PadConfiguration {
 	private:
 		int index; // when replaying a motion, this is used to keep track of where we are..
-		int crnt_tick; // number of ticks since we started this motion 
-		
+		int crnt_tick; // number of ticks since we started this motion
+
 		int last_chord[MAX_PAD_CHORD];
 		int last_x;
-		
+
 		std::vector<int> x;
 		std::vector<int> y;
 		std::vector<int> t; // relative number of ticks from the start_tick
 
 		int start_tick;
-		
+
 		bool terminated, to_be_deleted;
 
 		// notes should be an array with the size of MAX_PAD_CHORD
 		// unused entries will be marked with a -1
 		void build_chord(int *scale_data, int scale_offset, int *notes, int pad_column);
-		
+
 	public:
 		void get_padmotion_xml(int finger, std::ostringstream &stream);
-		
+
 		PadMotion(Pad *parent_config,
 			  int sequence_position, int x, int y);
 
 		// used to parse PadMotion xml when using project level < 5
 		PadMotion(Pad *parent_config,
 			  int &start_offset_return,
-			  const KXMLDoc &motion_xml);		
+			  const KXMLDoc &motion_xml);
 
 		// used to parse PadMotion xml when using project level >= 5
 		PadMotion(Pad *parent_config,
 			  const KXMLDoc &motion_xml);
-		
+
 		void quantize();
 		void add_position(int x, int y);
 		void terminate();
 		static void can_be_deleted_now(PadMotion *can_be_deleted);
-		static void delete_motion(PadMotion *to_be_deleted);		
+		static void delete_motion(PadMotion *to_be_deleted);
 
 		// returns true if the motion could start at the current position
 		bool start_motion(int session_position);
 
 		// resets a currently playing motion
 		void reset();
-		
+
 		// returns true if the motion finished playing
 		bool process_motion(MidiEventBuilder *_meb, Arpeggiator *arpeggiator);
 
@@ -396,15 +396,15 @@ private:
 	class PadFinger {
 	private:
 		bool to_be_deleted;
-		
+
 	public:
 		Pad *parent;
-		
+
 		PadMotion *recorded;
 		PadMotion *next_motion_to_play;
-		
+
 		std::vector<PadMotion *> playing_motions; // currently playing recorded motions
-		PadMotion *current; // current user controlled motion		
+		PadMotion *current; // current user controlled motion
 
 		PadFinger();
 		~PadFinger();
@@ -420,14 +420,14 @@ private:
 					    bool quantize);
 
 		void reset();
-		
+
 		// Designate a finger object for deletion.
 		void delete_pad_finger();
 
 		// Terminate all incomplete motions during recording
 		void terminate();
 	};
-	
+
 public:
 
 #define MAX_ARP_FINGERS 5
@@ -449,7 +449,7 @@ public:
 		public:
 			int length;
 			Note note[MAX_ARP_PATTERN_LENGTH];
-			
+
 			Pattern() : length(0) {}
 			void append(const Note &nn) {
 				// disallow too long patterns
@@ -462,7 +462,7 @@ public:
 
 			static void initiate_built_in();
 		};
-		
+
 	private:
 		// pattern playback
 		int phase; // 0 = go to on, 1 = on, 2 = go to off, 3 = off
@@ -483,9 +483,9 @@ public:
 		void swap_keys(ArpFinger &a, ArpFinger &b);
 		void sort_keys();
 	public:
-		
+
 		Arpeggiator();
-		
+
 		int enable_key(int key, int velocity); // returns the key if succesfull, -1 if not
 		void disable_key(int key);
 
@@ -495,7 +495,7 @@ public:
 
 		void reset();
 	};
-	
+
 	class Loop {
 	private:
 		// during playback this is used to keep track of the
@@ -511,11 +511,11 @@ public:
 		friend class LoopCreator;
 		// let the pad midi export builder insert notes using the internal functions
 		friend class PadMidiExportBuilder;
-		
+
 		Loop(const KXMLDoc &loop_xml);
 		void process_note_on(bool mute, MidiEventBuilder *_meb);
 		void process_note_off(MidiEventBuilder *_meb);
-		
+
 		NoteEntry *internal_delete_note(const NoteEntry *net);
 		void internal_update_note(const NoteEntry *original, const NoteEntry *new_entry);
 		const NoteEntry *internal_insert_note(NoteEntry *new_entry);
@@ -527,15 +527,15 @@ public:
 	public:
 		Loop();
 		~Loop();
-		
+
 		void get_loop_xml(std::ostringstream &stream, int id);
-		
+
 		void start_to_play();
 
 		void process(bool mute, MidiEventBuilder *meb);
 
 		const NoteEntry *notes_get() const;
-		
+
 		void note_delete(const NoteEntry *net);
 		void note_update(const NoteEntry *original, const NoteEntry *new_entry);
 		const NoteEntry *note_insert(const NoteEntry *new_entry);
@@ -546,12 +546,12 @@ public:
 	class PadSession {
 	private:
 		bool to_be_deleted, terminated;
-		
+
 	public:
 		PadSession(Pad *parent, int start_at_tick, bool terminated);
 		PadSession(Pad *parent, int start_at_tick, PadMotion *padmot, int finger_id);
 		PadSession(Pad *parent, const KXMLDoc &ps_xml);
-		
+
 		PadFinger finger[MAX_PAD_FINGERS];
 
 		int start_at_tick;
@@ -559,7 +559,7 @@ public:
 		bool in_play;
 
 		bool start_play(int crnt_tick);
-		
+
 		// if this object has been designated for deletion, this function will return true when all currently playing
 		// motions has been completed. If this returns true, you can delete this object.
 		bool process_session(bool do_record, bool mute,
@@ -577,17 +577,17 @@ public:
 
 		void get_session_xml(std::ostringstream &stream);
 	};
-		
+
 	class Pad : public PadConfiguration {
 	private:
 		friend class PadMotion;
-		
+
 		int pad_width, pad_height;
 		moodycamel::ReaderWriterQueue<PadEvent> *padEventQueue;
-		
+
 		PadSession *current_session;
 		std::vector<PadSession *>recorded_sessions;
-		
+
 		bool do_record;
 		bool do_quantize;
 
@@ -596,7 +596,7 @@ public:
 
 		void internal_set_record(bool do_record);
 		void internal_clear_pad();
-		
+
 	public: // not really public... (not lock protected..)
 		// please - don't call this from anything else but inside MachineSequencer class function...
 		void process(bool mute, int tick, MidiEventBuilder *_meb);
@@ -604,14 +604,14 @@ public:
 		void load_pad_from_xml(int project_interface_level, const KXMLDoc &pad_xml);
 
 		void export_to_loop(int start_tick, int stop_tick, Loop *loop);
-		
+
 		void reset();
 
 		Arpeggiator arpeggiator;
-		
+
 	public: // actually public (lock protected)
 		void set_pad_resolution(int width, int height);
-		void enqueue_event(int finger_id, PadEvent_t t, int x, int y);		
+		void enqueue_event(int finger_id, PadEvent_t t, int x, int y);
 		void set_record(bool do_record);
 		void set_quantize(bool do_quantize);
 		void clear_pad();
@@ -619,7 +619,7 @@ public:
 		Pad();
 		~Pad();
 	};
-	
+
 	/*************
 	 *
 	 * Public interface
@@ -638,7 +638,7 @@ public:
 
 	bool is_mute();
 	void set_mute(bool muted);
-	
+
        	// used to list controllers that can be accessed via MIDI
 	std::set<std::string> available_midi_controllers();
 	// assign the pad to a specific MIDI controller - if "" or if the string does not match a proper MIDI controller
@@ -647,17 +647,17 @@ public:
 	void assign_pad_to_midi_controller(const std::string &);
 
 	Pad *get_pad();
-	
+
 	void set_pad_arpeggio_pattern(const std::string identity);
 	void set_pad_chord_mode(PadConfiguration::ChordMode pconf);
-	int export_pad_to_loop(int loop_id = LOOP_NOT_SET);
+	void export_pad_to_loop(int loop_id = LOOP_NOT_SET);
 
 	const ControllerEnvelope *get_controller_envelope(const std::string &name) const;
 	void update_controller_envelope(const ControllerEnvelope *original, const ControllerEnvelope *new_entry);
 
 	/// returns a pointer to the machine this MachineSequencer is feeding.
 	Machine *get_machine();
-	
+
 	/*************
 	 *
 	 * Inheritance stuff
@@ -666,19 +666,19 @@ public:
 protected:
 	/// Returns a set of controller groups
 	virtual std::vector<std::string> internal_get_controller_groups();
-	
+
 	/// Returns a set of controller names
 	virtual std::vector<std::string> internal_get_controller_names();
 	virtual std::vector<std::string> internal_get_controller_names(const std::string &group_name);
-	
+
 	/// Returns a controller pointer (remember to delete it...)
 	virtual Controller *internal_get_controller(const std::string &name);
 
-	/// get a hint about what this machine is (for example, "effect" or "generator") 
+	/// get a hint about what this machine is (for example, "effect" or "generator")
 	virtual std::string internal_get_hint();
 
 	virtual bool detach_and_destroy();
-	
+
 	// Additional XML-formated descriptive data.
 	// functions, Machine::*, like get_base_xml_description()
 	virtual std::string get_class_name();
@@ -687,7 +687,7 @@ protected:
 	virtual void fill_buffers();
 
 	// reset a machine to a defined state
-	virtual void reset(); 
+	virtual void reset();
 
 	/*************
 	 *
@@ -699,7 +699,7 @@ private:
 	Pad pad;
 	MidiEventBuilder _meb;
 	Loop *current_loop;
-	
+
 	void prep_empty_loop_sequence();
 	int internal_get_loop_id_at(int position);
 	void internal_get_loop_ids_at(int *position_vector, int length);
@@ -707,9 +707,9 @@ private:
 	int internal_add_new_loop();
 	void get_loops_xml(std::ostringstream &stream);
 	void get_loop_sequence_xml(std::ostringstream &stream);
-	
+
 	std::set<std::string> internal_available_midi_controllers();
-	
+
 	/*************
 	 *
 	 * controller envelopes - the envelopes start at global line 0 and continue as long as they have control
@@ -720,7 +720,7 @@ private:
 	void create_controller_envelopes();
 	void process_controller_envelopes(int current_tick, MidiEventBuilder *_meb);
 	std::map<std::string, ControllerEnvelope *> controller_envelope; // a map of controller names to their envelopes
-	
+
 	/* rest of it */
 	bool mute; // don't start to play new tones..
 	std::string sibling_name; // this MachineSequencer generates events to a specific sibling
@@ -728,7 +728,7 @@ private:
 	int loop_store_size, last_free_loop_store_position;
 
 	void double_loop_store();
-	
+
 	int *loop_sequence;
 	int loop_sequence_length;
 
@@ -759,10 +759,10 @@ private:
 	static std::map<Machine *, MachineSequencer *> machine2sequencer;
 	static int sequence_length;
 	static std::vector<MachineSequencerSetChangeCallbackF_t> set_change_callback;
-	
+
 	// tell all listeners something was updated
 	static void inform_registered_callbacks_async();
-	
+
 	// Set the length of the sequences of ALL MachineSequencer objects.
 	// To keep everything synchronized there is no
 	// public interface to set a specific machine sequencer's sequence
@@ -776,23 +776,23 @@ private:
 	 ****************************/
 public:
 	static int quantize_tick(int start_tick); // helper, quantize a tick value into the closest absolute line
-	
+
 	static void presetup_from_xml(int project_interface_level, const KXMLDoc &machine_xml);
 	static void finalize_xml_initialization();
-	
+
 	static void create_sequencer_for_machine(Machine *m);
 	static MachineSequencer *get_sequencer_for_machine(Machine *m);
 	static std::map<std::string, MachineSequencer *, ltstr> get_sequencers();
 
 	static std::vector<std::string> get_pad_arpeggio_patterns();
-	
+
 	/// register a call-back that will be called when the MachineSequencer set is changed
 	static void register_change_callback(
 		void (*callback_f)(void *));
 
 	/// This will export the entire sequence to a MIDI, type 2, file
 	static void export2MIDI(bool just_loops, const std::string &output_path);
-	
+
 };
 
 #endif

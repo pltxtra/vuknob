@@ -17,7 +17,7 @@
  * Free Software Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA 02111-1307 USA
  */
 
-#define __DO_DYNLIB_DEBUG
+//#define __DO_DYNLIB_DEBUG
 #include "dynlib_debug.h"
 
 #include "dynlib.h"
@@ -62,12 +62,12 @@ void *init(MachineTable *mt, const char *name) {
 	ChorusData *d = (ChorusData *)malloc(sizeof(ChorusData));
 
 	if(d == NULL) return NULL;
-	
+
 	memset(d, 0, sizeof(ChorusData));
 
 	d->voices = MAX_CHORUS_VOICES;
 	d->general_gain = ftoFTYPE(1.0);
-	
+
 	int k = 0;
 	for(k = 0; k < MAX_CHORUS_VOICES; k++) {
 		d->depth[k] = 0.5f;
@@ -76,9 +76,9 @@ void *init(MachineTable *mt, const char *name) {
 		d->gain[k] = 0.9f - (0.6f / (float)MAX_CHORUS_VOICES) * ((float)k);
 		d->pan[k] = (1 - 2 * (k % 2)) * (0.9f / (float)MAX_CHORUS_VOICES) * ((float)k);
 	}
-		
+
 	SETUP_SATANS_MATH(mt);
-	
+
 	/* return pointer to instance data */
 	return (void *)d;
 }
@@ -121,7 +121,7 @@ void *get_controller_ptr(MachineTable *mt, void *void_info,
 	if(strcmp("Voice 3", group)) voice_id = 2;
 	if(strcmp("Voice 4", group)) voice_id = 3;
 
-	if(voice_id >= 0 && voice_id < 4) {	
+	if(voice_id >= 0 && voice_id < 4) {
 		if(strcmp("depthPercent", name) == 0)
 			return &(d->depth[voice_id]);
 		if(strcmp("rateHz", name) == 0)
@@ -133,7 +133,7 @@ void *get_controller_ptr(MachineTable *mt, void *void_info,
 		if(strcmp("pan", name) == 0)
 			return &(d->pan[voice_id]);
 	}
-	
+
 	return NULL;
 }
 
@@ -149,7 +149,7 @@ void execute(MachineTable *mt, void *data) {
 	SignalPointer *os_stereo = mt->get_output_signal(mt, "Stereo");
 
 	if(os == NULL) return;
-	
+
 	FTYPE *ou = mt->get_signal_buffer(os);
 	FTYPE *ou_stereo = mt->get_signal_buffer(os_stereo);
 	int ol = mt->get_signal_samples(os);
@@ -160,9 +160,9 @@ void execute(MachineTable *mt, void *data) {
 		for(t = 0; t < ol; t++) {
 			ou[t] = itoFTYPE(0);
 		}
-		return;		
+		return;
 	}
-	
+
 	FTYPE *in = mt->get_signal_buffer(s);
 
 	float freq = (float)mt->get_signal_frequency(os);
@@ -171,7 +171,7 @@ void execute(MachineTable *mt, void *data) {
 		recreate_delayline(d, d->Fs_CURRENT);
 	}
 
-	
+
 #ifdef __SATAN_USES_FLOATS
 
 #define DELAYT_t float
@@ -187,17 +187,17 @@ void execute(MachineTable *mt, void *data) {
 #define itoDELAYT(A) ftofp16p16(A)
 #define DELAYTtoi(A) fp16p16toi(A)
 #define mulDELAYT(A,B) mulfp16p16(A,B)
-	
+
 #endif
 
 	FTYPE x, y;
 	DELAYT_t y1, y2;
 
-	
+
 #define SIN(x,f) ftoDELAYT(SAT_SIN_SCALAR(((x)%(f))/(float)(f)))
 
 	int k;
-	
+
 	FTYPE gain[MAX_CHORUS_VOICES];
 	FTYPE pan_gain_l[MAX_CHORUS_VOICES];
 	FTYPE pan_gain_r[MAX_CHORUS_VOICES];
@@ -216,14 +216,14 @@ void execute(MachineTable *mt, void *data) {
 		gain[k] = ftoFTYPE(d->gain[k]);
 		int variable_offset_i = d->offset[k] * freq * d->depth[k] / 4000.0f;
 		int base_offset_i = d->offset[k] * freq / 2000.f - variable_offset_i;
-		
+
 		variable_offset[k] = itoDELAYT(variable_offset_i);
 		base_offset[k] = itoDELAYT(base_offset_i);
-		
+
 		float periodf = freq / d->rate[k];
 		period[k] = (int)periodf;
 	}
-	
+
 	int i, i_s;
 
 	for(i = 0, i_s = 0; i < ol; i++, i_s += 2) {
@@ -238,7 +238,7 @@ void execute(MachineTable *mt, void *data) {
 			ftoFTYPE(0.0f), // left
 			ftoFTYPE(0.0f)  // right
 		};
-		
+
 		for(k = 0; k < d->voices; k++) {
 			// calculate offset
 			DELAYT_t offset = SIN(d->time[k], period[k]); d->time[k] = (d->time[k] + 1) % period[k];
@@ -249,23 +249,23 @@ void execute(MachineTable *mt, void *data) {
 			// we get two values to do a linear interpolation
 			y1 = delayLineMonoGetOffsetNoMove(d->dl1, offset_i);
 			y2 = delayLineMonoGetOffsetNoMove(d->dl1, offset_i + 1);
-			
+
 			y2 = y2 - y1;
-			
+
 			int t_offset = offset;
 			y2 = y1 + (offset - (float)t_offset) * y2;
-			
+
 			y = y2;
-			
+
 #else
 			// we get two values to do a linear interpolation
 			y = delayLineMonoGetOffsetNoMove(d->dl1, offset_i);
 			y1 = y >> 8; // shift from fp8p24 to DELAYT
 			y = delayLineMonoGetOffsetNoMove(d->dl1, offset_i + 1);
 			y2 = y >> 8; // shift from fp8p24 to DELAYT
-			
+
 			y2 = y2 - y1;
-			
+
 			offset = 0x0000ffff & offset; // only keep fraction
 			y2 = y1 + mulDELAYT(offset, y2);
 			y = y2 << 8; // shift from DELAYT to fp8p24
@@ -276,11 +276,10 @@ void execute(MachineTable *mt, void *data) {
 		}
 		// just step the delay line, actual value is ignored
 		(void) delayLineMonoGet(d->dl1);
-		
+
 		// mix in dry
 		ou[i] = mulFTYPE(d->general_gain, current[0] + x);
 		ou_stereo[i_s + 0] = mulFTYPE(d->general_gain, current[1] + x);
 		ou_stereo[i_s + 1] = mulFTYPE(d->general_gain, current[2] + x);
-	}	
+	}
 }
-

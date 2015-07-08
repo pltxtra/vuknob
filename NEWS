@@ -1,3 +1,9 @@
+--------- Market Version 63 (2.13) --------------
+ * Fix bug in JAM, Copy to loop function
+
+--------- Market Version 62 (2.12) --------------
+ * for vuKNOBnet - added permission for wifi wake lock.
+
 --------- Market Version 61 (2.11) --------------
  * for vuKNOBnet - detect if vuKNOB is already playing when connecting.
  * Keep screen always on

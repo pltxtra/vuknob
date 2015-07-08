@@ -291,6 +291,7 @@ void LivePad2::select_menu() {
 
 		try {
 			int max_loop = mseq->get_nr_of_loops();
+			SATAN_DEBUG("max_loop: %d\n", max_loop);
 			for(int k = 0; k < max_loop; k++) {
 				std::ostringstream loop_id;
 				loop_id << "Loop #" << k;

@@ -117,6 +117,26 @@ if [ "$1" = "-release" ]; then
 	echo ""
 	exit 1
     fi
+    grep "DO_SATAN_DEBUG" ./jni/*.cc | grep "DEBUG" | grep -v "//" > /dev/null
+    if [ $? -eq 0 ]; then
+	echo ""
+	echo "Error - can't build release with DO_SATAN_DEBUG enabled:"
+	echo ""
+	grep "DO_SATAN_DEBUG" ./jni/*.cc | grep "DEBUG" | grep -v "//"
+	echo ""
+	echo ""
+	exit 1
+    fi
+    grep "DO_DYNLIB_DEBUG" ./jni/dynlib/*.c | grep "DEBUG" | grep -v "//" > /dev/null
+    if [ $? -eq 0 ]; then
+	echo ""
+	echo "Error - can't build release with DO_DYNLIB_DEBUG enabled:"
+	echo ""
+	grep "DO_DYNLIB_DEBUG" ./jni/dynlib/*.c | grep "DEBUG" | grep -v "//"
+	echo ""
+	echo ""
+	exit 1
+    fi
     RELEASE_OR_DEBUG=release
 fi
 

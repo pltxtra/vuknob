@@ -26,7 +26,7 @@
  * Free Software Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA 02111-1307 USA
  */
 
-#define __DO_DYNLIB_DEBUG
+//#define __DO_DYNLIB_DEBUG
 #include "dynlib_debug.h"
 
 #include "dynlib.h"
@@ -62,10 +62,10 @@ typedef struct _VocoderData {
 	bandPassFilterMono_t **bp_modulator;
 	xPassFilterMono_t **lp_modulator; // for envelope detector
 #else
-	FTYPE *prev_carrier, *prev_modulator; 
-	FTYPE *prev_output; 
-	FTYPE *next_output; 
-	FTYPE *output; 
+	FTYPE *prev_carrier, *prev_modulator;
+	FTYPE *prev_output;
+	FTYPE *next_output;
+	FTYPE *output;
 	FTYPE *hanning;
 	FTYPE *carrier, *modulator;
 	kiss_fftr_cfg fft_fwd_cfg;
@@ -85,14 +85,14 @@ typedef struct _VocoderData {
 #endif
 
 	float volume;
-	
+
 } VocoderData;
 
 #ifdef VOCODER_IIR_IMPLEMENTATION
 
 void cleanup_filters(VocoderData *d) {
 	int k = 0;
-	
+
 	if(d->bp_carrier) {
 		for(k = 0; k < VOCODER_CHANNELS; k++) {
 			if(d->bp_carrier[k])
@@ -128,7 +128,7 @@ int setup_filters(MachineTable *mt, VocoderData *d, float Fs) {
 	d->lp_modulator = (xPassFilterMono_t **)calloc(1, sizeof(xPassFilterMono_t *) * VOCODER_CHANNELS);
 
 	if(d->bp_carrier == NULL || d->bp_modulator == NULL || d->lp_modulator == NULL) return 1;
-	
+
 	int k;
 	for(k = 0; k < VOCODER_CHANNELS; k++) {
 		d->bp_carrier[k] = create_bandPassFilterMono(mt);
@@ -186,7 +186,7 @@ int setup_filters(MachineTable *mt, VocoderData *d, float Fs) {
 		bandPassFilterMonoRecalc(d->bp_modulator[k]);
 		xPassFilterMonoRecalc(d->lp_modulator[k]);
 	}
-	
+
 	return 0;
 }
 
@@ -234,7 +234,7 @@ void cleanup_filters(VocoderData *d) {
 		free(d->next_output);
 		d->next_output = NULL;
 	}
-	
+
 	if(d->fft_fwd_cfg) {
 		free(d->fft_fwd_cfg);
 		d->fft_fwd_cfg = NULL;
@@ -259,7 +259,7 @@ void cleanup_filters(VocoderData *d) {
 	}
 }
 
-void calculate_window_size(float length_f, int *fft_len, int *fft_lap) {		
+void calculate_window_size(float length_f, int *fft_len, int *fft_lap) {
 	float optimal = (float)FFT_OPTIMAL_LENGTH;
 	if(optimal > length_f) optimal = length_f;
 	int length = length_f;
@@ -272,7 +272,7 @@ void calculate_window_size(float length_f, int *fft_len, int *fft_lap) {
 
 	// so first we calculate how many pieces we have, this is k. k can be uneven...
 	k = (*fft_len) - (*fft_lap);
-	k = length / k; 
+	k = length / k;
 
 	// then we calculate a value for l, starting at k, such that length / l is an even integer value (no remainder)
 	for(l = k; l > 1; l--) {
@@ -298,31 +298,31 @@ void calculate_hanning(FTYPE *d, int len) {
 
 int setup_filters(MachineTable *mt, VocoderData *d, int ol) {
 	calculate_window_size((float)ol, &(d->fft_len), &(d->fft_lap));
-	
+
 #ifdef THIS_IS_A_MOCKERY
 	printf("fft_len: %d - fft_lap: %d\n", d->fft_len, d->fft_lap);
 #endif
-	
+
 	d->prev_carrier = (FTYPE *)calloc(ol, sizeof(FTYPE));
 	d->prev_modulator = (FTYPE *)calloc(ol, sizeof(FTYPE));
-	
+
 	d->carrier = (FTYPE *)calloc(d->fft_len, sizeof(FTYPE));
 	d->modulator = (FTYPE *)calloc(d->fft_len, sizeof(FTYPE));
-	
+
 	d->output = (FTYPE *)calloc(d->fft_len, sizeof(FTYPE));
 	d->prev_output = (FTYPE *)calloc(ol, sizeof(FTYPE));
 	d->next_output = (FTYPE *)calloc(ol, sizeof(FTYPE));
-	
+
 	d->fft_fwd_cfg = mt->prepare_fft(d->fft_len, 0);
-	d->fft_rev_cfg = mt->prepare_fft(d->fft_len, 1);		
-	
+	d->fft_rev_cfg = mt->prepare_fft(d->fft_len, 1);
+
 	d->c_fft = (kiss_fft_cpx *)calloc(d->fft_len, sizeof(kiss_fft_cpx));
 	d->m_fft = (kiss_fft_cpx *)calloc(d->fft_len, sizeof(kiss_fft_cpx));
-	
+
 	d->hanning = (FTYPE *)calloc(d->fft_len, sizeof(FTYPE));
 
 	d->channel_width = (d->fft_len) / (VOCODER_CHANNELS * 2);
-	
+
 	if(
 		(d->prev_carrier == NULL) ||
 		(d->prev_modulator == NULL) ||
@@ -338,7 +338,7 @@ int setup_filters(MachineTable *mt, VocoderData *d, int ol) {
 		(d->hanning == NULL)) {
 		return 1;
 	}
-	
+
 	calculate_hanning(d->hanning, (d->fft_len));
 	return 0;
 }
@@ -350,13 +350,13 @@ void *init(MachineTable *mt, const char *name) {
 	VocoderData *d = (VocoderData *)calloc(1, sizeof(VocoderData));
 
 	if(d == NULL) return NULL; // failed to allocate
-	
+
 	memset(d, 0, sizeof(VocoderData));
-	
+
 	SETUP_SATANS_MATH(mt);
 
 	d->volume = 1.0;
-	
+
 	/* return pointer to instance data */
 	return (void *)d;
 }
@@ -374,7 +374,7 @@ void *get_controller_ptr(MachineTable *mt, void *void_info,
 	VocoderData *d = (VocoderData *)void_info;
 	if(strcmp("volume", name) == 0)
 		return &(d->volume);
-	
+
 	return NULL;
 }
 
@@ -391,7 +391,7 @@ void execute(MachineTable *mt, void *data) {
 	SignalPointer *os = mt->get_output_signal(mt, "Mono");
 
 	if(os == NULL) return;
-	
+
 	FTYPE *ou = mt->get_signal_buffer(os);
 	int Fs = mt->get_signal_frequency(os);
 	int ol = mt->get_signal_samples(os);
@@ -405,16 +405,16 @@ void execute(MachineTable *mt, void *data) {
 			cs = ms = NULL;
 		}
 	}
-	
+
 	if(cs == NULL || ms == NULL) {
 		// just clear output, then return
 		int t;
 		for(t = 0; t < ol; t++) {
 			ou[t] = itoFTYPE(0);
 		}
-		return;		
+		return;
 	}
-	
+
 	FTYPE *c_in = mt->get_signal_buffer(cs);
 	FTYPE *m_in = mt->get_signal_buffer(ms);
 
@@ -422,7 +422,7 @@ void execute(MachineTable *mt, void *data) {
 	FTYPE m_base, c_base, output;
 
 	FTYPE volume = ftoFTYPE(d->volume);
-	
+
 	for(i = 0; i < ol; i++) {
 		m_base = m_in[i];
 		c_base = c_in[i];
@@ -430,7 +430,7 @@ void execute(MachineTable *mt, void *data) {
 
 		for(k = 0; k < VOCODER_CHANNELS; k++) {
 			FTYPE m, c;
-			
+
 			// modulator
 			bandPassFilterMonoPut(d->bp_modulator[k], m_base);
 			m = bandPassFilterMonoGet(d->bp_modulator[k]);
@@ -438,7 +438,7 @@ void execute(MachineTable *mt, void *data) {
 			xPassFilterMonoPut(d->lp_modulator[k], m);
 			m = xPassFilterMonoGet(d->lp_modulator[k]);
 			m = ABS_FTYPE(m);
-			
+
 			// carrier
 			bandPassFilterMonoPut(d->bp_carrier[k], c_base);
 			c = bandPassFilterMonoGet(d->bp_carrier[k]);
@@ -448,7 +448,7 @@ void execute(MachineTable *mt, void *data) {
 		}
 
 		ou[i] = mulFTYPE(output, volume);
-	}	
+	}
 }
 
 #else
@@ -459,15 +459,15 @@ inline void do_work(MachineTable *mt, VocoderData *d, int std_len, FTYPE *c, FTY
 	// hanning
 	{
 		int k;
-		
+
 		for(k = 0; k < std_len; k++) {
 			c[k] *= d->hanning[k];
 			m[k] *= d->hanning[k];
 		}
 	}
-	
+
 	// flip to frequency space
-	mt->do_fft(d->fft_fwd_cfg, c, d->c_fft);		
+	mt->do_fft(d->fft_fwd_cfg, c, d->c_fft);
 	mt->do_fft(d->fft_fwd_cfg, m, d->m_fft);
 
 	// do the work
@@ -528,7 +528,7 @@ inline void build_output_buffer(int output_size, int offset, int buffer_size,
 	}
 	k -= output_size;
 	for(; i < buffer_size; i++, k++) {
-		next_dest[k] += buffer[i]; 
+		next_dest[k] += buffer[i];
 	}
 }
 
@@ -538,10 +538,10 @@ inline void execute_fft(MachineTable *mt, VocoderData *d, int ol, FTYPE *c_in, F
 
 	int read_offset = piece_len - (piece_len * pieces);
 	int write_offset = 0;
-	
+
 	int p;
 
-	// clear next output buffer and copy the old one into the current	
+	// clear next output buffer and copy the old one into the current
 	memcpy(ou, d->prev_output, ol * sizeof(FTYPE));
 	memset(d->next_output, 0, ol * sizeof(FTYPE));
 
@@ -550,7 +550,7 @@ inline void execute_fft(MachineTable *mt, VocoderData *d, int ol, FTYPE *c_in, F
 		build_input_buffer(ol, read_offset, d->fft_len, d->prev_modulator, m_in, d->modulator);
 
 		do_work(mt, d, d->fft_len, d->carrier, d->modulator, d->output);
-		
+
 		build_output_buffer(ol, write_offset, d->fft_len,
 				    d->output, ou, d->next_output);
 		read_offset += piece_len;
@@ -574,7 +574,7 @@ void execute(MachineTable *mt, void *data) {
 	SignalPointer *os = mt->get_output_signal(mt, "Mono");
 
 	if(os == NULL) return;
-	
+
 	FTYPE *ou = mt->get_signal_buffer(os);
 	int ol = mt->get_signal_samples(os);
 
@@ -584,7 +584,7 @@ void execute(MachineTable *mt, void *data) {
 		// we must have at least FFT_OPTIMAL_LENGTH of data to do FFTs
 		if(ol < FFT_OPTIMAL_LENGTH) {
 			for(k = 1; k * ol < FFT_OPTIMAL_LENGTH; k++) { /* find multiple of ol that is larger than FFT_OPTIMAL_LENGTH */ }
-			
+
 			d->indirect_carrier = (FTYPE *)calloc(k * ol, sizeof(FTYPE));
 			d->indirect_modulator = (FTYPE *)calloc(k * ol, sizeof(FTYPE));
 			d->indirect_output = (FTYPE *)calloc(k * ol, sizeof(FTYPE));
@@ -618,14 +618,14 @@ void execute(MachineTable *mt, void *data) {
 		for(t = 0; t < ol; t++) {
 			ou[t] = itoFTYPE(0);
 		}
-		return;		
+		return;
 	}
 
 	FTYPE *c_in = mt->get_signal_buffer(cs);
 	FTYPE *m_in = mt->get_signal_buffer(ms);
 
 	if(d->indirect_limit > 1) {
-		if(d->indirect_index == 0)	
+		if(d->indirect_index == 0)
 			execute_fft(mt, d, d->indirect_size, d->indirect_carrier, d->indirect_modulator, d->indirect_output);
 
 		int offset = d->indirect_index * ol;
@@ -633,7 +633,7 @@ void execute(MachineTable *mt, void *data) {
 		memcpy(&(d->indirect_carrier[offset]), c_in, ol * sizeof(FTYPE));
 		memcpy(&(d->indirect_modulator[offset]), m_in, ol * sizeof(FTYPE));
 		memcpy(ou, &(d->indirect_output[offset]), ol * sizeof(FTYPE));
-		
+
 		d->indirect_index = (d->indirect_index + 1) % (d->indirect_limit);
 	} else {
 		execute_fft(mt, d, ol, c_in, m_in, ou);

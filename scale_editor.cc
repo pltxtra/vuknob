@@ -30,21 +30,115 @@
 #include "scale_editor.hh"
 #include "svg_loader.hh"
 
-//#define __DO_SATAN_DEBUG
+#define __DO_SATAN_DEBUG
 #include "satan_debug.hh"
 
 #include "common.hh"
+
+ScaleEditor::Key::Key(ScaleEditor *parent, const std::string &id,
+		      int index, std::function<void(int)> callback)
+	: ElementReference(parent, id) {
+	set_event_handler(
+		[this, id, index, callback](KammoGUI::SVGCanvas::SVGDocument *source,
+			   KammoGUI::SVGCanvas::ElementReference *e_ref,
+			   const KammoGUI::SVGCanvas::MotionEvent &event) {
+			SATAN_DEBUG("Key pressed: %d (%s)\n", index, id.c_str());
+			callback(index);
+		}
+		);
+}
+
+ScaleEditor::Setting::Setting(ScaleEditor *parent, const std::string &id,
+			      std::function<void(Setting*)> callback)
+	: ElementReference(parent, id + "set") {
+	play_button = ElementReference(parent, id + "play");
+	setting_text = play_button.find_child_by_class("key_text");
+
+	set_event_handler(
+		[this, id, callback](KammoGUI::SVGCanvas::SVGDocument *source,
+				     KammoGUI::SVGCanvas::ElementReference *e_ref,
+				     const KammoGUI::SVGCanvas::MotionEvent &event) {
+			SATAN_DEBUG("Setting pressed: %s\n", id.c_str());
+			callback(this);
+		}
+		);
+
+	play_button.set_event_handler(
+		[this, id](KammoGUI::SVGCanvas::SVGDocument *source,
+			   KammoGUI::SVGCanvas::ElementReference *e_ref,
+			   const KammoGUI::SVGCanvas::MotionEvent &event) {
+			SATAN_DEBUG("Play pressed: %s\n", id.c_str());
+		}
+		);
+}
+
+void ScaleEditor::Setting::change_setting(int key_index) {
+	SATAN_DEBUG("change_setting(%d)\n", key_index);
+}
 
 ScaleEditor::ScaleEditor(KammoGUI::SVGCanvas *cnv)
 	: SVGDocument(std::string(SVGLoader::get_svg_directory() + "/ScaleEditor.svg"), cnv) {
 	auto on_cancel_event = [this](KammoGUI::SVGCanvas::SVGDocument *source,
 				   KammoGUI::SVGCanvas::ElementReference *e_ref,
 				   const KammoGUI::SVGCanvas::MotionEvent &event) {
+		SATAN_DEBUG("cancel ScaleEditor.\n");
 		hide();
 	};
 
 	shade_layer = KammoGUI::SVGCanvas::ElementReference(this, "shadeLayer");
 	shade_layer.set_event_handler(on_cancel_event);
+	no_event = KammoGUI::SVGCanvas::ElementReference(this, "noEvent");
+	no_event.set_event_handler([](KammoGUI::SVGCanvas::SVGDocument *source,
+				      KammoGUI::SVGCanvas::ElementReference *e_ref,
+				      const KammoGUI::SVGCanvas::MotionEvent &event) {
+					   SATAN_DEBUG("no event area pressed.\n");
+				   }
+		);
+
+	auto select_setting = [this](Setting* new_setting) {
+		active_setting = new_setting;
+		SATAN_DEBUG("New setting: %p\n", new_setting);
+	};
+
+	auto change_setting = [this](int index) {
+		if(active_setting) {
+			active_setting->change_setting(index);
+		}
+	};
+
+	keys.push_back(new Key(this, "c_1",  0, change_setting));
+	keys.push_back(new Key(this, "cs1",  1, change_setting));
+	keys.push_back(new Key(this, "d_1",  2, change_setting));
+	keys.push_back(new Key(this, "ds1",  3, change_setting));
+	keys.push_back(new Key(this, "e_1",  4, change_setting));
+	keys.push_back(new Key(this, "f_1",  5, change_setting));
+	keys.push_back(new Key(this, "fs1",  6, change_setting));
+	keys.push_back(new Key(this, "g_1",  7, change_setting));
+	keys.push_back(new Key(this, "gs1",  8, change_setting));
+	keys.push_back(new Key(this, "a_1",  9, change_setting));
+	keys.push_back(new Key(this, "as1", 10, change_setting));
+	keys.push_back(new Key(this, "b_1", 11, change_setting));
+
+	keys.push_back(new Key(this, "c_2", 12, change_setting));
+	keys.push_back(new Key(this, "cs2", 13, change_setting));
+	keys.push_back(new Key(this, "d_2", 14, change_setting));
+	keys.push_back(new Key(this, "ds2", 15, change_setting));
+	keys.push_back(new Key(this, "e_2", 16, change_setting));
+	keys.push_back(new Key(this, "f_2", 17, change_setting));
+	keys.push_back(new Key(this, "fs2", 18, change_setting));
+	keys.push_back(new Key(this, "g_2", 19, change_setting));
+	keys.push_back(new Key(this, "gs2", 20, change_setting));
+	keys.push_back(new Key(this, "a_2", 21, change_setting));
+	keys.push_back(new Key(this, "as2", 22, change_setting));
+	keys.push_back(new Key(this, "b_2", 23, change_setting));
+
+	settings.push_back(new Setting(this, "s1_", select_setting));
+	settings.push_back(new Setting(this, "s2_", select_setting));
+	settings.push_back(new Setting(this, "s3_", select_setting));
+	settings.push_back(new Setting(this, "s4_", select_setting));
+	settings.push_back(new Setting(this, "s5_", select_setting));
+	settings.push_back(new Setting(this, "s6_", select_setting));
+	settings.push_back(new Setting(this, "s7_", select_setting));
 
 	hide();
 }
@@ -52,6 +146,7 @@ ScaleEditor::ScaleEditor(KammoGUI::SVGCanvas *cnv)
 void ScaleEditor::show() {
 	KammoGUI::SVGCanvas::ElementReference root_element = KammoGUI::SVGCanvas::ElementReference(this);
 	root_element.set_display("inline");
+	active_setting = 0;
 }
 
 void ScaleEditor::hide() {
@@ -83,7 +178,7 @@ void ScaleEditor::on_resize() {
 	{ // calculate transform for the main part of the document
 		double scaling = FingerScaler::fit_to_fingers(canvas_w_inches, canvas_h_inches,
 							      canvas_w, canvas_h,
-							      5, 7,
+							      7, 6,
 							      document_size.width, document_size.height);
 
 		// calculate translation

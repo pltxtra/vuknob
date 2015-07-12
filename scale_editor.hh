@@ -22,12 +22,37 @@
 
 #include <kamogui.hh>
 #include <functional>
+#include <list>
 
 class ScaleEditor : public KammoGUI::SVGCanvas::SVGDocument {
 private:
 	KammoGUI::SVGCanvas::SVGMatrix transform_t, shade_transform_t;
 
 	KammoGUI::SVGCanvas::ElementReference shade_layer;
+	KammoGUI::SVGCanvas::ElementReference no_event;
+
+	class Key : public KammoGUI::SVGCanvas::ElementReference {
+	public:
+		Key(ScaleEditor *parent, const std::string &id,
+		    int index, std::function<void(int)> callback);
+	};
+
+	class Setting : public KammoGUI::SVGCanvas::ElementReference {
+	private:
+		KammoGUI::SVGCanvas::ElementReference play_button;
+		KammoGUI::SVGCanvas::ElementReference setting_text;
+	public:
+		Setting(ScaleEditor *parent,
+			const std::string &id_base,
+			std::function<void(Setting*)> callback);
+
+		void change_setting(int key_index);
+	};
+
+	std::list<Key*> keys;
+	std::list<Setting*> settings;
+
+	Setting* active_setting = 0;
 
 public:
 	ScaleEditor(KammoGUI::SVGCanvas *cnv);

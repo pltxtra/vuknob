@@ -92,6 +92,8 @@ void LivePad2::on_render() {
 }
 
 void LivePad2::select_machine() {
+	listView->clear();
+
 	for(auto k_weak : msequencers) {
 		if(auto k = k_weak.lock()) {
 			SATAN_DEBUG("Adding machine %s to selection.\n", k->get_sibling_name().c_str());
@@ -120,6 +122,8 @@ void LivePad2::select_machine() {
 }
 
 void LivePad2::select_mode() {
+	listView->clear();
+
 	listView->add_row("No Arpeggio");
 
 	if(auto gco = RemoteInterface::GlobalControlObject::get_global_control_object()) {
@@ -140,6 +144,8 @@ void LivePad2::select_mode() {
 }
 
 void LivePad2::select_chord() {
+	listView->clear();
+
 	listView->add_row("chord off");
 	listView->add_row("chord triad");
 
@@ -180,6 +186,8 @@ void LivePad2::refresh_scale_key_names() {
 }
 
 void LivePad2::select_scale() {
+	listView->clear();
+
 	if(auto gco = RemoteInterface::GlobalControlObject::get_global_control_object()) {
 		for(auto scale : gco->get_scale_names()) {
 			listView->add_row(scale);
@@ -209,6 +217,8 @@ void LivePad2::select_scale() {
 }
 
 void LivePad2::select_controller() {
+	listView->clear();
+
 	listView->add_row("Velocity");
 
 	if(mseq) {
@@ -239,6 +249,25 @@ void LivePad2::select_controller() {
 }
 
 void LivePad2::select_menu() {
+	listView->clear();
+
+	listView->add_row("Copy to loop editor");
+	listView->add_row("Custom scale editor");
+
+	listView->select_from_list("Menu",
+				   [this](bool row_selected, int row_index, const std::string &row_text) {
+					   if(!row_selected) return;
+
+					   if(row_text == "Copy to loop editor") {
+						   copy_to_loop();
+					   }
+				   }
+		);
+}
+
+void LivePad2::copy_to_loop() {
+	listView->clear();
+
 	if(mseq) {
 		listView->add_row("New loop");
 		std::string failure_message = "";
@@ -431,7 +460,6 @@ void LivePad2::button_on_event(KammoGUI::SVGCanvas::SVGDocument *source, KammoGU
 			x = x < 0 ? -x : x;
 			y = y < 0 ? -y : y;
 			if(x < 10 && y < 10) {
-				ctx->listView->clear();
 				if(e_ref->get_id() == "recordGroup") {
 					ctx->toggle_record();
 				} else if(e_ref->get_id() == "quantize") {

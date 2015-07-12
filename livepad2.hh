@@ -85,6 +85,8 @@ private:
 	void select_controller();
 	void select_menu();
 
+	void copy_to_loop();
+
 	void refresh_record_indicator();
 	void refresh_quantize_indicator();
 	void refresh_scale_indicator();

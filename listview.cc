@@ -141,20 +141,21 @@ void ListView::on_cancel_event(KammoGUI::SVGCanvas::SVGDocument *source,
 			       const KammoGUI::SVGCanvas::MotionEvent &event) {
 	ListView *ctx = (ListView *)source;
 
+	ctx->hide();
+
 	if(ctx->callback_context != &listview_dummy_pointer)
 		ctx->listview_callback(ctx->callback_context, false, -1, "");
 	else
 		ctx->listview_callback_new(false, -1, "");
-	ctx->hide();
 }
 
 void ListView::row_selected(int row_index, const std::string &selected_text) {
+	hide();
+
 	if(callback_context != &listview_dummy_pointer)
 		listview_callback(callback_context, true, row_index, selected_text);
 	else
 		listview_callback_new(true, row_index, selected_text);
-
-	hide();
 }
 
 ListView::ListView(KammoGUI::SVGCanvas *cnv) : SVGDocument(std::string(SVGLoader::get_svg_directory() + "/listView.svg"), cnv), offset(0.0) {

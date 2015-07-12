@@ -76,6 +76,43 @@ public:
 	}
 };
 
+class FingerScaler {
+public:
+	// stretch source_width/height_pixels up to width/height_pixels
+	// however - limit the scaling to fit_width/height_fingers
+	static double fit_to_fingers(double width_inches, double height_inches,
+				     double width_pixels, double height_pixels,
+				     int fit_width_fingers, int fit_height_fingers,
+				     double source_width_pixels, double source_height_pixels) {
+		double tmp;
+
+		// calculate the canvas size in "fingers"
+		tmp = width_inches / INCHES_PER_FINGER;
+		int width_fingers = (int)tmp;
+		tmp = height_inches / INCHES_PER_FINGER;
+		int height_fingers = (int)tmp;
+
+		// calculate the size of a finger in pixels
+		tmp = width_pixels / ((double)width_fingers);
+		double finger_width = tmp;
+		tmp = height_pixels / ((double)height_fingers);
+		double finger_height = tmp;
+
+		// force scaling to fit into 5 by 7 "fingers"
+		if(width_fingers > fit_width_fingers) width_fingers = fit_width_fingers;
+		if(height_fingers > fit_height_fingers) height_fingers = fit_height_fingers;
+
+		// calculate scaling factor
+		double target_w = (double)width_fingers  * finger_width;
+		double target_h = (double)height_fingers  * finger_height;
+
+		double scale_w = target_w / (double)source_width_pixels;
+		double scale_h = target_h / (double)source_height_pixels;
+
+		return scale_w < scale_h ? scale_w : scale_h;
+	}
+};
+
 /**************************
  *
  * Replace missing C++11 functionality

@@ -24,29 +24,29 @@
 #include <functional>
 
 class ListView : public KammoGUI::SVGCanvas::SVGDocument  {
-private:		
+private:
 	class Row : public KammoGUI::SVGCanvas::ElementReference {
 	private:
 		int row_index;
 		ListView *parent;
-		
+
 		static void on_event(KammoGUI::SVGCanvas::SVGDocument *source,
 				     KammoGUI::SVGCanvas::ElementReference *e_ref,
 				     const KammoGUI::SVGCanvas::MotionEvent &event);
-		
+
 		Row(ListView *parent, const std::string &text, int row_index, const std::string &id);
 	public:
 		std::string text;
 
 		static Row *create(ListView *parent, int row_index, const std::string &text);
 	};
-	
+
 	friend class Row;
 
 	double offset, min_offset;
-	
+
 	std::vector<Row *> rows;
-	
+
 	KammoGUI::SVGCanvas::SVGMatrix transform_t, shade_transform_t;
 
 	KammoGUI::SVGCanvas::ElementReference shade_layer;
@@ -55,30 +55,33 @@ private:
 
 	void *callback_context;
 	std::function<void(void *context, bool, int row_number, const std::string &)> listview_callback;
-	
+	std::function<void(bool, int row_number, const std::string &)> listview_callback_new;
+
 	void show();
 	void hide();
 
-	
+
 	static void on_cancel_event(KammoGUI::SVGCanvas::SVGDocument *source,
 				    KammoGUI::SVGCanvas::ElementReference *e_ref,
 				    const KammoGUI::SVGCanvas::MotionEvent &event);
-	
+
 	void row_selected(int row_index, const std::string &selected_text);
-	void selection_cancelled();
-	
+
 public:
 	ListView(KammoGUI::SVGCanvas *cnv);
-	
+
 	virtual void on_resize();
 	virtual void on_render();
 
 	void clear();
-	void add_row(const std::string &new_row);	
+	void add_row(const std::string &new_row);
 	void select_from_list(
 		const std::string &title,
 		void *callback_context,
 		std::function<void(void *context, bool selected, int row_number, const std::string &)> listview_callback);
+	void select_from_list(
+		const std::string &title,
+		std::function<void(bool selected, int row_number, const std::string &)> listview_callback);
 };
 
 #endif

@@ -91,91 +91,35 @@ void LivePad2::on_render() {
 	}
 }
 
-void LivePad2::listview_callback(void *context, bool row_selected, int row_index, const std::string &text) {
-	LivePad2 *ctx = (LivePad2 *)context;
-
-	SATAN_DEBUG("---> Row selected: %s\n", text.c_str());
-
-	if(row_selected) {
-		switch(ctx->current_selector) {
-		case selecting_machine:
-		{
-			ctx->machine_selected(text);
-		}
-		break;
-
-		case selecting_mode:
-		{
-			ctx->mode_selected(text);
-		}
-		break;
-
-		case selecting_chord:
-		{
-			ctx->chord_selected(text);
-		}
-		break;
-
-		case selecting_scale:
-		{
-			ctx->scale_selected(text);
-		}
-		break;
-
-		case selecting_controller:
-		{
-			ctx->controller_selected(text);
-		}
-		break;
-
-		case selecting_menu:
-		{
-			ctx->menu_selected(row_index);
-		}
-		break;
-
-		default:
-		case not_selecting:
-			/* ignore */
-			break;
-		}
-	}
-
-	ctx->current_selector = not_selecting;
-	ctx->refresh_machine_settings();
-}
-
-void LivePad2::machine_selected(const std::string &machine_name) {
-	for(auto k_weak : msequencers) {
-		if(auto k = k_weak.lock()) {
-			if(machine_name == k->get_sibling_name()) {
-				SATAN_DEBUG("Machine selected: %s\n", k->get_sibling_name().c_str());
-				LivePad2::use_new_MachineSequencer(k);
-			}
-		}
-	}
-}
-
 void LivePad2::select_machine() {
-	current_selector = selecting_machine;
-
 	for(auto k_weak : msequencers) {
 		if(auto k = k_weak.lock()) {
 			SATAN_DEBUG("Adding machine %s to selection.\n", k->get_sibling_name().c_str());
 			listView->add_row(k->get_sibling_name());
 		}
 	}
-}
 
-void LivePad2::mode_selected(const std::string &mode_name) {
-	mode = mode_name;
+	listView->select_from_list("Select machine",
+				   [this](bool row_selected, int row_index, const std::string &row_text) {
+					   if(!row_selected) return;
 
-	refresh_machine_settings();
+					   for(auto k_weak : msequencers) {
+						   if(auto k = k_weak.lock()) {
+							   if(row_text == k->get_sibling_name()) {
+								   SATAN_DEBUG("Machine selected: %s\n",
+									       k->get_sibling_name().c_str());
+								   LivePad2::use_new_MachineSequencer(k);
+							   }
+						   }
+					   }
+
+					   refresh_machine_settings();
+				   }
+
+		);
 }
 
 void LivePad2::select_mode() {
-	current_selector = selecting_mode;
-
 	listView->add_row("No Arpeggio");
 
 	if(auto gco = RemoteInterface::GlobalControlObject::get_global_control_object()) {
@@ -183,17 +127,31 @@ void LivePad2::select_mode() {
 			listView->add_row(arpid);
 		}
 	}
-}
 
-void LivePad2::chord_selected(const std::string &chord_name) {
-	l_pad2->chord_mode = chord_name;
+	listView->select_from_list("Select mode",
+				   [this](bool row_selected, int row_index, const std::string &row_text) {
+					   if(!row_selected) return;
+
+					   mode = row_text;
+
+					   refresh_machine_settings();
+				   }
+		);
 }
 
 void LivePad2::select_chord() {
-	current_selector = selecting_chord;
-
 	listView->add_row("chord off");
 	listView->add_row("chord triad");
+
+	listView->select_from_list("Select chord",
+				   [this](bool row_selected, int row_index, const std::string &row_text) {
+					   if(!row_selected) return;
+
+					   l_pad2->chord_mode = row_text;
+
+					   refresh_machine_settings();
+				   }
+		);
 }
 
 static const char *key_text[] = {
@@ -221,48 +179,36 @@ void LivePad2::refresh_scale_key_names() {
 	}
 }
 
-void LivePad2::scale_selected(const std::string &_scale_name) {
-	scale_name = _scale_name;
-
-	if(auto gco = RemoteInterface::GlobalControlObject::get_global_control_object()) {
-		int n = 0;
-
-		for(auto scale : gco->get_scale_names()) {
-			if(scale_name == scale) {
-				scale_index = n;
-			}
-			n++;
-		}
-	}
-}
-
 void LivePad2::select_scale() {
-	current_selector = selecting_scale;
-
 	if(auto gco = RemoteInterface::GlobalControlObject::get_global_control_object()) {
 		for(auto scale : gco->get_scale_names()) {
 			listView->add_row(scale);
 		}
 	}
-}
 
-void LivePad2::controller_selected(const std::string &controller_name) {
-	std::string new_ctrl = "Velocity"; // default to Velocity
+	listView->select_from_list("Select scale",
+				   [this](bool row_selected, int row_index, const std::string &row_text) {
+					   if(!row_selected) return;
 
-	if(mseq) {
-		for(auto ctrl : mseq->available_midi_controllers()) {
-			if(ctrl == controller_name) {
-				new_ctrl = ctrl; // we found a match, keep this name
-			}
-		}
-	}
+					   scale_name = row_text;
 
-	controller = new_ctrl;
+					   if(auto gco = RemoteInterface::GlobalControlObject::get_global_control_object()) {
+						   int n = 0;
+
+						   for(auto scale : gco->get_scale_names()) {
+							   if(scale_name == scale) {
+								   scale_index = n;
+							   }
+							   n++;
+						   }
+					   }
+
+					   refresh_machine_settings();
+				   }
+		);
 }
 
 void LivePad2::select_controller() {
-	current_selector = selecting_controller;
-
 	listView->add_row("Velocity");
 
 	if(mseq) {
@@ -270,21 +216,29 @@ void LivePad2::select_controller() {
 			listView->add_row(ctrl);
 		}
 	}
-}
 
-void LivePad2::menu_selected(int row_index) {
-	if(mseq) {
-		if(row_index == 0) {
-			mseq->pad_export_to_loop();
-		} else {
-			mseq->pad_export_to_loop(row_index - 1);
-		}
-	}
+	listView->select_from_list("Select controller",
+				   [this](bool row_selected, int row_index, const std::string &row_text) {
+					   if(!row_selected) return;
+
+					   std::string new_ctrl = "Velocity"; // default to Velocity
+
+					   if(mseq) {
+						   for(auto ctrl : mseq->available_midi_controllers()) {
+							   if(ctrl == row_text) {
+								   new_ctrl = ctrl; // we found a match, keep this name
+							   }
+						   }
+					   }
+
+					   controller = new_ctrl;
+
+					   refresh_machine_settings();
+				   }
+		);
 }
 
 void LivePad2::select_menu() {
-	current_selector = selecting_menu;
-
 	if(mseq) {
 		listView->add_row("New loop");
 		std::string failure_message = "";
@@ -302,6 +256,22 @@ void LivePad2::select_menu() {
 		}
 		if(failure_message.size() != 0) jInformer::inform(failure_message);
 	}
+
+	listView->select_from_list("Copy to loop",
+				   [this](bool row_selected, int row_index, const std::string &row_text) {
+					   if(!row_selected) return;
+
+					   if(mseq) {
+						   if(row_index == 0) {
+							   mseq->pad_export_to_loop();
+						   } else {
+							   mseq->pad_export_to_loop(row_index - 1);
+						   }
+					   }
+
+					   refresh_machine_settings();
+				   }
+		);
 }
 
 void LivePad2::refresh_record_indicator() {
@@ -461,8 +431,6 @@ void LivePad2::button_on_event(KammoGUI::SVGCanvas::SVGDocument *source, KammoGU
 			x = x < 0 ? -x : x;
 			y = y < 0 ? -y : y;
 			if(x < 10 && y < 10) {
-				std::string select_title = "";
-
 				ctx->listView->clear();
 				if(e_ref->get_id() == "recordGroup") {
 					ctx->toggle_record();
@@ -476,26 +444,16 @@ void LivePad2::button_on_event(KammoGUI::SVGCanvas::SVGDocument *source, KammoGU
 					ctx->octave_down();
 				} else if(e_ref->get_id() == "selectMachine") {
 					ctx->select_machine();
-					select_title = "Select machine";
 				} else if(e_ref->get_id() == "selectMode") {
 					ctx->select_mode();
-					select_title = "Select mode";
 				} else if(e_ref->get_id() == "selectChord") {
 					ctx->select_chord();
-					select_title = "Select chord";
 				} else if(e_ref->get_id() == "selectScale") {
 					ctx->select_scale();
-					select_title = "Select scale";
 				} else if(e_ref->get_id() == "selectController") {
 					ctx->select_controller();
-					select_title = "Select controller";
 				} else if(e_ref->get_id() == "selectMenu") {
 					ctx->select_menu();
-					select_title = "Copy to loop";
-				}
-
-				if(ctx->current_selector != not_selecting) {
-					ctx->listView->select_from_list(select_title, ctx, listview_callback);
 				}
 			}
 			break;
@@ -595,8 +553,9 @@ void LivePad2::recording_state_changed(bool _is_recording) {
 		);
 }
 
-LivePad2::LivePad2(KammoGUI::SVGCanvas *cnv, std::string file_name) : SVGDocument(file_name, cnv), octave(3), scale_index(0), scale_name("C- "), record(false), quantize(false),
-	chord_mode("chord off"), mode("No Arpeggio"), controller("velocity"), listView(NULL), current_selector(not_selecting)
+LivePad2::LivePad2(KammoGUI::SVGCanvas *cnv, std::string file_name)
+	: SVGDocument(file_name, cnv), octave(3), scale_index(0), scale_name("C- "), record(false), quantize(false)
+	, chord_mode("chord off"), mode("No Arpeggio"), controller("velocity"), listView(NULL)
 {
 	l_pad2 = this;
 

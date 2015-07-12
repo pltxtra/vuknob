@@ -76,24 +76,13 @@ private:
 	KammoGUI::SVGCanvas::ElementReference selectController_element;
 	KammoGUI::SVGCanvas::ElementReference selectMenu_element;
 
-	enum currentSelector_t { not_selecting, selecting_machine, selecting_mode,
-				 selecting_chord, selecting_scale, selecting_controller,
-				 selecting_menu};
-	currentSelector_t current_selector;
-
 	void refresh_scale_key_names();
 
-	void machine_selected(const std::string &machine_name);
 	void select_machine();
-	void mode_selected(const std::string &mode_name);
 	void select_mode();
-	void chord_selected(const std::string &chord_name);
 	void select_chord();
-	void scale_selected(const std::string &scale_name);
 	void select_scale();
-	void controller_selected(const std::string &controller_name);
 	void select_controller();
-	void menu_selected(int row_index);
 	void select_menu();
 
 	void refresh_record_indicator();

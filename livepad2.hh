@@ -30,6 +30,7 @@
 #include <kamogui.hh>
 
 #include "listview.hh"
+#include "scale_editor.hh"
 #include "remote_interface.hh"
 
 #define HZONES PAD_HZONES
@@ -62,6 +63,7 @@ private:
 		 std::owner_less<std::weak_ptr<RemoteInterface::RIMachine> > >msequencers; // all known machine sequencers
 
 	ListView *listView;
+	ScaleEditor *scale_editor;
 
 	KammoGUI::SVGCanvas::ElementReference octaveUp_element;
 	KammoGUI::SVGCanvas::ElementReference octaveDown_element;
@@ -104,7 +106,6 @@ private:
 
 	static void button_on_event(KammoGUI::SVGCanvas::SVGDocument *source, KammoGUI::SVGCanvas::ElementReference *e_ref,
 				    const KammoGUI::SVGCanvas::MotionEvent &event);
-	static void listview_callback(void *context, bool row_selected, int row_index, const std::string &text);
 	static void graphArea_on_event(SVGDocument *source, KammoGUI::SVGCanvas::ElementReference *e_ref,
 				       const KammoGUI::SVGCanvas::MotionEvent &event);
 public:

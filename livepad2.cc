@@ -251,15 +251,22 @@ void LivePad2::select_controller() {
 void LivePad2::select_menu() {
 	listView->clear();
 
-	listView->add_row("Copy to loop editor");
-	listView->add_row("Custom scale editor");
+	auto rn_copy_to_loop = "Copy to loop editor";
+	auto rn_custom_scale_editor = "Custom scale editor";
+
+	listView->add_row(rn_copy_to_loop);
+	listView->add_row(rn_custom_scale_editor);
 
 	listView->select_from_list("Menu",
-				   [this](bool row_selected, int row_index, const std::string &row_text) {
+				   [this
+				    , rn_copy_to_loop
+				    , rn_custom_scale_editor]
+				   (bool row_selected, int row_index, const std::string &row_text) {
 					   if(!row_selected) return;
 
-					   if(row_text == "Copy to loop editor") {
+					   if(row_text == rn_copy_to_loop) {
 						   copy_to_loop();
+					   } else if(row_text == rn_custom_scale_editor) {
 					   }
 				   }
 		);
@@ -583,7 +590,7 @@ void LivePad2::recording_state_changed(bool _is_recording) {
 
 LivePad2::LivePad2(KammoGUI::SVGCanvas *cnv, std::string file_name)
 	: SVGDocument(file_name, cnv), octave(3), scale_index(0), scale_name("C- "), record(false), quantize(false)
-	, chord_mode("chord off"), mode("No Arpeggio"), controller("velocity"), listView(NULL)
+	, chord_mode("chord off"), mode("No Arpeggio"), controller("velocity"), listView(NULL), scale_editor(NULL)
 {
 	l_pad2 = this;
 
@@ -638,6 +645,7 @@ LivePad2::LivePad2(KammoGUI::SVGCanvas *cnv, std::string file_name)
 	}
 
 	listView = new ListView(cnv);
+	scale_editor = new ScaleEditor(cnv);
 
 	refresh_machine_settings();
 

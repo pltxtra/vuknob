@@ -245,9 +245,9 @@ class TrackerMenu : public KammoGUI::SVGCanvas::SVGDocument {
 private:
 	class HelpTextAnimation : public KammoGUI::Animation {
 	private:
-		KammoGUI::SVGCanvas::ElementReference help_text;
+		KammoGUI::SVGCanvas::ElementReference *help_text;
 	public:
-		HelpTextAnimation(KammoGUI::SVGCanvas::ElementReference &help_text, const std::string &display_text);
+		HelpTextAnimation(KammoGUI::SVGCanvas::ElementReference* _help_text, const std::string &display_text);
 		virtual void new_frame(float progress);
 		virtual void on_touch_event();
 	};

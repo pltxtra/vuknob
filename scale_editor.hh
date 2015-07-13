@@ -49,8 +49,8 @@ private:
 		void change_setting(int key_index);
 	};
 
-	std::list<Key*> keys;
-	std::list<Setting*> settings;
+	std::list<Key> keys;
+	std::list<Setting> settings;
 
 	Setting* active_setting = 0;
 

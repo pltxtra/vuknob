@@ -74,13 +74,13 @@ static char *key_names[] = {
  *
  ***************************/
 
-TrackerMenu::HelpTextAnimation::HelpTextAnimation(KammoGUI::SVGCanvas::ElementReference &_help_text, const std::string &display_text) :
-	KammoGUI::Animation(1.0) {
+TrackerMenu::HelpTextAnimation::HelpTextAnimation(KammoGUI::SVGCanvas::ElementReference* _help_text, const std::string &display_text)
+	: KammoGUI::Animation(1.0)
+	, help_text(_help_text)
+{
 
-	help_text = _help_text;
-	help_text.set_display("inline");
-
-	help_text.find_child_by_class("helpText").set_text_content(display_text);
+	help_text->set_display("inline");
+	help_text->find_child_by_class("helpText").set_text_content(display_text);
 
 	SATAN_DEBUG("Animation %p started (%s).\n", this, display_text.c_str());
 }
@@ -88,7 +88,7 @@ TrackerMenu::HelpTextAnimation::HelpTextAnimation(KammoGUI::SVGCanvas::ElementRe
 void TrackerMenu::HelpTextAnimation::new_frame(float progress) {
 	if(progress >= 1.0f) {
 		SATAN_DEBUG("Animation %p finished\n", this);
-		help_text.set_display("none");
+		help_text->set_display("none");
 	}
 }
 
@@ -189,59 +189,59 @@ void TrackerMenu::menu_selection_on_event(KammoGUI::SVGCanvas::SVGDocument *sour
 			HelpTextAnimation *helpanim = NULL;
 			if(e_ref == &(ctx->menu_copy)) {
 				ctx->tracker->copy_selected();
-				helpanim = new HelpTextAnimation(ctx->menu_help, "Copy");
+				helpanim = new HelpTextAnimation(&ctx->menu_help, "Copy");
 
 			} else if(e_ref == &(ctx->menu_paste)) {
 				ctx->tracker->paste_selected();
-				helpanim = new HelpTextAnimation(ctx->menu_help, "Paste");
+				helpanim = new HelpTextAnimation(&ctx->menu_help, "Paste");
 
 			} else if(e_ref == &(ctx->menu_trash)) {
 				ctx->tracker->trash_selected();
-				helpanim = new HelpTextAnimation(ctx->menu_help, "Delete");
+				helpanim = new HelpTextAnimation(&ctx->menu_help, "Delete");
 
 			} else if(e_ref == &(ctx->menu_quantize)) {
 				ctx->tracker->quantize_selected();
-				helpanim = new HelpTextAnimation(ctx->menu_help, "Quantize");
+				helpanim = new HelpTextAnimation(&ctx->menu_help, "Quantize");
 
 			} else if(e_ref == &(ctx->menu_shiftLeft)) {
 				ctx->tracker->shift_selected(-1);
-				helpanim = new HelpTextAnimation(ctx->menu_help, "Shift Left");
+				helpanim = new HelpTextAnimation(&ctx->menu_help, "Shift Left");
 
 			} else if(e_ref == &(ctx->menu_shiftRight)) {
 				ctx->tracker->shift_selected( 1);
-				helpanim = new HelpTextAnimation(ctx->menu_help, "Shift Right");
+				helpanim = new HelpTextAnimation(&ctx->menu_help, "Shift Right");
 
 			} else if(e_ref == &(ctx->menu_transposeUp)) {
 				ctx->tracker->transpose_selected(  1);
-				helpanim = new HelpTextAnimation(ctx->menu_help, "Transpose +1");
+				helpanim = new HelpTextAnimation(&ctx->menu_help, "Transpose +1");
 
 			} else if(e_ref == &(ctx->menu_transposeDown)) {
 				ctx->tracker->transpose_selected( -1);
-				helpanim = new HelpTextAnimation(ctx->menu_help, "Transpose -1");
+				helpanim = new HelpTextAnimation(&ctx->menu_help, "Transpose -1");
 
 			} else if(e_ref == &(ctx->menu_octaveUp)) {
 				ctx->tracker->transpose_selected( 12);
-				helpanim = new HelpTextAnimation(ctx->menu_help, "Transpose +12");
+				helpanim = new HelpTextAnimation(&ctx->menu_help, "Transpose +12");
 
 			} else if(e_ref == &(ctx->menu_octaveDown)) {
 				ctx->tracker->transpose_selected(-12);
-				helpanim = new HelpTextAnimation(ctx->menu_help, "Transpose -12");
+				helpanim = new HelpTextAnimation(&ctx->menu_help, "Transpose -12");
 
 			} else if(e_ref == &(ctx->menu_previousLoop)) {
 				ctx->tracker->previous_selected();
-				helpanim = new HelpTextAnimation(ctx->menu_help, "Previous");
+				helpanim = new HelpTextAnimation(&ctx->menu_help, "Previous");
 
 			} else if(e_ref == &(ctx->menu_nextLoop)) {
 				ctx->tracker->next_selected();
-				helpanim = new HelpTextAnimation(ctx->menu_help, "Next");
+				helpanim = new HelpTextAnimation(&ctx->menu_help, "Next");
 
 			} else if(e_ref == &(ctx->menu_undo)) {
 				ctx->tracker->restore_from_undo_buffer();
-				helpanim = new HelpTextAnimation(ctx->menu_help, "Undo");
+				helpanim = new HelpTextAnimation(&ctx->menu_help, "Undo");
 
 			} else if(e_ref == &(ctx->menu_snapTo)) {
 				ctx->tracker->snap_toggled();
-				helpanim = new HelpTextAnimation(ctx->menu_help, "Snap toggled");
+				helpanim = new HelpTextAnimation(&ctx->menu_help, "Snap toggled");
 			}
 			if(helpanim) {
 				SATAN_DEBUG("help animation started.\n");

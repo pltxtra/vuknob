@@ -106,39 +106,39 @@ ScaleEditor::ScaleEditor(KammoGUI::SVGCanvas *cnv)
 		}
 	};
 
-	keys.push_back(new Key(this, "c_1",  0, change_setting));
-	keys.push_back(new Key(this, "cs1",  1, change_setting));
-	keys.push_back(new Key(this, "d_1",  2, change_setting));
-	keys.push_back(new Key(this, "ds1",  3, change_setting));
-	keys.push_back(new Key(this, "e_1",  4, change_setting));
-	keys.push_back(new Key(this, "f_1",  5, change_setting));
-	keys.push_back(new Key(this, "fs1",  6, change_setting));
-	keys.push_back(new Key(this, "g_1",  7, change_setting));
-	keys.push_back(new Key(this, "gs1",  8, change_setting));
-	keys.push_back(new Key(this, "a_1",  9, change_setting));
-	keys.push_back(new Key(this, "as1", 10, change_setting));
-	keys.push_back(new Key(this, "b_1", 11, change_setting));
+	keys.push_back(Key(this, "c_1",  0, change_setting));
+	keys.push_back(Key(this, "cs1",  1, change_setting));
+	keys.push_back(Key(this, "d_1",  2, change_setting));
+	keys.push_back(Key(this, "ds1",  3, change_setting));
+	keys.push_back(Key(this, "e_1",  4, change_setting));
+	keys.push_back(Key(this, "f_1",  5, change_setting));
+	keys.push_back(Key(this, "fs1",  6, change_setting));
+	keys.push_back(Key(this, "g_1",  7, change_setting));
+	keys.push_back(Key(this, "gs1",  8, change_setting));
+	keys.push_back(Key(this, "a_1",  9, change_setting));
+	keys.push_back(Key(this, "as1", 10, change_setting));
+	keys.push_back(Key(this, "b_1", 11, change_setting));
 
-	keys.push_back(new Key(this, "c_2", 12, change_setting));
-	keys.push_back(new Key(this, "cs2", 13, change_setting));
-	keys.push_back(new Key(this, "d_2", 14, change_setting));
-	keys.push_back(new Key(this, "ds2", 15, change_setting));
-	keys.push_back(new Key(this, "e_2", 16, change_setting));
-	keys.push_back(new Key(this, "f_2", 17, change_setting));
-	keys.push_back(new Key(this, "fs2", 18, change_setting));
-	keys.push_back(new Key(this, "g_2", 19, change_setting));
-	keys.push_back(new Key(this, "gs2", 20, change_setting));
-	keys.push_back(new Key(this, "a_2", 21, change_setting));
-	keys.push_back(new Key(this, "as2", 22, change_setting));
-	keys.push_back(new Key(this, "b_2", 23, change_setting));
+	keys.push_back(Key(this, "c_2", 12, change_setting));
+	keys.push_back(Key(this, "cs2", 13, change_setting));
+	keys.push_back(Key(this, "d_2", 14, change_setting));
+	keys.push_back(Key(this, "ds2", 15, change_setting));
+	keys.push_back(Key(this, "e_2", 16, change_setting));
+	keys.push_back(Key(this, "f_2", 17, change_setting));
+	keys.push_back(Key(this, "fs2", 18, change_setting));
+	keys.push_back(Key(this, "g_2", 19, change_setting));
+	keys.push_back(Key(this, "gs2", 20, change_setting));
+	keys.push_back(Key(this, "a_2", 21, change_setting));
+	keys.push_back(Key(this, "as2", 22, change_setting));
+	keys.push_back(Key(this, "b_2", 23, change_setting));
 
-	settings.push_back(new Setting(this, "s1_", select_setting));
-	settings.push_back(new Setting(this, "s2_", select_setting));
-	settings.push_back(new Setting(this, "s3_", select_setting));
-	settings.push_back(new Setting(this, "s4_", select_setting));
-	settings.push_back(new Setting(this, "s5_", select_setting));
-	settings.push_back(new Setting(this, "s6_", select_setting));
-	settings.push_back(new Setting(this, "s7_", select_setting));
+	settings.push_back(Setting(this, "s1_", select_setting));
+	settings.push_back(Setting(this, "s2_", select_setting));
+	settings.push_back(Setting(this, "s3_", select_setting));
+	settings.push_back(Setting(this, "s4_", select_setting));
+	settings.push_back(Setting(this, "s5_", select_setting));
+	settings.push_back(Setting(this, "s6_", select_setting));
+	settings.push_back(Setting(this, "s7_", select_setting));
 
 	hide();
 }

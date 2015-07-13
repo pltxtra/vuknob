@@ -24,6 +24,8 @@
 #include <functional>
 #include <list>
 
+#include "remote_interface.hh"
+
 class ScaleEditor : public KammoGUI::SVGCanvas::SVGDocument {
 private:
 	KammoGUI::SVGCanvas::SVGMatrix transform_t, shade_transform_t;
@@ -47,12 +49,15 @@ private:
 			std::function<void(Setting*)> callback);
 
 		void change_setting(int key_index);
+		void set_selected(bool is_selected);
 	};
 
 	std::list<Key> keys;
 	std::list<Setting> settings;
 
 	Setting* active_setting = 0;
+
+	std::shared_ptr<RemoteInterface::RIMachine> mseq;
 
 public:
 	ScaleEditor(KammoGUI::SVGCanvas *cnv);
@@ -61,7 +66,7 @@ public:
 	virtual void on_render() override;
 
 	void hide();
-	void show();
+	void show(std::shared_ptr<RemoteInterface::RIMachine> mseq);
 };
 
 #endif

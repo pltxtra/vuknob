@@ -43,7 +43,18 @@ ScaleEditor::Key::Key(ScaleEditor *parent, const std::string &id,
 			   KammoGUI::SVGCanvas::ElementReference *e_ref,
 			   const KammoGUI::SVGCanvas::MotionEvent &event) {
 			SATAN_DEBUG("Key pressed: %d (%s)\n", index, id.c_str());
-			callback(index);
+			switch(event.get_action()) {
+			case KammoGUI::SVGCanvas::MotionEvent::ACTION_CANCEL:
+			case KammoGUI::SVGCanvas::MotionEvent::ACTION_OUTSIDE:
+			case KammoGUI::SVGCanvas::MotionEvent::ACTION_POINTER_DOWN:
+			case KammoGUI::SVGCanvas::MotionEvent::ACTION_POINTER_UP:
+			case KammoGUI::SVGCanvas::MotionEvent::ACTION_MOVE:
+			case KammoGUI::SVGCanvas::MotionEvent::ACTION_DOWN:
+				break;
+			case KammoGUI::SVGCanvas::MotionEvent::ACTION_UP:
+				callback(index);
+				break;
+			}
 		}
 		);
 }
@@ -55,25 +66,56 @@ ScaleEditor::Setting::Setting(ScaleEditor *parent, const std::string &id,
 	setting_text = play_button.find_child_by_class("key_text");
 
 	set_event_handler(
-		[this, id, callback](KammoGUI::SVGCanvas::SVGDocument *source,
-				     KammoGUI::SVGCanvas::ElementReference *e_ref,
-				     const KammoGUI::SVGCanvas::MotionEvent &event) {
+		[id, callback](KammoGUI::SVGCanvas::SVGDocument *source,
+			       KammoGUI::SVGCanvas::ElementReference *e_ref,
+			       const KammoGUI::SVGCanvas::MotionEvent &event) {
+			Setting *thiz = (Setting *)e_ref;
 			SATAN_DEBUG("Setting pressed: %s\n", id.c_str());
-			callback(this);
+			switch(event.get_action()) {
+			case KammoGUI::SVGCanvas::MotionEvent::ACTION_CANCEL:
+			case KammoGUI::SVGCanvas::MotionEvent::ACTION_OUTSIDE:
+			case KammoGUI::SVGCanvas::MotionEvent::ACTION_POINTER_DOWN:
+			case KammoGUI::SVGCanvas::MotionEvent::ACTION_POINTER_UP:
+			case KammoGUI::SVGCanvas::MotionEvent::ACTION_MOVE:
+			case KammoGUI::SVGCanvas::MotionEvent::ACTION_DOWN:
+				break;
+			case KammoGUI::SVGCanvas::MotionEvent::ACTION_UP:
+				callback(thiz);
+				break;
+			}
 		}
 		);
 
 	play_button.set_event_handler(
-		[this, id](KammoGUI::SVGCanvas::SVGDocument *source,
-			   KammoGUI::SVGCanvas::ElementReference *e_ref,
-			   const KammoGUI::SVGCanvas::MotionEvent &event) {
-			SATAN_DEBUG("Play pressed: %s\n", id.c_str());
+		[id](KammoGUI::SVGCanvas::SVGDocument *source,
+		     KammoGUI::SVGCanvas::ElementReference *e_ref,
+		     const KammoGUI::SVGCanvas::MotionEvent &event) {
+			switch(event.get_action()) {
+			case KammoGUI::SVGCanvas::MotionEvent::ACTION_CANCEL:
+			case KammoGUI::SVGCanvas::MotionEvent::ACTION_OUTSIDE:
+			case KammoGUI::SVGCanvas::MotionEvent::ACTION_POINTER_DOWN:
+			case KammoGUI::SVGCanvas::MotionEvent::ACTION_POINTER_UP:
+			case KammoGUI::SVGCanvas::MotionEvent::ACTION_MOVE:
+			case KammoGUI::SVGCanvas::MotionEvent::ACTION_DOWN:
+				break;
+			case KammoGUI::SVGCanvas::MotionEvent::ACTION_UP:
+				SATAN_DEBUG("Play pressed: %s\n", id.c_str());
+				break;
+			}
 		}
 		);
+
+	set_selected(false);
 }
 
 void ScaleEditor::Setting::change_setting(int key_index) {
 	SATAN_DEBUG("change_setting(%d)\n", key_index);
+}
+
+void ScaleEditor::Setting::set_selected(bool is_selected) {
+	SATAN_DEBUG("set_selected(%s) for %p\n", is_selected ? "true" : "false", this);
+	find_child_by_class("selectIndicator").set_display(is_selected ? "inline" : "none");
+	SATAN_DEBUG("    completed set_selected() for %p\n", this);
 }
 
 ScaleEditor::ScaleEditor(KammoGUI::SVGCanvas *cnv)
@@ -96,8 +138,12 @@ ScaleEditor::ScaleEditor(KammoGUI::SVGCanvas *cnv)
 		);
 
 	auto select_setting = [this](Setting* new_setting) {
+		SATAN_DEBUG("Active Setting: %p --- New setting: %p\n", active_setting, new_setting);
+		if(active_setting) active_setting->set_selected(false);
+		new_setting->set_selected(true);
+
 		active_setting = new_setting;
-		SATAN_DEBUG("New setting: %p\n", new_setting);
+		SATAN_DEBUG("Active setting set.\n");
 	};
 
 	auto change_setting = [this](int index) {
@@ -143,10 +189,12 @@ ScaleEditor::ScaleEditor(KammoGUI::SVGCanvas *cnv)
 	hide();
 }
 
-void ScaleEditor::show() {
+void ScaleEditor::show(std::shared_ptr<RemoteInterface::RIMachine> _mseq) {
 	KammoGUI::SVGCanvas::ElementReference root_element = KammoGUI::SVGCanvas::ElementReference(this);
 	root_element.set_display("inline");
+	if(active_setting) active_setting->set_selected(false);
 	active_setting = 0;
+	mseq = _mseq;
 }
 
 void ScaleEditor::hide() {

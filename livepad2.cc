@@ -267,7 +267,7 @@ void LivePad2::select_menu() {
 					   if(row_text == rn_copy_to_loop) {
 						   copy_to_loop();
 					   } else if(row_text == rn_custom_scale_editor) {
-						   scale_editor->show();
+						   scale_editor->show(mseq);
 					   }
 				   }
 		);

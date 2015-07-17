@@ -30,6 +30,8 @@
 #
 
 LOCAL_PATH := $(call my-dir)
+DEPENDENCY_DIRECTORY := ../../vuknob_dependencies
+I_DEPENDENCY_DIRECTORY := ../vuknob_dependencies
 
 include $(CLEAR_VARS)
 LOCAL_CPP_EXTENSION := .cc
@@ -38,12 +40,25 @@ LOCAL_SRC_FILES := pathvariable.cc
 include $(BUILD_SHARED_LIBRARY)
 
 include $(CLEAR_VARS)
+LOCAL_MODULE    := libvorbis
+LOCAL_SRC_FILES := $(I_DEPENDENCY_DIRECTORY)/lib/libvorbis.a
+include $(PREBUILT_STATIC_LIBRARY)
+
+include $(CLEAR_VARS)
+LOCAL_MODULE    := libogg
+LOCAL_SRC_FILES := $(I_DEPENDENCY_DIRECTORY)/lib/libogg.a
+include $(PREBUILT_STATIC_LIBRARY)
+
+include $(CLEAR_VARS)
+LOCAL_MODULE    := libvorbisenc
+LOCAL_SRC_FILES := $(I_DEPENDENCY_DIRECTORY)/lib/libvorbisenc.a
+include $(PREBUILT_STATIC_LIBRARY)
+
+include $(CLEAR_VARS)
 
 LOCAL_CPP_EXTENSION := .cc
 
 LOCAL_MODULE    := kamoflage
-DEPENDENCY_DIRECTORY := ../../vuknob_dependencies
-I_DEPENDENCY_DIRECTORY := ../vuknob_dependencies
 
 ifeq ($(TARGET_ARCH_ABI),armeabi-v7a)
 #        LOCAL_ARM_NEON  := true
@@ -144,8 +159,8 @@ KISS_FFT_SOURCES =\
 kiss_fft.c kiss_fftr.c
 
 #  kamoflage/satan stuff
-LOCAL_STATIC_LIBRARIES := cpufeatures
-LOCAL_LDLIBS += -ldl -llog $(DEPENDENCY_DIRECTORY)/lib/libvorbis.a $(DEPENDENCY_DIRECTORY)/lib/libogg.a $(DEPENDENCY_DIRECTORY)/lib/libvorbisenc.a
+LOCAL_STATIC_LIBRARIES := cpufeatures libvorbis libogg libvorbisenc
+LOCAL_LDLIBS += -ldl -llog
 LOCAL_SRC_FILES := \
 $(LIBJPEG_SOURCES) $(LIBPNG_SOURCES) $(ZLIB_SOURCES) $(LIBEXPAT_SOURCES) $(LIBSVG_SOURCES) $(LIBSVG_ANDROID_SOURCES)  $(LIBKAMOFLAGE_SOURCES) $(JNGLDRUM_SOURCES) $(KISS_FFT_SOURCES) \
 satan.cc \

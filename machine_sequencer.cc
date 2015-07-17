@@ -1161,17 +1161,11 @@ void MachineSequencer::Loop::copy_loop(const MachineSequencer::Loop *src) {
 
 #include "scales.hh"
 
-MachineSequencer::PadConfiguration::PadConfiguration() : chord_mode(chord_off) {
-	initialize_scales_library();
-}
+MachineSequencer::PadConfiguration::PadConfiguration() : chord_mode(chord_off) {}
 
-MachineSequencer::PadConfiguration::PadConfiguration(PadMode _mode, int _scale, int _octave) : mode(_mode), chord_mode(chord_off), scale(_scale), octave(_octave), arpeggio_pattern(0), pad_controller_coarse(-1), pad_controller_fine(-1) {
-	initialize_scales_library();
-}
+MachineSequencer::PadConfiguration::PadConfiguration(PadMode _mode, int _scale, int _octave) : mode(_mode), chord_mode(chord_off), scale(_scale), octave(_octave), arpeggio_pattern(0), pad_controller_coarse(-1), pad_controller_fine(-1) {}
 
-MachineSequencer::PadConfiguration::PadConfiguration(const PadConfiguration *parent) : mode(parent->mode), chord_mode(parent->chord_mode), scale(parent->scale), octave(parent->octave), arpeggio_pattern(0), pad_controller_coarse(parent->pad_controller_coarse), pad_controller_fine(parent->pad_controller_fine) {
-	initialize_scales_library();
-}
+MachineSequencer::PadConfiguration::PadConfiguration(const PadConfiguration *parent) : mode(parent->mode), chord_mode(parent->chord_mode), scale(parent->scale), octave(parent->octave), arpeggio_pattern(0), pad_controller_coarse(parent->pad_controller_coarse), pad_controller_fine(parent->pad_controller_fine) {}
 
 void MachineSequencer::PadConfiguration::set_coarse_controller(int c) {
 	pad_controller_coarse = c;
@@ -1238,12 +1232,10 @@ void MachineSequencer::PadConfiguration::load_configuration_from_xml(const KXMLD
 std::vector<std::string> MachineSequencer::PadConfiguration::get_scale_names() {
 	std::vector<std::string> retval;
 
-	int k, max;
+	auto max = Scales::get_number_of_scales();
 
-	max = sizeof(scales_library) / sizeof(ScaleEntry);
-
-	for(k = 0; k < max; k++) {
-		retval.push_back(std::string(scales_library[k].name));
+	for(int k = 0; k < max; k++) {
+		retval.push_back(std::string(Scales::get_scale(k)->name));
 	}
 
 	return retval;
@@ -1252,14 +1244,13 @@ std::vector<std::string> MachineSequencer::PadConfiguration::get_scale_names() {
 std::vector<int> MachineSequencer::PadConfiguration::get_scale_keys(const std::string &scale_name) {
 	std::vector<int> retval;
 
-	int k, max;
+	auto max = Scales::get_number_of_scales();
 
-	max = sizeof(scales_library) / sizeof(ScaleEntry);
-
-	for(k = 0; k < max; k++) {
-		if(scales_library[k].name == scale_name) {
+	for(int k = 0; k < max; k++) {
+		auto scl = Scales::get_scale(k);
+		if(scl->name == scale_name) {
 			for(int l = 0; l < 7; l++) {
-				retval.push_back(scales_library[k].notes[l + scales_library[k].offset]);
+				retval.push_back(scl->notes[l + scl->offset]);
 			}
 		}
 	}
@@ -1446,7 +1437,7 @@ void MachineSequencer::PadMotion::reset() {
 	last_x = -1;
 }
 
-void MachineSequencer::PadMotion::build_chord(int *scale_data, int scale_offset, int *chord, int pad_column) {
+void MachineSequencer::PadMotion::build_chord(const int *scale_data, int scale_offset, int *chord, int pad_column) {
 	// this version of build_chord() builds a simple triad
 	chord[0] = octave * 12 + scale_data[pad_column + 0 + scale_offset];
 	chord[1] = octave * 12 + scale_data[pad_column + 2 + scale_offset];
@@ -1465,8 +1456,9 @@ bool MachineSequencer::PadMotion::process_motion(MachineSequencer::MidiEventBuil
 
 	crnt_tick++;
 
-	int *scale_data = scales_library[scale].notes;
-	int scale_offset = scales_library[scale].offset;
+	auto scl = Scales::get_scale(scale);
+	const int *scale_data = scl->notes;
+	int scale_offset = scl->offset;
 
 	int max = (int)x.size();
 

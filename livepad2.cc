@@ -34,6 +34,7 @@
 
 #include "livepad2.hh"
 #include "svg_loader.hh"
+#include "scales.hh"
 
 //#define __DO_SATAN_DEBUG
 #include "satan_debug.hh"
@@ -160,11 +161,6 @@ void LivePad2::select_chord() {
 		);
 }
 
-static const char *key_text[] = {
-	"C-", "C#", "D-", "D#", "E-", "F-", "F#", "G-", "G#", "A-", "A#", "B-",
-	"C-", "C#", "D-", "D#", "E-", "F-", "F#", "G-", "G#", "A-", "A#", "B-"
-};
-
 void LivePad2::refresh_scale_key_names() {
 	if(auto gco = RemoteInterface::GlobalControlObject::get_global_control_object()) {
 		std::vector<int> keys = gco->get_scale_keys(scale_name);
@@ -178,7 +174,7 @@ void LivePad2::refresh_scale_key_names() {
 			int key_number = keys[n % keys.size()];
 
 			std::stringstream key_name_text;
-			key_name_text << key_text[key_number] << (octave + (key_number / 12) + (n / keys.size()));
+			key_name_text << Scales::get_key_text(key_number) << (octave + (key_number / 12) + (n / keys.size()));
 			SATAN_DEBUG("   [%d] -> %s\n", key_number, key_name_text.str().c_str());
 			key_name.set_text_content(key_name_text.str());
 		}

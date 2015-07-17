@@ -195,6 +195,7 @@ remote_interface.cc remote_interface.hh \
 corner_button.cc corner_button.hh \
 connection_list.cc connection_list.hh \
 scale_editor.cc scale_editor.hh \
+scales.cc scales.hh \
 time_measure.cc
 
 LOCAL_SHARED_LIBRARIES := libpathvariable

@@ -43,12 +43,13 @@ private:
 	private:
 		KammoGUI::SVGCanvas::ElementReference play_button;
 		KammoGUI::SVGCanvas::ElementReference setting_text;
+		int key;
 	public:
 		Setting(ScaleEditor *parent,
 			const std::string &id_base,
 			std::function<void(Setting*)> callback);
 
-		void change_setting(int key_index);
+		void change_key(int key_index);
 		void set_selected(bool is_selected);
 	};
 

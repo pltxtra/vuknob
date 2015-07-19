@@ -212,12 +212,42 @@ void MachineSequencer::MidiEventBuilder::use_buffer(void **_buffer, int _buffer_
 	process_freeable_chain();
 }
 
+void MachineSequencer::MidiEventBuilder::finish_current_buffer() {
+	buffer_size = 0;
+	buffer_position = 1;
+	buffer = 0;
+}
+
 void MachineSequencer::MidiEventBuilder::skip_to(int new_buffer_position) {
 	buffer_position = new_buffer_position;
 }
 
 int MachineSequencer::MidiEventBuilder::tell() {
 	return buffer_position;
+}
+
+void MachineSequencer::MidiEventBuilder::queue_midi_data(size_t len, const char *data) {
+	size_t offset = 0;
+
+	while(offset < len) {
+		switch(data[offset] & 0xf0) {
+		case 0x80: // note off
+			queue_note_off(data[offset + 1], data[offset + 2], data[offset] & 0x0f);
+			offset += 3;
+			break;
+		case 0x90: // note on
+			queue_note_on(data[offset + 1], data[offset + 2], data[offset] & 0x0f);
+			offset += 3;
+			break;
+		case 0xb0: // change controller
+			queue_controller(data[offset + 1], data[offset + 2], data[offset] & 0x0f);
+			offset += 3;
+			break;
+		default: // not implemented - skip rest of data
+			SATAN_ERROR("MidiEventBuilder::queue_midi_data() - Unimplemented status byte - skip rest of data.\n");
+			return;
+		}
+	}
 }
 
 void MachineSequencer::MidiEventBuilder::queue_note_on(int note, int velocity, int channel) {
@@ -2488,6 +2518,8 @@ void MachineSequencer::fill_buffers() {
 
 	}
 
+	_meb.finish_current_buffer();
+
 	// wrap around for next buffer
 	next_tick_at -= output_limit;
 }
@@ -2903,6 +2935,20 @@ void MachineSequencer::update_controller_envelope(
 			}
 		},
 		&param, true);
+}
+
+void MachineSequencer::enqueue_midi_data(size_t len, const char* data) {
+	char* data_copy = (char*)malloc(len);
+	if(!data_copy) return;
+	memcpy(data_copy, data, len);
+
+	Machine::machine_operation_enqueue(
+		[this, len, data_copy] (void *) {
+
+			_meb.queue_midi_data(len, data_copy);
+			free(data_copy);
+
+		}, NULL, false);
 }
 
 /*************************************

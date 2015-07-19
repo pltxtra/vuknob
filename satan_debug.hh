@@ -27,6 +27,9 @@
  *
  */
 
+#ifndef __SATAN_DEBUG_HEADER
+#define __SATAN_DEBUG_HEADER
+
 #define WHERESTR  "[file %s, line %d]: "
 #define WHEREARG  __FILE__, __LINE__
 
@@ -71,3 +74,5 @@
 #endif
 
 #endif
+
+#endif // __SATAN_DEBUG_HEADER

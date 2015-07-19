@@ -33,26 +33,29 @@
 #define __DO_SATAN_DEBUG
 #include "satan_debug.hh"
 
+#include "scales.hh"
 #include "common.hh"
 
 ScaleEditor::Key::Key(ScaleEditor *parent, const std::string &id,
-		      int index, std::function<void(int)> callback)
+		      int index,
+		      std::function<void(bool note_on, int index)> callback)
 	: ElementReference(parent, id) {
 	set_event_handler(
 		[id, index, callback](KammoGUI::SVGCanvas::SVGDocument *source,
 				      KammoGUI::SVGCanvas::ElementReference *e_ref,
 				      const KammoGUI::SVGCanvas::MotionEvent &event) {
-			SATAN_DEBUG("Key pressed: %d (%s)\n", index, id.c_str());
 			switch(event.get_action()) {
 			case KammoGUI::SVGCanvas::MotionEvent::ACTION_CANCEL:
 			case KammoGUI::SVGCanvas::MotionEvent::ACTION_OUTSIDE:
 			case KammoGUI::SVGCanvas::MotionEvent::ACTION_POINTER_DOWN:
 			case KammoGUI::SVGCanvas::MotionEvent::ACTION_POINTER_UP:
 			case KammoGUI::SVGCanvas::MotionEvent::ACTION_MOVE:
+				break;
 			case KammoGUI::SVGCanvas::MotionEvent::ACTION_DOWN:
+				callback(true, index);
 				break;
 			case KammoGUI::SVGCanvas::MotionEvent::ACTION_UP:
-				callback(index);
+				callback(false, index);
 				break;
 			}
 		}
@@ -60,16 +63,19 @@ ScaleEditor::Key::Key(ScaleEditor *parent, const std::string &id,
 }
 
 ScaleEditor::Setting::Setting(ScaleEditor *parent, const std::string &id,
-			      std::function<void(Setting*)> callback)
-	: ElementReference(parent, id + "set") {
+			      std::function<void(Setting*)> set_callback,
+			      std::function<void(bool note_on,
+						 int key_index)> play_callback)
+	: ElementReference(parent, id + "set")
+	, key(0)
+{
 	play_button = ElementReference(parent, id + "play");
 	setting_text = play_button.find_child_by_class("key_text");
 
 	set_event_handler(
-		[id, callback](KammoGUI::SVGCanvas::SVGDocument *source,
+		[this, id, set_callback](KammoGUI::SVGCanvas::SVGDocument *source,
 			       KammoGUI::SVGCanvas::ElementReference *e_ref,
 			       const KammoGUI::SVGCanvas::MotionEvent &event) {
-			Setting *thiz = (Setting *)e_ref;
 			SATAN_DEBUG("Setting pressed: %s\n", id.c_str());
 			switch(event.get_action()) {
 			case KammoGUI::SVGCanvas::MotionEvent::ACTION_CANCEL:
@@ -80,37 +86,43 @@ ScaleEditor::Setting::Setting(ScaleEditor *parent, const std::string &id,
 			case KammoGUI::SVGCanvas::MotionEvent::ACTION_DOWN:
 				break;
 			case KammoGUI::SVGCanvas::MotionEvent::ACTION_UP:
-				callback(thiz);
+				set_callback(this);
 				break;
 			}
 		}
 		);
 
 	play_button.set_event_handler(
-		[id](KammoGUI::SVGCanvas::SVGDocument *source,
-		     KammoGUI::SVGCanvas::ElementReference *e_ref,
-		     const KammoGUI::SVGCanvas::MotionEvent &event) {
+		[this, play_callback](KammoGUI::SVGCanvas::SVGDocument *source,
+				KammoGUI::SVGCanvas::ElementReference *e_ref,
+				const KammoGUI::SVGCanvas::MotionEvent &event) {
 			switch(event.get_action()) {
 			case KammoGUI::SVGCanvas::MotionEvent::ACTION_CANCEL:
 			case KammoGUI::SVGCanvas::MotionEvent::ACTION_OUTSIDE:
 			case KammoGUI::SVGCanvas::MotionEvent::ACTION_POINTER_DOWN:
 			case KammoGUI::SVGCanvas::MotionEvent::ACTION_POINTER_UP:
 			case KammoGUI::SVGCanvas::MotionEvent::ACTION_MOVE:
+				break;
 			case KammoGUI::SVGCanvas::MotionEvent::ACTION_DOWN:
+				play_callback(true, key);
 				break;
 			case KammoGUI::SVGCanvas::MotionEvent::ACTION_UP:
-				SATAN_DEBUG("Play pressed: %s\n", id.c_str());
+				play_callback(false, key);
 				break;
 			}
 		}
 		);
 
 	set_selected(false);
+	change_key(key);
 }
 
 void ScaleEditor::Setting::change_key(int key_index) {
-	SATAN_DEBUG("change_setting(%d)\n", key_index);
+	SATAN_DEBUG("change_setting(%d) -- octave: %d\n", key_index, key_index / 12);
 	key = key_index;
+
+	std::string octave_text = ((key_index / 12) == 1) ? "2" : "1";
+	setting_text.set_text_content(Scales::get_key_text(key_index) + octave_text);
 }
 
 void ScaleEditor::Setting::set_selected(bool is_selected) {
@@ -147,9 +159,36 @@ ScaleEditor::ScaleEditor(KammoGUI::SVGCanvas *cnv)
 		SATAN_DEBUG("Active setting set.\n");
 	};
 
-	auto change_key = [this](int index) {
-		if(active_setting) {
-			active_setting->change_key(index);
+	auto change_key = [this](bool note_on, int index) {
+		if(note_on) {
+			char midi_data[] = {
+				0x90, (char)(36 + index), 0x7f
+			};
+			if(mseq) mseq->enqueue_midi_data(3, midi_data);
+		} else {
+			char midi_data[] = {
+				0x80, (char)(36 + index), 0x7f
+			};
+			if(mseq) mseq->enqueue_midi_data(3, midi_data);
+			if(active_setting) {
+				active_setting->change_key(index);
+			}
+		}
+	};
+
+	auto play_key = [this](bool note_on, int index) {
+		if(!mseq) return;
+
+		if(note_on) {
+			char midi_data[] = {
+				0x90, (char)(36 + index), 0x7f
+			};
+			mseq->enqueue_midi_data(3, midi_data);
+		} else {
+			char midi_data[] = {
+				0x80, (char)(36 + index), 0x7f
+			};
+			mseq->enqueue_midi_data(3, midi_data);
 		}
 	};
 
@@ -179,13 +218,13 @@ ScaleEditor::ScaleEditor(KammoGUI::SVGCanvas *cnv)
 	keys.push_back(Key(this, "as2", 22, change_key));
 	keys.push_back(Key(this, "b_2", 23, change_key));
 
-	settings.push_back(Setting(this, "s1_", select_setting));
-	settings.push_back(Setting(this, "s2_", select_setting));
-	settings.push_back(Setting(this, "s3_", select_setting));
-	settings.push_back(Setting(this, "s4_", select_setting));
-	settings.push_back(Setting(this, "s5_", select_setting));
-	settings.push_back(Setting(this, "s6_", select_setting));
-	settings.push_back(Setting(this, "s7_", select_setting));
+	settings.push_back(new Setting(this, "s1_", select_setting, play_key));
+	settings.push_back(new Setting(this, "s2_", select_setting, play_key));
+	settings.push_back(new Setting(this, "s3_", select_setting, play_key));
+	settings.push_back(new Setting(this, "s4_", select_setting, play_key));
+	settings.push_back(new Setting(this, "s5_", select_setting, play_key));
+	settings.push_back(new Setting(this, "s6_", select_setting, play_key));
+	settings.push_back(new Setting(this, "s7_", select_setting, play_key));
 
 	hide();
 }

@@ -36,7 +36,7 @@ private:
 	class Key : public KammoGUI::SVGCanvas::ElementReference {
 	public:
 		Key(ScaleEditor *parent, const std::string &id,
-		    int index, std::function<void(int)> callback);
+		    int index, std::function<void(bool note_on, int index)> callback);
 	};
 
 	class Setting : public KammoGUI::SVGCanvas::ElementReference {
@@ -47,14 +47,15 @@ private:
 	public:
 		Setting(ScaleEditor *parent,
 			const std::string &id_base,
-			std::function<void(Setting*)> callback);
+			std::function<void(Setting*)> set_callback,
+			std::function<void(bool note_on, int index)> play_callback);
 
 		void change_key(int key_index);
 		void set_selected(bool is_selected);
 	};
 
 	std::list<Key> keys;
-	std::list<Setting> settings;
+	std::list<Setting*> settings;
 
 	Setting* active_setting = 0;
 

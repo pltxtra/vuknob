@@ -166,12 +166,16 @@ private:
 		MidiEventBuilder();
 
 		void use_buffer(void **buffer, int buffer_size);
+		void finish_current_buffer();
 		void skip_to(int new_buffer_position);
 		int tell();
+
+		void queue_midi_data(size_t len, const char *data);
 
 		virtual void queue_note_on(int note, int velocity, int channel = 0);
 		virtual void queue_note_off(int note, int velocity, int channel = 0);
 		virtual void queue_controller(int controller, int value, int channel = 0);
+
 	};
 
 	class PadMidiExportBuilder : public MidiEventBuilder {
@@ -654,6 +658,8 @@ public:
 
 	const ControllerEnvelope *get_controller_envelope(const std::string &name) const;
 	void update_controller_envelope(const ControllerEnvelope *original, const ControllerEnvelope *new_entry);
+
+	void enqueue_midi_data(size_t len, const char* data);
 
 	/// returns a pointer to the machine this MachineSequencer is feeding.
 	Machine *get_machine();

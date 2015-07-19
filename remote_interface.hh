@@ -54,6 +54,40 @@ protected:
 	class Context;
 	class BaseObject;
 
+	static inline std::string encode_byte_array(size_t len, const char *data) {
+		std::string result;
+		size_t offset = 0;
+		while(len - offset > 0) {
+			char frb[3];
+
+			frb[0] = ((data[offset] & 0xf0) >> 4) + 'a';
+			frb[1] = ((data[offset] & 0x0f) >> 0) + 'a';
+			frb[2] = '\0';
+
+			offset++;
+
+			result +=  frb;
+		}
+		return result;
+	}
+
+	static inline void decode_byte_array(const std::string &encoded,
+					     size_t &len, char **data) {
+		*data = (char*)malloc((sizeof(char) * encoded.size()) >> 1);
+		if(*data == 0) return;
+
+		len = encoded.size() / 2;
+		size_t offset = 0;
+
+		while(len - offset > 0) {
+			(*data)[offset] =
+				( (encoded[(offset << 1) + 0] - 'a') << 4)
+				|
+				( (encoded[(offset << 1) + 1] - 'a') << 0);
+			offset++;
+		}
+	}
+
 	class Message {
 	public:
 		enum { header_length = 8 };
@@ -597,6 +631,7 @@ public:
 		void pad_set_arpeggio_pattern(const std::string &arp_pattern);
 		void pad_clear();
 		void pad_enqueue_event(int finger, PadEvent_t event_type, float ev_x, float ev_y);
+		void enqueue_midi_data(size_t len, const char* data);
 
 	public:
 		virtual void post_constructor_client(); // called after the constructor has been called

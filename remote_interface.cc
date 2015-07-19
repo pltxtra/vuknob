@@ -2419,6 +2419,21 @@ void RemoteInterface::RIMachine::pad_enqueue_event(int finger, PadEvent_t event_
 		);
 }
 
+void RemoteInterface::RIMachine::enqueue_midi_data(size_t len, const char* data) {
+	std::string encoded = encode_byte_array(len, data);
+	auto thiz = std::dynamic_pointer_cast<RIMachine>(shared_from_this());
+	send_object_message(
+		[encoded, thiz](std::shared_ptr<Message> &msg2send) {
+			msg2send->set_value("command", "midi");
+			msg2send->set_value("ignored", thiz->name); // make sure thiz is not optimized away
+
+			msg2send->set_value("data", encoded);
+
+			SATAN_DEBUG("RIMachine::enqueue_midi_data() - data: %s\n", encoded.c_str());
+		}
+		);
+}
+
 void RemoteInterface::RIMachine::post_constructor_client() {
 	for(auto weak_listener : listeners) {
 		if(auto listener = weak_listener.lock()) {
@@ -2455,6 +2470,24 @@ void RemoteInterface::RIMachine::process_message(Server *context, MessageHandler
 				break;
 			}
 			mseq->get_pad()->enqueue_event(finger, pevt, xp, yp);
+		}
+	} else if(command == "midi") {
+		size_t len;
+		char *data;
+		decode_byte_array(msg.get_value("data"), len, &data);
+		SATAN_DEBUG("RIMachine::process_message() - midi data received. (%d -> %p)\n",
+			    len, data);
+		if(data) {
+			try {
+				MachineSequencer *mseq = dynamic_cast<MachineSequencer *>((real_machine_ptr));
+				if(mseq != NULL) {
+					mseq->enqueue_midi_data(len, data);
+				}
+				free(data);
+			} catch(...) {
+				free(data);
+				throw;
+			}
 		}
 	} else if(command == "setctrval") {
 		SATAN_DEBUG("Server will now process a setctrlval message.\n");

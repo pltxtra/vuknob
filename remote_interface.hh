@@ -44,12 +44,10 @@
 
 #define RI_LOOP_NOT_SET -1
 
-class RemoteInterface {
-public:
+namespace RemoteInterface {
 	class Server;
 	class Client;
 
-protected:
 	class MessageHandler;
 	class Context;
 	class BaseObject;
@@ -305,8 +303,6 @@ protected:
 
 		const Factory *my_factory;
 	};
-
-public:
 
 	class HandleList : public BaseObject {
 	private:

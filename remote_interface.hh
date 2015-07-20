@@ -376,6 +376,9 @@ public:
 		std::vector<std::string> get_pad_arpeggio_patterns();
 		std::vector<std::string> get_scale_names();
 		std::vector<int> get_scale_keys(const std::string &scale_name);
+		const char* get_key_text(int key);
+		int get_custom_scale_note(int offset);
+		void set_custom_scale_note(int offset, int note);
 
 		bool is_it_playing();
 		void play();

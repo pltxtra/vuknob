@@ -43,15 +43,20 @@ private:
 	private:
 		KammoGUI::SVGCanvas::ElementReference play_button;
 		KammoGUI::SVGCanvas::ElementReference setting_text;
-		int key;
+		int key, offset;
+
 	public:
 		Setting(ScaleEditor *parent,
+			int offset,
 			const std::string &id_base,
 			std::function<void(Setting*)> set_callback,
 			std::function<void(bool note_on, int index)> play_callback);
 
 		void change_key(int key_index);
+		int get_key();
 		void set_selected(bool is_selected);
+
+		int get_offset() { return offset; }
 	};
 
 	std::list<Key> keys;
@@ -59,6 +64,7 @@ private:
 
 	Setting* active_setting = 0;
 
+	KammoGUI::SVGCanvas::ElementReference bt_OK;
 	std::shared_ptr<RemoteInterface::RIMachine> mseq;
 
 public:

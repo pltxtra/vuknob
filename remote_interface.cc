@@ -38,6 +38,7 @@
 #include "dynamic_machine.hh"
 #include "machine_sequencer.hh"
 #include "common.hh"
+#include "scales.hh"
 
 //#define __DO_SATAN_DEBUG
 #include "satan_debug.hh"
@@ -64,7 +65,7 @@
 #define __FCT_RIMACHINE			"RIMachine"
 #define __FCT_SAMPLEBANK	        "SampleBank"
 
-#define __VUKNOB_PROTOCOL_VERSION__ 4
+#define __VUKNOB_PROTOCOL_VERSION__ 5
 
 //#define VUKNOB_UDP_SUPPORT
 //#define VUKNOB_UDP_USE
@@ -1056,6 +1057,22 @@ void RemoteInterface::GlobalControlObject::process_message(Server *context, Mess
 		reply->set_value("playing", Machine::is_it_playing() ? "true" : "false");
 		src->deliver_message(reply);
 		SATAN_DEBUG("Reply delivered...\n");
+	} else if(command == "set_custom_scale_note") {
+		auto str_offset = msg.get_value("offset");
+		auto str_note = msg.get_value("note");
+		int offset = std::stoi(str_offset);
+		int note = std::stoi(str_note);
+
+		Scales::set_custom_scale_note(offset, note);
+
+		// update state of clients
+		send_object_message(
+			[str_offset, str_note](std::shared_ptr<Message> &msg2send) {
+				msg2send->set_value("command", "custom_note_updated");
+				msg2send->set_value("offset", str_offset);
+				msg2send->set_value("note", str_note);
+			}
+			);
 	} else if(command == "play") {
 		SATAN_DEBUG("play command received...\n");
 		Machine::play();
@@ -1153,6 +1170,31 @@ void RemoteInterface::GlobalControlObject::process_message(Client *context, cons
 	if(command == "nrplaying") {
 		auto new_row = std::stoi(msg.get_value("nrow"));
 		for(auto w_clb : playback_state_listeners) if(auto clb = w_clb.lock()) clb->periodic_playback_update(new_row);
+	} else if(command == "custom_note_updated") {
+		unsigned int offset = std::stoi(msg.get_value("offset"));
+		int note = std::stoi(msg.get_value("note"));
+
+		{
+			std::lock_guard<std::mutex> lock_guard(base_object_mutex);
+			std::string scale_name;
+			std::vector<int> ole_v;
+			for(auto scl : scale2keys) {
+				if(scl.first[0] == 'C' && scl.first[1] == 'S') {
+					scale_name = scl.first;
+					ole_v = scl.second;
+				}
+			}
+			std::vector<int> nu_v;
+			for(unsigned int k = 0; k < ole_v.size(); k++) {
+				if(k == offset) {
+					nu_v.push_back(note);
+				} else {
+					nu_v.push_back(ole_v[k]);
+				}
+			}
+			scale2keys[scale_name] = nu_v;
+
+		}
 	} else if(command == "play") {
 		SATAN_DEBUG("Client: Playing is now true.\n");
 		is_playing = true;
@@ -1259,6 +1301,32 @@ std::vector<int> RemoteInterface::GlobalControlObject::get_scale_keys(const std:
 
 	std::vector<int> empty_retval;
 	return empty_retval;
+}
+
+const char* RemoteInterface::GlobalControlObject::get_key_text(int key) {
+	return Scales::get_key_text(key);
+}
+
+int RemoteInterface::GlobalControlObject::get_custom_scale_note(int offset) {
+	std::lock_guard<std::mutex> lock_guard(base_object_mutex);
+	for(auto scl : scale2keys) {
+		if(scl.first[0] == 'C' && scl.first[1] == 'S') {
+			return scl.second[offset];
+		}
+	}
+	return 0;
+}
+
+void RemoteInterface::GlobalControlObject::set_custom_scale_note(int offset, int note) {
+	SATAN_ERROR("   trying to set_custom_scale_note(%d, %d)\n", offset, note);
+
+	send_object_message(
+		[offset, note](std::shared_ptr<Message> &msg2send) {
+			msg2send->set_value("command", "set_custom_scale_note");
+			msg2send->set_value("offset", std::to_string(offset));
+			msg2send->set_value("note", std::to_string(note));
+		}
+		);
 }
 
 bool RemoteInterface::GlobalControlObject::is_it_playing() {

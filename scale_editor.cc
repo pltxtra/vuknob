@@ -29,11 +29,10 @@
 
 #include "scale_editor.hh"
 #include "svg_loader.hh"
-
+#include "remote_interface.hh"
 #define __DO_SATAN_DEBUG
 #include "satan_debug.hh"
 
-#include "scales.hh"
 #include "common.hh"
 
 ScaleEditor::Key::Key(ScaleEditor *parent, const std::string &id,
@@ -62,12 +61,12 @@ ScaleEditor::Key::Key(ScaleEditor *parent, const std::string &id,
 		);
 }
 
-ScaleEditor::Setting::Setting(ScaleEditor *parent, const std::string &id,
+ScaleEditor::Setting::Setting(ScaleEditor *parent, int _offset, const std::string &id,
 			      std::function<void(Setting*)> set_callback,
 			      std::function<void(bool note_on,
 						 int key_index)> play_callback)
 	: ElementReference(parent, id + "set")
-	, key(0)
+	, key(0), offset(_offset)
 {
 	play_button = ElementReference(parent, id + "play");
 	setting_text = play_button.find_child_by_class("key_text");
@@ -118,11 +117,18 @@ ScaleEditor::Setting::Setting(ScaleEditor *parent, const std::string &id,
 }
 
 void ScaleEditor::Setting::change_key(int key_index) {
-	SATAN_DEBUG("change_setting(%d) -- octave: %d\n", key_index, key_index / 12);
-	key = key_index;
+	if(auto gco = RemoteInterface::GlobalControlObject::get_global_control_object()) {
 
-	std::string octave_text = ((key_index / 12) == 1) ? "2" : "1";
-	setting_text.set_text_content(Scales::get_key_text(key_index) + octave_text);
+		SATAN_DEBUG("change_setting(%d) -- octave: %d\n", key_index, key_index / 12);
+		key = key_index;
+
+		std::string octave_text = ((key_index / 12) == 1) ? "2" : "1";
+		setting_text.set_text_content(gco->get_key_text(key_index) + octave_text);
+	}
+}
+
+int ScaleEditor::Setting::get_key() {
+	return key;
 }
 
 void ScaleEditor::Setting::set_selected(bool is_selected) {
@@ -218,13 +224,29 @@ ScaleEditor::ScaleEditor(KammoGUI::SVGCanvas *cnv)
 	keys.push_back(Key(this, "as2", 22, change_key));
 	keys.push_back(Key(this, "b_2", 23, change_key));
 
-	settings.push_back(new Setting(this, "s1_", select_setting, play_key));
-	settings.push_back(new Setting(this, "s2_", select_setting, play_key));
-	settings.push_back(new Setting(this, "s3_", select_setting, play_key));
-	settings.push_back(new Setting(this, "s4_", select_setting, play_key));
-	settings.push_back(new Setting(this, "s5_", select_setting, play_key));
-	settings.push_back(new Setting(this, "s6_", select_setting, play_key));
-	settings.push_back(new Setting(this, "s7_", select_setting, play_key));
+	settings.push_back(new Setting(this, 0, "s1_", select_setting, play_key));
+	settings.push_back(new Setting(this, 1, "s2_", select_setting, play_key));
+	settings.push_back(new Setting(this, 2, "s3_", select_setting, play_key));
+	settings.push_back(new Setting(this, 3, "s4_", select_setting, play_key));
+	settings.push_back(new Setting(this, 4, "s5_", select_setting, play_key));
+	settings.push_back(new Setting(this, 5, "s6_", select_setting, play_key));
+	settings.push_back(new Setting(this, 6, "s7_", select_setting, play_key));
+
+	bt_OK = KammoGUI::SVGCanvas::ElementReference(this, "bt_OK");
+	bt_OK.set_event_handler(
+		[this](KammoGUI::SVGCanvas::SVGDocument *source,
+		       KammoGUI::SVGCanvas::ElementReference *e_ref,
+		       const KammoGUI::SVGCanvas::MotionEvent &event) {
+			if(event.get_action() != KammoGUI::SVGCanvas::MotionEvent::ACTION_UP) return;
+
+			if(auto gco = RemoteInterface::GlobalControlObject::get_global_control_object()) {
+				for(auto sett : settings) {
+					gco->set_custom_scale_note(sett->get_offset(), sett->get_key());
+				}
+			}
+			hide();
+		}
+		);
 
 	hide();
 }
@@ -235,6 +257,12 @@ void ScaleEditor::show(std::shared_ptr<RemoteInterface::RIMachine> _mseq) {
 	if(active_setting) active_setting->set_selected(false);
 	active_setting = 0;
 	mseq = _mseq;
+
+	if(auto gco = RemoteInterface::GlobalControlObject::get_global_control_object()) {
+		for(auto sett : settings) {
+			sett->change_key(gco->get_custom_scale_note(sett->get_offset()));
+		}
+	}
 }
 
 void ScaleEditor::hide() {
@@ -266,7 +294,7 @@ void ScaleEditor::on_resize() {
 	{ // calculate transform for the main part of the document
 		double scaling = FingerScaler::fit_to_fingers(canvas_w_inches, canvas_h_inches,
 							      canvas_w, canvas_h,
-							      8, 7,
+							      8, 8,
 							      document_size.width, document_size.height);
 
 		// calculate translation

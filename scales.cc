@@ -17,6 +17,9 @@
  * Free Software Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA 02111-1307 USA
  */
 
+#include "satan_project_entry.hh"
+#define SCALES_PROJECT_INTERFACE_LEVEL 2
+
 #include "scales.hh"
 
 namespace Scales {
@@ -120,12 +123,16 @@ namespace Scales {
 			       0x0, 0x1, 0x3, 0x5, 0x6, 0x8, 0xa,
 			       0x0, 0x2, 0x4, 0x5, 0x7, 0x9, 0xb
 			} },
+		{ 0x0, "CS1", {0x0, 0x2, 0x4, 0x5, 0x7, 0x9, 0xb,
+			       0x0, 0x2, 0x4, 0x5, 0x7, 0x9, 0xb,
+			       0x0, 0x2, 0x4, 0x5, 0x7, 0x9, 0xb
+			} },
 	};
 
 	static void initialize_scale(ScaleEntry *s) {
 		for(int x = 0; x < 7; x++) {
-			s->notes[x +  7] = s->notes[x % 8] + 12;
-			s->notes[x + 14] = s->notes[x % 8] + 24;
+			s->notes[x +  7] = s->notes[x] + 12;
+			s->notes[x + 14] = s->notes[x] + 24;
 		}
 	}
 
@@ -157,9 +164,9 @@ namespace Scales {
 	}
 
 	const ScaleEntry* get_scale(int index) {
-		index = (index % max_scales);
 		initialize_scales_library();
 
+		index = (index % max_scales);
 		return &(scales_library[index]);
 	}
 
@@ -167,4 +174,128 @@ namespace Scales {
 		return key_text[key % 12];
 	}
 
+	int get_custom_scale_note(int offset) {
+		initialize_scales_library();
+		offset = offset % 7;
+
+		for(int i = 0; i < max_scales;  i++) {
+			if(scales_library[i].name[0] == 'C'
+			   &&
+			   scales_library[i].name[1] == 'S'
+				) {
+				return scales_library[i].notes[offset];
+			}
+		}
+		return -1;
+	}
+
+	void set_custom_scale_note(int offset, int note) {
+		initialize_scales_library();
+		offset = offset % 7;
+
+		for(int i = 0; i < max_scales;  i++) {
+			if(scales_library[i].name[0] == 'C'
+			   &&
+			   scales_library[i].name[1] == 'S'
+				) {
+				scales_library[i].notes[offset     ] = note;
+				scales_library[i].notes[offset +  7] = note + 12;
+				scales_library[i].notes[offset + 14] = note + 24;
+			}
+		}
+	}
+
+	class ScalesProjectEntry : public SatanProjectEntry {
+	private:
+		void parse_scale(KXMLDoc &scl) {
+			initialize_scales_library();
+
+			auto scl_name = scl.get_attr("name");
+
+			unsigned int k, k_max = 0;
+			int *notes;
+
+			for(int i = 0; i < max_scales; i++) {
+				if(scl_name == scales_library[i].name) {
+					notes = scales_library[i].notes;
+					break;
+				}
+			}
+
+			// Parse graph coords
+			try {
+				k_max = scl["k"].get_count();
+			} catch(jException e) { k_max = 0;}
+
+			for(k = 0; k < k_max; k++) {
+				auto v = scl["scale"][k];
+				int offset, note;
+
+				KXML_GET_NUMBER(v, "o", offset, 0);
+				KXML_GET_NUMBER(v, "n", note, 0);
+
+				notes[offset] = note;
+			}
+		}
+
+	public:
+		ScalesProjectEntry() : SatanProjectEntry("scalesentry", 1, SCALES_PROJECT_INTERFACE_LEVEL) {}
+
+		virtual std::string get_xml_attributes() override {
+			return "";
+		}
+
+		virtual void generate_xml(std::ostream &output) override {
+			output << "\n";
+
+			for(int i; i < max_scales; i++) {
+				if(scales_library[i].name[0] == 'C'
+				   &&
+				   scales_library[i].name[1] == 'S'
+					) {
+					output << "<scale name=\""
+					       << scales_library[i].name
+					       << "\" >\n";
+
+					for(int k = 0; k < 7; k++) {
+						output << "<k o=\""
+						       << k
+						       << "\" n=\""
+						       << scales_library[i].notes[k]
+						       << "\" />\n";
+					}
+				}
+			}
+
+			output << "\n";
+		}
+
+		virtual void parse_xml(int project_interface_level, KXMLDoc &xml_node) override {
+			unsigned int k, k_max = 0;
+
+			// Parse graph coords
+			try {
+				k_max = xml_node["scale"].get_count();
+			} catch(jException e) { k_max = 0;}
+
+			for(k = 0; k < k_max; k++) {
+				auto scale_node = xml_node["scale"][k];
+				parse_scale(scale_node);
+			}
+		}
+
+		virtual void set_defaults() override {
+			initialize_scales_library();
+
+			set_custom_scale_note(0,  0);
+			set_custom_scale_note(1,  2);
+			set_custom_scale_note(2,  4);
+			set_custom_scale_note(3,  5);
+			set_custom_scale_note(4,  7);
+			set_custom_scale_note(5,  9);
+			set_custom_scale_note(6, 11);
+		}
+	};
+
+	static ScalesProjectEntry this_will_register_us_as_a_project_entry;
 };

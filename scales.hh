@@ -17,6 +17,9 @@
  * Free Software Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA 02111-1307 USA
  */
 
+#ifndef SCALES_HH
+#define SCALES_HH
+
 namespace Scales {
 
 	struct ScaleEntry {
@@ -28,4 +31,9 @@ namespace Scales {
 	const int get_number_of_scales();
 	const ScaleEntry* get_scale(int index);
 	const char* get_key_text(int key);
+	int get_custom_scale_note(int offset);
+	void set_custom_scale_note(int offset, int note);
+
 };
+
+#endif

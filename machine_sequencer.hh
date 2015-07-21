@@ -306,7 +306,8 @@ public:
 
 		PadMode mode;
 		ChordMode chord_mode;
-		int scale, octave, arpeggio_pattern;
+		int scale, last_scale, octave, arpeggio_pattern;
+		int scale_data[21];
 
 		 // if coarse == -1 default to using pad to set velocity.. otherwise pad will set the assigned controller
 		int pad_controller_coarse, pad_controller_fine;
@@ -321,9 +322,6 @@ public:
 
 		void get_configuration_xml(std::ostringstream &stream);
 		void load_configuration_from_xml(const KXMLDoc &pad_xml);
-
-		static std::vector<std::string> get_scale_names();
-		static std::vector<int> get_scale_keys(const std::string &scale_name);
 	};
 
 private:

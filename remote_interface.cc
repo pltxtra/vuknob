@@ -39,6 +39,7 @@
 #include "machine_sequencer.hh"
 #include "common.hh"
 #include "scales.hh"
+#include "serialize.hh"
 
 //#define __DO_SATAN_DEBUG
 #include "satan_debug.hh"
@@ -72,307 +73,6 @@
 
 /***************************
  *
- *  Decoder/Encoder functions
- *
- ***************************/
-
-static std::string decode_string(const std::string &encoded) {
-	char inp[encoded.size() + 1];
-	(void) strncpy(inp, encoded.c_str(), sizeof(inp));
-	int k = 0;
-	char *tok = inp;
-
-	std::string output = "";
-
-	while(inp[k] != '\0') {
-		if(inp[k] == '%') { // OK, encoded value - decode it
-			inp[k] = '\0';
-			output = output + tok;
-
-			char v[] = {inp[k + 1], inp[k + 2]};
-			for(int u = 0; u < 2; u++) {
-				if(v[u] <= 'f' && v[u] >= 'a') v[u] = 0xA + v[u] - 'a';
-				else if(v[u] <= 'F' && v[u] >= 'A') v[u] = 0xA + v[u] - 'A';
-				else if(v[u] <= '9' && v[u] >= '0') v[u] = v[u] - '0';
-			}
-			v[0] = (v[0] << 4) | v[1];
-			v[1] = '\0';
-
-			output += v;
-
-			k += 3;
-
-			tok = &inp[k];
-		} else {
-			k++;
-		}
-	}
-	if(*tok != '\0')
-		output = output + tok;
-
-	return output;
-}
-
-static std::string encode_string(const std::string &uncoded) {
-	char inp[uncoded.size() + 1];
-	(void) strncpy(inp, uncoded.c_str(), sizeof(inp));
-
-	char *tok = inp;
-	std::string output = "";
-
-	for(int k = 0; inp[k] != '\0'; k++) {
-		switch(inp[k]) {
-		case '%':
-			inp[k] = '\0';
-			output = output + tok;
-			output = output + "%25";
-			tok = &inp[k + 1];
-			break;
-		case '=':
-			inp[k] = '\0';
-			output = output + tok;
-			output = output + "%3d";
-			tok = &inp[k + 1];
-			break;
-		case ';':
-			inp[k] = '\0';
-			output = output + tok;
-			output = output + "%3b";
-			tok = &inp[k + 1];
-			break;
-		break;
-		}
-	}
-	if(*tok != '\0')
-		output = output + tok;
-
-	return output;
-}
-
-class ItemSerializer {
-private:
-	std::stringstream result_stream;
-
-public:
-
-	void process(const std::string &v) {
-		result_stream << "string;" << encode_string(v) << ";";
-	}
-
-	void process(bool v) {
-		result_stream << "bool;" << (v ? "true" : "false") << ";";
-	}
-
-	void process(int v) {
-		result_stream << "int;" << v << ";";
-	}
-
-	void process(unsigned int v) {
-		result_stream << "uint;" << v << ";";
-	}
-
-	void process(float v) {
-		result_stream << "float;" << v << ";";
-	}
-
-	void process(double v) {
-		result_stream << "double;" << v << ";";
-	}
-
-	template <typename U, typename V>
-	void process(const std::pair<U,V> &pair);
-
-	template <class ContainerT>
-	void process(const ContainerT &elements);
-
-	std::string result() {
-		return encode_string(result_stream.str());
-	}
-};
-
-template <typename U, typename V>
-void ItemSerializer::process(const std::pair<U,V> &pair) {
-	ItemSerializer subser;
-
-	subser.process(pair.first);
-	subser.process(pair.second);
-
-	result_stream << "pair;" << encode_string(subser.result()) << ";";
-}
-
-template <class ContainerT>
-void ItemSerializer::process(const ContainerT &elements) {
-	ItemSerializer subser;
-
-	for(auto element : elements) {
-		subser.process(element);
-	}
-
-	result_stream << "container;" << encode_string(subser.result()) << ";";
-}
-
-class ItemDeserializer {
-public:
-	class UnexpectedTypeWhenDeserializing : public std::runtime_error {
-	public:
-		UnexpectedTypeWhenDeserializing() : runtime_error("Found unexpected type when trying to deserialize object.") {}
-		virtual ~UnexpectedTypeWhenDeserializing() {}
-	};
-
-	class UnexpectedEndWhenDeserializing : public std::runtime_error {
-	public:
-		UnexpectedEndWhenDeserializing() : runtime_error("Found unexpected end of string input when trying to deserialize object.") {}
-		virtual ~UnexpectedEndWhenDeserializing() {}
-	};
-
-private:
-	std::istringstream is;
-
-	inline void verify_type(const std::string &type_identifier) {
-
-		std::string type;
-		std::getline(is, type, ';');
-		if(is.eof()) throw UnexpectedEndWhenDeserializing();
-
-		SATAN_DEBUG("verify_type(%s) (eof: %s) -> %s\n", type_identifier.c_str(), is.eof() ? "true" : "false", type.c_str());
-
-		if(type == type_identifier) return;
-
-		SATAN_DEBUG(" expected type [%s] but found [%s]\n", type_identifier.c_str(), type.c_str());
-
-		throw UnexpectedTypeWhenDeserializing();
-	}
-
-	inline void get_string(std::string &val) {
-
-		std::getline(is, val, ';');
-		if(is.eof()) throw UnexpectedEndWhenDeserializing();
-
-		SATAN_DEBUG("get_string() (eof: %s)-> %s\n", is.eof() ? "true" : "false", val.c_str());
-	}
-
-#define __ITD_GET_STRING(name) std::string name; get_string(name);
-public:
-	ItemDeserializer(const std::string input) : is(decode_string(input)) {
-		SATAN_DEBUG("ItemDeserializer() -> %s\n", decode_string(input).c_str());
-	}
-
-	void process(std::string &v) {
-		verify_type("string");
-
-		__ITD_GET_STRING(val_s);
-		v = decode_string(val_s);
-	}
-
-	void process(bool &v) {
-		verify_type("bool");
-
-		__ITD_GET_STRING(val_s);
-		v = (val_s == "true") ? true : false;
-	}
-
-	void process(int &v) {
-		verify_type("int");
-
-		__ITD_GET_STRING(val_s);
-		v = std::stoi(val_s);
-	}
-
-	void process(unsigned int &v) {
-		verify_type("uint");
-
-		__ITD_GET_STRING(val_s);
-		v = (unsigned int)std::stoul(val_s);
-	}
-
-	void process(float &v) {
-		verify_type("float");
-
-		__ITD_GET_STRING(val_s);
-		v = std::stof(val_s);
-	}
-
-	void process(double &v) {
-		verify_type("double");
-
-		__ITD_GET_STRING(val_s);
-		v = std::stod(val_s);
-	}
-
-	template <typename U, typename V>
-	void process(std::pair<U,V> &pair);
-
-	template <typename U, typename V>
-	void process(std::map<U,V> &pair);
-
-	template <class ContainerT>
-	void process(ContainerT &elements);
-
-	bool eof() {
-		return is.eof();
-	}
-};
-
-template <typename U, typename V>
-void ItemDeserializer::process(std::pair<U,V> &pair) {
-	verify_type("pair");
-
-	__ITD_GET_STRING(subserialized);
-
-	SATAN_DEBUG("Will deserialize pair [%s]\n", decode_string(subserialized).c_str());
-
-	ItemDeserializer subdeser(decode_string(subserialized));
-
-	subdeser.process(pair.first);
-	subdeser.process(pair.second);
-}
-
-template <typename U, typename V>
-void ItemDeserializer::process(std::map<U,V> &elements) {
-	verify_type("container");
-
-	__ITD_GET_STRING(subserialized);
-
-	SATAN_DEBUG("Will deserialize container [%s]\n", decode_string(subserialized).c_str());
-
-	ItemDeserializer subdeser(decode_string(subserialized));
-
-	std::pair<U,V> element;
-	while(!subdeser.eof()) {
-		try {
-			subdeser.process(element);
-			(void) elements.insert(elements.end(), element);
-		} catch(UnexpectedEndWhenDeserializing& ignored) {
-			/* ignore - this indicates end of contained data */
-		}
-	}
-}
-
-template <class ContainerT>
-void ItemDeserializer::process(ContainerT &elements) {
-	typedef typename ContainerT::value_type ElementT;
-
-	verify_type("container");
-
-	__ITD_GET_STRING(subserialized);
-
-	SATAN_DEBUG("Will deserialize container [%s]\n", decode_string(subserialized).c_str());
-
-	ItemDeserializer subdeser(decode_string(subserialized));
-
-	ElementT element;
-	while(!subdeser.eof()) {
-		try {
-			subdeser.process(element);
-			(void) elements.insert(elements.end(), element);
-		} catch(UnexpectedEndWhenDeserializing& ignored) {
-			/* ignore - this indicates end of contained data */
-		}
-	}
-}
-
-/***************************
- *
  *  Class RemoteInterface::Message
  *
  ***************************/
@@ -400,8 +100,8 @@ void RemoteInterface::Message::set_value(const std::string &key, const std::stri
 	if(value.find(';') != std::string::npos) throw IllegalChar();
 	if(value.find('=') != std::string::npos) throw IllegalChar();
 
-	auto enc_key = encode_string(key);
-	auto enc_val = encode_string(value);
+	auto enc_key = Serialize::encode_string(key);
+	auto enc_val = Serialize::encode_string(value);
 
 	key2val[enc_key] = enc_val;
 
@@ -466,7 +166,7 @@ bool RemoteInterface::Message::decode_body() {
 		std::getline(is, val, ';');
 		SATAN_DEBUG("     -> val: %s\n", val.c_str());
 		if(key != "") {
-			key2val[decode_string(key)] = decode_string(val);
+			key2val[Serialize::decode_string(key)] = Serialize::decode_string(val);
 		}
 		std::getline(is, key, '=');
 	}
@@ -685,7 +385,10 @@ void RemoteInterface::MessageHandler::deliver_message(std::shared_ptr<Message> &
  *
  ***************************/
 
-RemoteInterface::BaseObject::Factory::Factory(const char* _type) : type(_type) {
+RemoteInterface::BaseObject::Factory::Factory(const char* _type, bool _static_single_object)
+	: type(_type)
+	, static_single_object(_static_single_object)
+{
 	if(factories.find(type) != factories.end()) throw FactoryAlreadyCreated();
 
 	factories[type] = this;
@@ -700,6 +403,15 @@ RemoteInterface::BaseObject::Factory::~Factory() {
 
 const char* RemoteInterface::BaseObject::Factory::get_type() const {
 	return type;
+}
+
+auto RemoteInterface::BaseObject::Factory::create_static_single_object(int32_t new_obj_id) -> std::shared_ptr<BaseObject> {
+	std::shared_ptr<BaseObject> retval;
+
+	if(static_single_object)
+		retval = create(new_obj_id);
+
+	return retval;
 }
 
 /***************************
@@ -823,7 +535,150 @@ std::shared_ptr<RemoteInterface::BaseObject> RemoteInterface::BaseObject::create
 	return factory_iterator->second->create(new_obj_id);
 }
 
+void RemoteInterface::BaseObject::create_static_single_objects_on_server(
+	std::function<int()> get_new_id_callback,
+	std::function<void(std::shared_ptr<BaseObject>)> new_obj_created) {
+	for(auto factory : factories) {
+		auto obj = factory.second->create_static_single_object(get_new_id_callback());
+		if(obj) new_obj_created(obj);
+	}
+}
+
 std::map<std::string, RemoteInterface::BaseObject::Factory *> RemoteInterface::BaseObject::factories;
+
+/***************************
+ *
+ *  Class RemoteInterface::SimpleBaseObject
+ *
+ ***************************/
+
+namespace RemoteInterface {
+
+	SimpleBaseObject::SimpleBaseObject(const Factory *factory, const Message &serialized)
+		: BaseObject(factory, serialized)
+	{
+	}
+
+	SimpleBaseObject::SimpleBaseObject(int32_t new_obj_id, const Factory* factory)
+		: BaseObject(new_obj_id, factory)
+	{
+	}
+
+	void SimpleBaseObject::register_handler(const std::string& command_id,
+						std::function<void(Context *context, MessageHandler *src, const Message& msg)> handler) {
+		if(command2function.find(command_id) != command2function.end())
+			throw HandlerAlreadyRegistered();
+
+		command2function[command_id] = handler;
+	}
+
+	class SimpleHandler : public MessageHandler{
+	private:
+		asio::io_service io_service;
+		std::function<void(const Message *reply_message)> callback;
+	public:
+		SimpleHandler(std::function<void(const Message *reply_message)> _cb)
+			: MessageHandler(io_service)
+			, callback(_cb)
+			{}
+		SimpleHandler()
+			: MessageHandler(io_service)
+			{}
+
+		virtual void deliver_message(std::shared_ptr<Message> &msg, bool via_udp = false) override {
+			callback(msg.get());
+		}
+
+		virtual void on_message_received(const Message &msg) override {}
+		virtual void on_connection_dropped() override {}
+	};
+
+	void SimpleBaseObject::send_message_to_server(
+		const std::string &command_id,
+		std::function<void(std::shared_ptr<Message> &msg_to_send)> create_msg_callback,
+		std::function<void(const Message *reply_message)> reply_received_callback) {
+
+		if(is_server_side()) {
+			// if we already are server side - shortcut the process
+			context->post_action(
+				[this, command_id, create_msg_callback, reply_received_callback]() {
+					std::shared_ptr<Message> msg2send = context->acquire_message();
+
+					msg2send->set_value("id", std::to_string(get_obj_id()));
+					msg2send->set_value("commandid", command_id);
+					create_msg_callback(msg2send);
+
+					SimpleHandler sh(reply_received_callback);
+					auto fnc = command2function.find(command_id);
+					const Message& m2s = *(msg2send.get());
+					if(fnc != command2function.end())
+						fnc->second(context, &sh, m2s);
+				}, true
+				);
+		} else {
+			send_object_message(
+				[command_id, create_msg_callback](std::shared_ptr<Message> &msg_to_send) {
+					msg_to_send->set_value("commandid", command_id);
+					create_msg_callback(msg_to_send);
+				},
+				reply_received_callback);
+		}
+	}
+
+	void SimpleBaseObject::send_message_to_server(
+		const std::string &command_id,
+		std::function<void(std::shared_ptr<Message> &msg_to_send)> create_msg_callback) {
+
+		if(is_server_side()) {
+			// if we already are server side - shortcut the process
+			context->post_action(
+				[this, command_id, create_msg_callback]() {
+					std::shared_ptr<Message> msg2send = context->acquire_message();
+
+					msg2send->set_value("id", std::to_string(get_obj_id()));
+					msg2send->set_value("commandid", command_id);
+					create_msg_callback(msg2send);
+
+					SimpleHandler sh;
+					auto fnc = command2function.find(command_id);
+					const Message& m2s = *(msg2send.get());
+					if(fnc != command2function.end())
+						fnc->second(context, &sh, m2s);
+				}, true
+				);
+		} else {
+			send_object_message(
+				[command_id, create_msg_callback](std::shared_ptr<Message> &msg_to_send) {
+					msg_to_send->set_value("commandid", command_id);
+					create_msg_callback(msg_to_send);
+				}
+				);
+		}
+	}
+
+	void SimpleBaseObject::post_constructor_client() {
+	}
+
+	void SimpleBaseObject::process_message(Server *context, MessageHandler *src, const Message &msg) {
+		std::string command_id = msg.get_value("commandid");
+		auto fnc = command2function.find(command_id);
+		if(fnc != command2function.end())
+			fnc->second(context, src, msg);
+	}
+
+	void SimpleBaseObject::process_message(Client *context, const Message &msg) {
+		std::string command_id = msg.get_value("commandid");
+		auto fnc = command2function.find(command_id);
+		if(fnc != command2function.end())
+			fnc->second(context, context, msg);
+	}
+
+	void SimpleBaseObject::serialize(std::shared_ptr<Message> &target) {
+	}
+
+	void SimpleBaseObject::on_delete(Client *context) {
+	}
+};
 
 /***************************
  *
@@ -980,50 +835,12 @@ void RemoteInterface::GlobalControlObject::parse_serialized_arp_patterns(std::ve
 	}
 }
 
-void RemoteInterface::GlobalControlObject::parse_serialized_keys(const std::string &scale_id, const std::string &serialized_keys) {
-	// parse scale list
-	std::stringstream keys_s(serialized_keys);
-	std::string key;
-
-	std::vector<int> result;
-
-	std::getline(keys_s, key, ':');
-	while(!keys_s.eof() && key != "") {
-		result.push_back(std::stoi(key));
-
-		std::getline(keys_s, key, ':');
-	}
-
-	scale2keys[scale_id] = result;
-}
-
 RemoteInterface::GlobalControlObject::GlobalControlObject(const Factory *factory, const Message &serialized) : BaseObject(factory, serialized) {
 	// get basics
 	bpm = std::stoi(serialized.get_value("bpm"));
 	lpb = std::stoi(serialized.get_value("lpb"));
 	is_playing = serialized.get_value("is_playing") == "true" ? true : false;
 	is_recording = serialized.get_value("is_recording") == "true" ? true : false;
-
-	// parse scale list
-	std::stringstream scales_s(serialized.get_value("scales"));
-	std::string scale;
-
-	// get first scale name
-	std::getline(scales_s, scale, ':');
-	while(!scales_s.eof() && scale != "") {
-		// insert scale name
-		scale_names.push_back(scale);
-
-		// get keys for the scale
-		std::stringstream keys4scale_id;
-		keys4scale_id << "keys4scale_" << scale;
-		std::string serialized_keys = serialized.get_value(keys4scale_id.str());
-
-		parse_serialized_keys(scale, serialized_keys);
-
-		// get next scale name
-		std::getline(scales_s, scale, ':');
-	}
 }
 
 RemoteInterface::GlobalControlObject::GlobalControlObject(int32_t new_obj_id, const Factory *factory) : BaseObject(new_obj_id, factory) {
@@ -1057,22 +874,6 @@ void RemoteInterface::GlobalControlObject::process_message(Server *context, Mess
 		reply->set_value("playing", Machine::is_it_playing() ? "true" : "false");
 		src->deliver_message(reply);
 		SATAN_DEBUG("Reply delivered...\n");
-	} else if(command == "set_custom_scale_note") {
-		auto str_offset = msg.get_value("offset");
-		auto str_note = msg.get_value("note");
-		int offset = std::stoi(str_offset);
-		int note = std::stoi(str_note);
-
-		Scales::set_custom_scale_note(offset, note);
-
-		// update state of clients
-		send_object_message(
-			[str_offset, str_note](std::shared_ptr<Message> &msg2send) {
-				msg2send->set_value("command", "custom_note_updated");
-				msg2send->set_value("offset", str_offset);
-				msg2send->set_value("note", str_note);
-			}
-			);
 	} else if(command == "play") {
 		SATAN_DEBUG("play command received...\n");
 		Machine::play();
@@ -1170,31 +971,6 @@ void RemoteInterface::GlobalControlObject::process_message(Client *context, cons
 	if(command == "nrplaying") {
 		auto new_row = std::stoi(msg.get_value("nrow"));
 		for(auto w_clb : playback_state_listeners) if(auto clb = w_clb.lock()) clb->periodic_playback_update(new_row);
-	} else if(command == "custom_note_updated") {
-		unsigned int offset = std::stoi(msg.get_value("offset"));
-		int note = std::stoi(msg.get_value("note"));
-
-		{
-			std::lock_guard<std::mutex> lock_guard(base_object_mutex);
-			std::string scale_name;
-			std::vector<int> ole_v;
-			for(auto scl : scale2keys) {
-				if(scl.first[0] == 'C' && scl.first[1] == 'S') {
-					scale_name = scl.first;
-					ole_v = scl.second;
-				}
-			}
-			std::vector<int> nu_v;
-			for(unsigned int k = 0; k < ole_v.size(); k++) {
-				if(k == offset) {
-					nu_v.push_back(note);
-				} else {
-					nu_v.push_back(ole_v[k]);
-				}
-			}
-			scale2keys[scale_name] = nu_v;
-
-		}
 	} else if(command == "play") {
 		SATAN_DEBUG("Client: Playing is now true.\n");
 		is_playing = true;
@@ -1222,17 +998,6 @@ void RemoteInterface::GlobalControlObject::process_message(Client *context, cons
 	}
 }
 
-void RemoteInterface::GlobalControlObject::serialize_keys(std::shared_ptr<Message> &target,
-							  const std::string &id,
-							  std::vector<int> keys) {
-	std::stringstream keys_serialized;
-
-	for(auto key : keys) {
-		keys_serialized << std::to_string(key) << ":";
-	}
-	target->set_value(id, keys_serialized.str());
-}
-
 void RemoteInterface::GlobalControlObject::serialize_arp_patterns(std::shared_ptr<Message> &target) {
 	std::stringstream ptrns_serialized;
 
@@ -1243,19 +1008,6 @@ void RemoteInterface::GlobalControlObject::serialize_arp_patterns(std::shared_pt
 }
 
 void RemoteInterface::GlobalControlObject::serialize(std::shared_ptr<Message> &target) {
-	std::vector<std::string> scale_names = MachineSequencer::PadConfiguration::get_scale_names();
-	std::stringstream scales_serialized;
-
-	for(auto scale_name : scale_names) {
-		scales_serialized << scale_name << ":";
-
-		std::stringstream keys4scale_id;
-		keys4scale_id << "keys4scale_" << scale_name;
-
-		serialize_keys(target, keys4scale_id.str(), MachineSequencer::PadConfiguration::get_scale_keys(scale_name));
-	}
-	target->set_value("scales", scales_serialized.str());
-
 	target->set_value("bpm", std::to_string(Machine::get_bpm()));
 	target->set_value("lpb", std::to_string(Machine::get_lpb()));
 	target->set_value("is_playing", Machine::is_it_playing() ? "true" : "false");
@@ -1282,51 +1034,6 @@ std::vector<std::string> RemoteInterface::GlobalControlObject::get_pad_arpeggio_
 
 	if(failed) throw Message::CannotReceiveReply();
 	return retval;
-}
-
-std::vector<std::string> RemoteInterface::GlobalControlObject::get_scale_names() {
-	std::lock_guard<std::mutex> lock_guard(base_object_mutex);
-	return scale_names;
-}
-
-std::vector<int> RemoteInterface::GlobalControlObject::get_scale_keys(const std::string &scale_name) {
-
-	{
-		std::lock_guard<std::mutex> lock_guard(base_object_mutex);
-		auto scl = scale2keys.find(scale_name);
-		if(scl != scale2keys.end()) {
-			return (*scl).second;
-		}
-	}
-
-	std::vector<int> empty_retval;
-	return empty_retval;
-}
-
-const char* RemoteInterface::GlobalControlObject::get_key_text(int key) {
-	return Scales::get_key_text(key);
-}
-
-int RemoteInterface::GlobalControlObject::get_custom_scale_note(int offset) {
-	std::lock_guard<std::mutex> lock_guard(base_object_mutex);
-	for(auto scl : scale2keys) {
-		if(scl.first[0] == 'C' && scl.first[1] == 'S') {
-			return scl.second[offset];
-		}
-	}
-	return 0;
-}
-
-void RemoteInterface::GlobalControlObject::set_custom_scale_note(int offset, int note) {
-	SATAN_ERROR("   trying to set_custom_scale_note(%d, %d)\n", offset, note);
-
-	send_object_message(
-		[offset, note](std::shared_ptr<Message> &msg2send) {
-			msg2send->set_value("command", "set_custom_scale_note");
-			msg2send->set_value("offset", std::to_string(offset));
-			msg2send->set_value("note", std::to_string(note));
-		}
-		);
 }
 
 bool RemoteInterface::GlobalControlObject::is_it_playing() {
@@ -1540,7 +1247,7 @@ std::shared_ptr<RemoteInterface::BaseObject> RemoteInterface::SampleBank::Sample
 // client side
 RemoteInterface::SampleBank::SampleBank(const Factory *factory, const Message &serialized) : BaseObject(factory, serialized) {
 	{
-		ItemDeserializer ides(serialized.get_value("content"));
+		Serialize::ItemDeserializer ides(serialized.get_value("content"));
 		serderize_samplebank(ides);
 	}
 	SATAN_DEBUG("SampleBank - client side - [%s] created.\n", bank_name.c_str());
@@ -1648,7 +1355,7 @@ void RemoteInterface::SampleBank::process_message(Client *context, const Message
 }
 
 void RemoteInterface::SampleBank::serialize(std::shared_ptr<Message> &target) {
-	ItemSerializer iser;
+	Serialize::ItemSerializer iser;
 	serderize_samplebank(iser);
 	target->set_value("content", iser.result());
 }
@@ -1748,12 +1455,12 @@ RemoteInterface::RIMachine::RIController::RIController(std::function<
 							       void(std::function<void(std::shared_ptr<Message> &msg_to_send)> )
 							       >  _send_obj_message,
 						       const std::string &serialized) : send_obj_message(_send_obj_message) {
-	ItemDeserializer ides(serialized);
+	Serialize::ItemDeserializer ides(serialized);
 	serderize_controller(ides);
 }
 
 std::string RemoteInterface::RIMachine::RIController::get_serialized_controller() {
-	ItemSerializer iser;
+	Serialize::ItemSerializer iser;
 	serderize_controller(iser);
 	return iser.result();
 }
@@ -1989,7 +1696,7 @@ RemoteInterface::RIMachine::RIMachine(const Factory *factory, const Message &ser
 		parse_io(outputs, serialized.get_value("outputs"));
 	} catch(Message::NoSuchKey &e) { /* ignore empty inputs */ }
 
-	ItemDeserializer deserializor(serialized.get_value("ctrgroups"));
+	Serialize::ItemDeserializer deserializor(serialized.get_value("ctrgroups"));
 	deserializor.process(controller_groups);
 	SATAN_DEBUG("Client, RIMachine::RIMachine(%s) - controller_groups [%s]:\n", name.c_str(), serialized.get_value("ctrgroups").c_str());
 	for(auto ctgr : controller_groups) {
@@ -2195,7 +1902,7 @@ std::vector<std::string> RemoteInterface::RIMachine::get_controller_names(const 
 
 		[this, &retval](const Message *reply_message) {
 			if(reply_message) {
-				ItemDeserializer deserializor(reply_message->get_value("ctrlnames"));
+				Serialize::ItemDeserializer deserializor(reply_message->get_value("ctrlnames"));
 				deserializor.process(retval);
 			}
 		}
@@ -2699,7 +2406,7 @@ void RemoteInterface::RIMachine::process_message(Server *context, MessageHandler
 		auto group_name = msg.get_value("grname");
 
 		std::shared_ptr<Message> reply = context->acquire_reply(msg);
-		ItemSerializer serializor;
+		Serialize::ItemSerializer serializor;
 
 		if(group_name == "") {
 			serializor.process(real_machine_ptr->get_controller_names());
@@ -2949,7 +2656,7 @@ void RemoteInterface::RIMachine::serialize(std::shared_ptr<Message> &target) {
 	}
 
 	{
-		ItemSerializer serializor;
+		Serialize::ItemSerializer serializor;
 		serializor.process(real_machine_ptr->get_controller_groups());
 		target->set_value("ctrgroups", serializor.result());
 	}
@@ -3245,8 +2952,10 @@ int32_t RemoteInterface::Server::reserve_new_obj_id() {
 	return new_obj_id;
 }
 
-void RemoteInterface::Server::create_object_from_factory(const std::string &factory_type,
-							 std::function<void(std::shared_ptr<BaseObject> nuobj)> new_object_init_callback) {
+void RemoteInterface::Server::create_object_from_factory(
+	const std::string &factory_type,
+	std::function<void(std::shared_ptr<BaseObject> nuobj)> new_object_init_callback)
+{
 	int32_t new_obj_id = reserve_new_obj_id();
 
 	std::shared_ptr<BaseObject> new_obj = BaseObject::create_object_on_server(new_obj_id, factory_type);
@@ -3561,6 +3270,22 @@ void RemoteInterface::Server::create_service_objects() {
 	}
 	{ // create global sample bank
 		create_object_from_factory(__FCT_SAMPLEBANK, [](std::shared_ptr<BaseObject> new_obj){});
+	}
+	{
+		BaseObject::create_static_single_objects_on_server(
+			[this](void) -> int {
+				return reserve_new_obj_id();
+			},
+			[this](std::shared_ptr<BaseObject> new_obj) {
+				new_obj->set_context(this);
+				all_objects[new_obj->get_obj_id()] = new_obj;
+
+				std::shared_ptr<Message> create_object_message = acquire_message();
+				add_create_object_header(create_object_message, new_obj);
+				new_obj->serialize(create_object_message);
+				distribute_message(create_object_message, false);
+			}
+			);
 	}
 	{ // register us as a machine set listener
 		Machine::register_machine_set_listener(shared_from_this());

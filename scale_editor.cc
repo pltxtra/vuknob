@@ -29,7 +29,7 @@
 
 #include "scale_editor.hh"
 #include "svg_loader.hh"
-#include "remote_interface.hh"
+#include "scales.hh"
 #define __DO_SATAN_DEBUG
 #include "satan_debug.hh"
 
@@ -117,13 +117,13 @@ ScaleEditor::Setting::Setting(ScaleEditor *parent, int _offset, const std::strin
 }
 
 void ScaleEditor::Setting::change_key(int key_index) {
-	if(auto gco = RemoteInterface::GlobalControlObject::get_global_control_object()) {
+	if(auto scalo = Scales::get_scales_object()) {
 
 		SATAN_DEBUG("change_setting(%d) -- octave: %d\n", key_index, key_index / 12);
 		key = key_index;
 
 		std::string octave_text = ((key_index / 12) == 1) ? "2" : "1";
-		setting_text.set_text_content(gco->get_key_text(key_index) + octave_text);
+		setting_text.set_text_content(scalo->get_key_text(key_index) + octave_text);
 	}
 }
 
@@ -239,9 +239,9 @@ ScaleEditor::ScaleEditor(KammoGUI::SVGCanvas *cnv)
 		       const KammoGUI::SVGCanvas::MotionEvent &event) {
 			if(event.get_action() != KammoGUI::SVGCanvas::MotionEvent::ACTION_UP) return;
 
-			if(auto gco = RemoteInterface::GlobalControlObject::get_global_control_object()) {
+			if(auto scalo = Scales::get_scales_object()) {
 				for(auto sett : settings) {
-					gco->set_custom_scale_note(sett->get_offset(), sett->get_key());
+					scalo->set_custom_scale_note(sett->get_offset(), sett->get_key());
 				}
 			}
 			hide();
@@ -258,9 +258,9 @@ void ScaleEditor::show(std::shared_ptr<RemoteInterface::RIMachine> _mseq) {
 	active_setting = 0;
 	mseq = _mseq;
 
-	if(auto gco = RemoteInterface::GlobalControlObject::get_global_control_object()) {
+	if(auto scalo = Scales::get_scales_object()) {
 		for(auto sett : settings) {
-			sett->change_key(gco->get_custom_scale_note(sett->get_offset()));
+			sett->change_key(scalo->get_custom_scale_note(sett->get_offset()));
 		}
 	}
 }

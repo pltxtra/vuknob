@@ -1193,9 +1193,9 @@ void MachineSequencer::Loop::copy_loop(const MachineSequencer::Loop *src) {
 
 MachineSequencer::PadConfiguration::PadConfiguration() : chord_mode(chord_off) {}
 
-MachineSequencer::PadConfiguration::PadConfiguration(PadMode _mode, int _scale, int _octave) : mode(_mode), chord_mode(chord_off), scale(_scale), octave(_octave), arpeggio_pattern(0), pad_controller_coarse(-1), pad_controller_fine(-1) {}
+MachineSequencer::PadConfiguration::PadConfiguration(PadMode _mode, int _scale, int _octave) : mode(_mode), chord_mode(chord_off), scale(_scale), last_scale(-1), octave(_octave), arpeggio_pattern(0), pad_controller_coarse(-1), pad_controller_fine(-1) {}
 
-MachineSequencer::PadConfiguration::PadConfiguration(const PadConfiguration *parent) : mode(parent->mode), chord_mode(parent->chord_mode), scale(parent->scale), octave(parent->octave), arpeggio_pattern(0), pad_controller_coarse(parent->pad_controller_coarse), pad_controller_fine(parent->pad_controller_fine) {}
+MachineSequencer::PadConfiguration::PadConfiguration(const PadConfiguration *parent) : mode(parent->mode), chord_mode(parent->chord_mode), scale(parent->scale), last_scale(-1), octave(parent->octave), arpeggio_pattern(0), pad_controller_coarse(parent->pad_controller_coarse), pad_controller_fine(parent->pad_controller_fine) {}
 
 void MachineSequencer::PadConfiguration::set_coarse_controller(int c) {
 	pad_controller_coarse = c;
@@ -1257,35 +1257,6 @@ void MachineSequencer::PadConfiguration::load_configuration_from_xml(const KXMLD
 
 	KXML_GET_NUMBER(c, "cc", pad_controller_coarse, -1);
 	KXML_GET_NUMBER(c, "cf", pad_controller_fine, -1);
-}
-
-std::vector<std::string> MachineSequencer::PadConfiguration::get_scale_names() {
-	std::vector<std::string> retval;
-
-	auto max = Scales::get_number_of_scales();
-
-	for(int k = 0; k < max; k++) {
-		retval.push_back(std::string(Scales::get_scale(k)->name));
-	}
-
-	return retval;
-}
-
-std::vector<int> MachineSequencer::PadConfiguration::get_scale_keys(const std::string &scale_name) {
-	std::vector<int> retval;
-
-	auto max = Scales::get_number_of_scales();
-
-	for(int k = 0; k < max; k++) {
-		auto scl = Scales::get_scale(k);
-		if(scl->name == scale_name) {
-			for(int l = 0; l < 7; l++) {
-				retval.push_back(scl->notes[l + scl->offset]);
-			}
-		}
-	}
-
-	return retval;
 }
 
 /*************************************
@@ -1486,9 +1457,22 @@ bool MachineSequencer::PadMotion::process_motion(MachineSequencer::MidiEventBuil
 
 	crnt_tick++;
 
-	auto scl = Scales::get_scale(scale);
-	const int *scale_data = scl->notes;
-	int scale_offset = scl->offset;
+	int scale_offset = 0;
+	if(scale != last_scale) {
+		if(auto scalo = Scales::get_scales_object_serverside()) {
+			//auto scl = scalo->get_scale(scale);
+			xxx
+		} else {
+			// default to standard C scale
+			static const int def_scale_data[] = {
+				0,  2,   4,  5,  7,  9, 11,
+				12, 14, 16, 17, 19, 21, 23,
+				24, 26, 28, 29, 31, 33, 35
+			};
+			for(auto k = 0; k < 21; k++)
+				scale_data[k] = def_scale_data[k];
+		}
+	}
 
 	int max = (int)x.size();
 

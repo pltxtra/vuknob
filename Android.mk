@@ -211,6 +211,7 @@ corner_button.cc corner_button.hh \
 connection_list.cc connection_list.hh \
 scale_editor.cc scale_editor.hh \
 scales.cc scales.hh \
+serialize.cc serialize.hh \
 time_measure.cc
 
 LOCAL_SHARED_LIBRARIES := libpathvariable

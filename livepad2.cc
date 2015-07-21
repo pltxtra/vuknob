@@ -162,8 +162,11 @@ void LivePad2::select_chord() {
 }
 
 void LivePad2::refresh_scale_key_names() {
+	auto scalo = Scales::get_scales_object();
+	if(!scalo) return;
+
 	if(auto gco = RemoteInterface::GlobalControlObject::get_global_control_object()) {
-		std::vector<int> keys = gco->get_scale_keys(scale_name);
+		std::vector<int> keys = scalo->get_scale_keys(scale_name);
 		SATAN_DEBUG("keys[%s].size() = %d\n", scale_name.c_str(), keys.size());
 		for(int n = 0; n < 8; n++) {
 			std::stringstream key_name_id;
@@ -174,7 +177,7 @@ void LivePad2::refresh_scale_key_names() {
 			int key_number = keys[n % keys.size()];
 
 			std::stringstream key_name_text;
-			key_name_text << Scales::get_key_text(key_number) << (octave + (key_number / 12) + (n / keys.size()));
+			key_name_text << scalo->get_key_text(key_number) << (octave + (key_number / 12) + (n / keys.size()));
 			SATAN_DEBUG("   [%d] -> %s\n", key_number, key_name_text.str().c_str());
 			key_name.set_text_content(key_name_text.str());
 		}
@@ -185,7 +188,10 @@ void LivePad2::select_scale() {
 	listView->clear();
 
 	if(auto gco = RemoteInterface::GlobalControlObject::get_global_control_object()) {
-		for(auto scale : gco->get_scale_names()) {
+		auto scalo = Scales::get_scales_object();
+		if(!scalo) return;
+
+		for(auto scale : scalo->get_scale_names()) {
 			listView->add_row(scale);
 		}
 	}
@@ -197,9 +203,12 @@ void LivePad2::select_scale() {
 					   scale_name = row_text;
 
 					   if(auto gco = RemoteInterface::GlobalControlObject::get_global_control_object()) {
+						   auto scalo = Scales::get_scales_object();
+						   if(!scalo) return;
+
 						   int n = 0;
 
-						   for(auto scale : gco->get_scale_names()) {
+						   for(auto scale : scalo->get_scale_names()) {
 							   if(scale_name == scale) {
 								   scale_index = n;
 							   }
@@ -324,8 +333,8 @@ void LivePad2::refresh_quantize_indicator() {
 void LivePad2::refresh_scale_indicator() {
 	int n = 0;
 
-	if(auto gco = RemoteInterface::GlobalControlObject::get_global_control_object()) {
-		for(auto scale : gco->get_scale_names()) {
+	if(auto scalo = Scales::get_scales_object()) {
+		for(auto scale : scalo->get_scale_names()) {
 			if(scale_index == n) {
 				selectScale_element.find_child_by_class("selectedText").set_text_content(scale);
 			}

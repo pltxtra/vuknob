@@ -206,11 +206,18 @@ namespace RemoteInterface {
 		asio::ip::udp::endpoint udp_target_endpoint;
 
 	public:
+		class OnlyForDelivery : public std::runtime_error {
+		public:
+			OnlyForDelivery() : runtime_error("MessageHandler object only intended for use with deliver_message().") {}
+			virtual ~OnlyForDelivery() {}
+		};
+
 		MessageHandler(asio::io_service &io_service);
 		MessageHandler(asio::ip::tcp::socket _socket);
 
 		void start_receive();
-		void deliver_message(std::shared_ptr<Message> &msg, bool via_udp = false); // will encode() msg before transfer
+
+		virtual void deliver_message(std::shared_ptr<Message> &msg, bool via_udp = false);
 
 		virtual void on_message_received(const Message &msg) = 0;
 		virtual void on_connection_dropped() = 0;
@@ -224,6 +231,8 @@ namespace RemoteInterface {
 		class Factory {
 		private:
 			const char* type;
+			bool static_single_object;
+
 		public:
 			class FactoryAlreadyCreated : public std::runtime_error {
 			public:
@@ -231,13 +240,15 @@ namespace RemoteInterface {
 				virtual ~FactoryAlreadyCreated() {}
 			};
 
-			Factory(const char* type);
+			Factory(const char* type, bool static_single_object = false);
 			~Factory();
 
 			const char* get_type() const;
 
 			virtual std::shared_ptr<BaseObject> create(const Message &serialized) = 0;
 			virtual std::shared_ptr<BaseObject> create(int32_t new_obj_id) = 0;
+
+			std::shared_ptr<BaseObject> create_static_single_object(int32_t new_obj_id);
 		};
 
 		BaseObject(const Factory *factory, const Message &serialized);
@@ -278,7 +289,8 @@ namespace RemoteInterface {
 		};
 		class ObjIdOverflow : public std::runtime_error {
 		public:
-			ObjIdOverflow() : runtime_error("This session ran out of possible values RemoteInterface::BaseObject::obj_id.") {}
+			ObjIdOverflow()
+				: runtime_error("This session ran out of possible values RemoteInterface::BaseObject::obj_id.") {}
 			virtual ~ObjIdOverflow() {}
 		};
 
@@ -296,12 +308,47 @@ namespace RemoteInterface {
 		static std::shared_ptr<BaseObject> create_object_from_message(const Message &msg);
 		static std::shared_ptr<BaseObject> create_object_on_server(int32_t new_obj_id, const std::string &type);
 
+		static void create_static_single_objects_on_server(
+			std::function<int()> get_new_id_callback,
+			std::function<void(std::shared_ptr<BaseObject>)> new_obj_created);
+
 	private:
 		static std::map<std::string, Factory *> factories;
 
 		int32_t obj_id;
 
 		const Factory *my_factory;
+	};
+
+	class SimpleBaseObject : public BaseObject {
+	private:
+		std::map<std::string,
+			 std::function<void(Context *context, MessageHandler *src, const Message& msg)> > command2function;
+
+	public:
+		class HandlerAlreadyRegistered : public std::runtime_error {
+		public:
+			HandlerAlreadyRegistered() : runtime_error("Tried to register the same command id twice.") {}
+			virtual ~HandlerAlreadyRegistered() {}
+		};
+
+		SimpleBaseObject(const Factory *factory, const Message &serialized);
+		SimpleBaseObject(int32_t new_obj_id, const Factory* factory);
+
+		void register_handler(const std::string& command_id,
+				      std::function<void(Context *context, MessageHandler *src, const Message& msg)> handler);
+		void send_message_to_server(const std::string &command_id,
+					    std::function<void(std::shared_ptr<Message> &msg_to_send)> create_msg_callback,
+					    std::function<void(const Message *reply_message)> reply_received_callback);
+		void send_message_to_server(const std::string &command_id,
+					    std::function<void(std::shared_ptr<Message> &msg_to_send)> create_msg_callback);
+
+		virtual void post_constructor_client() override; // called after the constructor has been called
+		virtual void process_message(Server *context, MessageHandler *src,
+					     const Message &msg) override; // server side processing
+		virtual void process_message(Client *context, const Message &msg) override; // client side processing
+		virtual void serialize(std::shared_ptr<Message> &target) override;
+		virtual void on_delete(Client *context) override; // called on client side when it's about to be deleted
 	};
 
 	class HandleList : public BaseObject {
@@ -350,11 +397,7 @@ namespace RemoteInterface {
 		virtual void on_delete(Client *context) override; // called on client side when it's about to be deleted
 
 		void parse_serialized_arp_patterns(std::vector<std::string> &retval, const std::string &serialized_arp_patterns);
-		void parse_serialized_keys(const std::string &scale_id, const std::string &serialized_keys);
 		void serialize_arp_patterns(std::shared_ptr<Message> &target);
-		void serialize_keys(std::shared_ptr<Message> &target,
-				    const std::string &id,
-				    std::vector<int> keys);
 	public:
 		GlobalControlObject(const Factory *factory, const Message &serialized); // create client side HandleList
 		GlobalControlObject(int32_t new_obj_id, const Factory *factory); // create server side HandleList
@@ -370,11 +413,6 @@ namespace RemoteInterface {
 		static std::shared_ptr<GlobalControlObject> get_global_control_object(); // get a shared ptr to the current GCO, shared_ptr will be empty if the client is not connected
 
 		std::vector<std::string> get_pad_arpeggio_patterns();
-		std::vector<std::string> get_scale_names();
-		std::vector<int> get_scale_keys(const std::string &scale_name);
-		const char* get_key_text(int key);
-		int get_custom_scale_note(int offset);
-		void set_custom_scale_note(int offset, int note);
 
 		bool is_it_playing();
 		void play();
@@ -403,9 +441,6 @@ namespace RemoteInterface {
 
 		int bpm, lpb;
 		bool is_playing = false, is_recording = false;
-
-		std::map<std::string, std::vector<int> > scale2keys;
-		std::vector<std::string> scale_names;
 	};
 
 	class SampleBank : public BaseObject {

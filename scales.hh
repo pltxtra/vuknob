@@ -20,20 +20,126 @@
 #ifndef SCALES_HH
 #define SCALES_HH
 
-namespace Scales {
+#include "remote_interface.hh"
+#include "serialize.hh"
 
-	struct ScaleEntry {
-		int offset;
-		const char *name;
-		int notes[21];
+class Scales : public RemoteInterface::SimpleBaseObject {
+public:
+	static constexpr const char* FACTORY_NAME		= "Scales";
+
+private:
+	class ScalesFactory : public Factory {
+	private:
+		static std::shared_ptr<Scales> clientside_scales_object;
+		static std::mutex clientside_mtx;
+
+		static std::shared_ptr<Scales> serverside_scales_object;
+		static std::mutex serverside_mtx;
+
+		static ScalesFactory scales_factory;
+	public:
+
+		ScalesFactory() : Factory(FACTORY_NAME) {}
+
+		virtual std::shared_ptr<BaseObject> create(const RemoteInterface::Message &serialized) override {
+			std::lock_guard<std::mutex> lck(clientside_mtx);
+			clientside_scales_object = std::make_shared<Scales>(this, serialized);
+			return clientside_scales_object;
+		}
+
+		virtual std::shared_ptr<BaseObject> create(int32_t new_obj_id) override {
+			std::lock_guard<std::mutex> lck(serverside_mtx);
+			serverside_scales_object = std::make_shared<Scales>(new_obj_id, this);
+			return serverside_scales_object;
+		}
+
+		static std::shared_ptr<Scales> get_clientside_scales_object() {
+			std::lock_guard<std::mutex> lck(clientside_mtx);
+			return clientside_scales_object;
+		}
+
+		static std::shared_ptr<Scales> get_serverside_scales_object() {
+			std::lock_guard<std::mutex> lck(serverside_mtx);
+			return serverside_scales_object;
+		}
 	};
 
-	const int get_number_of_scales();
-	const ScaleEntry* get_scale(int index);
+	static constexpr const char* CMD_GET_NR_SCALES		= "getnrs";
+	static constexpr const char* CMD_GET_SCALE_NAMES	= "getnames";
+	static constexpr const char* CMD_GET_SCALE_KEYS		= "getskeys";
+	static constexpr const char* CMD_GET_CUSTOM_SCALE_NOTE	= "getcsn";
+	static constexpr const char* CMD_SET_CUSTOM_SCALE_NOTE	= "setcsn";
+
+	void handle_get_nr_scales(RemoteInterface::Context *context, RemoteInterface::MessageHandler *src,
+				  const RemoteInterface::Message& msg);
+	void handle_get_scale_names(RemoteInterface::Context *context, RemoteInterface::MessageHandler *src,
+				    const RemoteInterface::Message& msg);
+	void handle_get_scale_keys(RemoteInterface::Context *context, RemoteInterface::MessageHandler *src,
+				   const RemoteInterface::Message& msg);
+	void handle_get_custom_scale_note(
+		RemoteInterface::Context *context, RemoteInterface::MessageHandler *src, const RemoteInterface::Message& msg);
+	void handle_set_custom_scale_note(
+		RemoteInterface::Context *context, RemoteInterface::MessageHandler *src, const RemoteInterface::Message& msg);
+
+	void register_handlers() {
+		register_handler(CMD_GET_NR_SCALES,
+				 std::bind(&Scales::handle_get_nr_scales, this,
+					   std::placeholders::_1, std::placeholders::_2, std::placeholders::_3));
+		register_handler(CMD_GET_SCALE_NAMES,
+				 std::bind(&Scales::handle_get_scale_names, this,
+					   std::placeholders::_1, std::placeholders::_2, std::placeholders::_3));
+		register_handler(CMD_GET_SCALE_KEYS,
+				 std::bind(&Scales::handle_get_scale_keys, this,
+					   std::placeholders::_1, std::placeholders::_2, std::placeholders::_3));
+		register_handler(CMD_GET_CUSTOM_SCALE_NOTE,
+				 std::bind(&Scales::handle_get_custom_scale_note, this,
+					   std::placeholders::_1, std::placeholders::_2, std::placeholders::_3));
+		register_handler(CMD_SET_CUSTOM_SCALE_NOTE,
+				 std::bind(&Scales::handle_set_custom_scale_note, this,
+					   std::placeholders::_1, std::placeholders::_2, std::placeholders::_3));
+	}
+
+	/* serverside data */
+	struct Scale {
+		static constexpr const char* serialize_identifier = "Scales::Scale";
+
+		std::string name;
+		std::vector<int> notes;
+
+		template <class SerderClassT>
+		void serderize(SerderClassT& iserder) {
+			iserder.process(name);
+			iserder.process(notes);
+		}
+	};
+
+	std::shared_ptr<Scale> custom_scale;
+
+	std::vector<std::shared_ptr<Scale> > scales;
+	bool scales_initialized = false;
+	void initialize_scales();
+
+public:
+
+	Scales(const Factory *factory, const RemoteInterface::Message &serialized);
+	Scales(int32_t new_obj_id, const Factory *factory);
+
 	const char* get_key_text(int key);
+
+	int get_number_of_scales();
+	std::vector<std::string> get_scale_names();
+	std::vector<int> get_scale_keys(const std::string &scale_name);
+	std::vector<int> get_scale_keys(int index);
 	int get_custom_scale_note(int offset);
 	void set_custom_scale_note(int offset, int note);
 
+	static std::shared_ptr<Scales> get_scales_object() {
+		return ScalesFactory::get_clientside_scales_object();
+	}
+
+	static std::shared_ptr<Scales> get_scales_object_serverside() {
+		return ScalesFactory::get_serverside_scales_object();
+	}
 };
 
 #endif

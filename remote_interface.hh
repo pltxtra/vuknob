@@ -240,6 +240,14 @@ namespace RemoteInterface {
 				virtual ~FactoryAlreadyCreated() {}
 			};
 
+			class StaticSingleObjectAlreadyCreated : public std::runtime_error {
+			public:
+				StaticSingleObjectAlreadyCreated()
+					: runtime_error("Tried to create multiple RemoteInterface::BaseObject "
+							"for factory marked as static single.") {}
+				virtual ~StaticSingleObjectAlreadyCreated() {}
+			};
+
 			Factory(const char* type, bool static_single_object = false);
 			~Factory();
 

@@ -27,39 +27,19 @@
  *
  */
 
-#include "satan_error.hh"
-
-#ifndef __SATAN_DEBUG_HEADER
-#define __SATAN_DEBUG_HEADER
-
-#define WHERESTR  "[file %s, line %d]: "
-#define WHEREARG  __FILE__, __LINE__
-
-#ifdef __DO_SATAN_DEBUG
+#ifndef __SATAN_ERROR_HEADER
+#define __SATAN_ERROR_HEADER
 
 #ifdef ANDROID
 
-//#define _DROP_STDOUT_STDERR_TO_FILE
-#define _STDOUT_DROP_FILE "/mnt/sdcard/SATAN_STDOUT.TXT"
-
 #include <android/log.h>
-#define SATAN_DEBUG_(...)       __android_log_print(ANDROID_LOG_INFO, "SATAN_NDK", __VA_ARGS__)
-#define SATAN_DEBUG(...)       __android_log_print(ANDROID_LOG_INFO, "SATAN_NDK", __VA_ARGS__)
+#define SATAN_ERROR(...)       __android_log_print(ANDROID_LOG_INFO, "SATAN_NDK", __VA_ARGS__)
 
 #else
 
 #include <stdio.h>
-#define SATAN_DEBUG_(...)       printf(__VA_ARGS__)
-#define SATAN_DEBUG(...)  printf(__VA_ARGS__)
+#define SATAN_ERRROR(...)  printf(__VA_ARGS__)
 
 #endif
 
-#else
-// disable debugging
-
-#define SATAN_DEBUG_(...)
-#define SATAN_DEBUG(_fmt, ...)
-
-#endif
-
-#endif // __SATAN_DEBUG_HEADER
+#endif // __SATAN_ERROR_HEADER

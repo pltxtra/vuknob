@@ -123,8 +123,10 @@ void ScaleEditor::Setting::change_key(int key_index) {
 		key = key_index;
 
 		std::string octave_text = ((key_index / 12) == 1) ? "2" : "1";
-		std::string key_text = scalo->get_key_text(key_index) + octave_text;
-		SATAN_DEBUG("change_setting(%d) -- octave: %d -> %s\n", key_index, key_index / 12, key_text.c_str());
+		std::string key_text(scalo->get_key_text(key_index));
+		key_text = key_text + octave_text;
+
+//		SATAN_DEBUG("change_setting(%d) -- octave: %d -> %s\n", key_index, key_index / 12, key_text.c_str());
 		setting_text.set_text_content(key_text);
 	} else {
 		SATAN_ERROR("ScaleEditor::Setting::change_key() - failed to get Scales object from client.\n");

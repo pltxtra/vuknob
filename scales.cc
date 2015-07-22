@@ -302,6 +302,9 @@ void Scales::handle_set_custom_scale_key(
 }
 
 const char* Scales::get_key_text(int key) {
+	SATAN_ERROR("in get_key_text() %d -> %d\n", key, key % 12);
+	SATAN_ERROR("---> %s\n", key_text[key % 12]);
+	SATAN_ERROR("exit get_key_text()\n");
 	return key_text[key % 12];
 }
 
@@ -350,7 +353,7 @@ std::vector<int> Scales::get_scale_keys(const std::string &scale_name) {
 	std::vector<int> retval = {0, 2, 4, 5, 7, 9, 11};
 
 	send_message_to_server(
-		CMD_GET_SCALE_NAMES,
+		CMD_GET_SCALE_KEYS,
 
 		[&scale_name](std::shared_ptr<RemoteInterface::Message> &msg2send) {
 			msg2send->set_value("name", scale_name);
@@ -371,7 +374,7 @@ std::vector<int> Scales::get_scale_keys(int index) {
 	std::vector<int> retval = {0, 2, 4, 5, 7, 9, 11};
 
 	send_message_to_server(
-		CMD_GET_SCALE_NAMES,
+		CMD_GET_SCALE_KEYSN,
 
 		[index](std::shared_ptr<RemoteInterface::Message> &msg2send) {
 			msg2send->set_value("index", std::to_string(index));
@@ -405,34 +408,35 @@ void Scales::get_scale_keys(int index, int* result) {
 }
 
 int Scales::get_custom_scale_key(int offset) {
-	initialize_scales_library();
-	offset = offset % 7;
+	int retval = 0;
 
-	for(int i = 0; i < max_scales;  i++) {
-		if(scales_library[i].name[0] == 'C'
-		   &&
-		   scales_library[i].name[1] == 'S'
-			) {
-			return scales_library[i].keys[offset];
+	send_message_to_server(
+		CMD_GET_CUSTOM_SCALE_KEY,
+
+		[offset](std::shared_ptr<RemoteInterface::Message> &msg2send) {
+			msg2send->set_value("offset", std::to_string(offset));
+		},
+
+		[this, &retval](const RemoteInterface::Message *reply_message) {
+			if(reply_message) {
+				retval = std::stoi(reply_message->get_value("key"));
+			}
 		}
-	}
-	return -1;
+		);
+
+	return retval;
 }
 
 void Scales::set_custom_scale_key(int offset, int key) {
-	initialize_scales_library();
-	offset = offset % 7;
+	send_message_to_server(
+		CMD_SET_CUSTOM_SCALE_KEY,
 
-	for(int i = 0; i < max_scales;  i++) {
-		if(scales_library[i].name[0] == 'C'
-		   &&
-		   scales_library[i].name[1] == 'S'
-			) {
-			scales_library[i].keys[offset     ] = key;
-			scales_library[i].keys[offset +  7] = key + 12;
-			scales_library[i].keys[offset + 14] = key + 24;
+		[offset, key](std::shared_ptr<RemoteInterface::Message> &msg2send) {
+			msg2send->set_value("offset", std::to_string(offset));
+			msg2send->set_value("key", std::to_string(key));
 		}
-	}
+
+		);
 }
 
 class ScalesProjectEntry : public SatanProjectEntry {
@@ -510,8 +514,11 @@ public:
 };
 
 static ScalesProjectEntry this_will_register_us_as_a_project_entry;
+static Scales::ScalesFactory this_will_register_us_as_a_factory;
 
 std::shared_ptr<Scales>		Scales::ScalesFactory::clientside_scales_object;
 std::mutex			Scales::ScalesFactory::clientside_mtx;
+volatile bool			Scales::ScalesFactory::clientside_obj_created = false;
 std::shared_ptr<Scales>		Scales::ScalesFactory::serverside_scales_object;
 std::mutex			Scales::ScalesFactory::serverside_mtx;
+volatile bool			Scales::ScalesFactory::serverside_obj_created = false;

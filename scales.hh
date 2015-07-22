@@ -23,8 +23,7 @@
 #include "remote_interface.hh"
 #include "serialize.hh"
 
-#define __DO_SATAN_DEBUG
-#include "satan_debug.hh"
+#include "satan_error.hh"
 
 class Scales : public RemoteInterface::SimpleBaseObject {
 public:
@@ -36,22 +35,24 @@ public:
 		virtual ~ServersideOnlyFunction() {}
 	};
 
-private:
 	class ScalesFactory : public Factory {
 	private:
 		static std::shared_ptr<Scales> clientside_scales_object;
 		static std::mutex clientside_mtx;
+		volatile static bool clientside_obj_created;
 
 		static std::shared_ptr<Scales> serverside_scales_object;
 		static std::mutex serverside_mtx;
+		volatile static bool serverside_obj_created;
 
-		static ScalesFactory scales_factory;
 	public:
 
-		ScalesFactory() : Factory(FACTORY_NAME) {}
+		ScalesFactory() : Factory(FACTORY_NAME, true) {}
 
 		virtual std::shared_ptr<BaseObject> create(const RemoteInterface::Message &serialized) override {
 			std::lock_guard<std::mutex> lck(clientside_mtx);
+			if(clientside_obj_created) throw StaticSingleObjectAlreadyCreated();
+			clientside_obj_created = true;
 			clientside_scales_object = std::make_shared<Scales>(this, serialized);
 			SATAN_ERROR("Clientside object created - %s\n", FACTORY_NAME);
 			return clientside_scales_object;
@@ -59,21 +60,31 @@ private:
 
 		virtual std::shared_ptr<BaseObject> create(int32_t new_obj_id) override {
 			std::lock_guard<std::mutex> lck(serverside_mtx);
+			if(serverside_obj_created) throw StaticSingleObjectAlreadyCreated();
+			serverside_obj_created = true;
 			serverside_scales_object = std::make_shared<Scales>(new_obj_id, this);
 			SATAN_ERROR("Serverside object created - %s\n", FACTORY_NAME);
 			return serverside_scales_object;
 		}
 
 		static std::shared_ptr<Scales> get_clientside_scales_object() {
-			std::lock_guard<std::mutex> lck(clientside_mtx);
-			return clientside_scales_object;
+			if(clientside_obj_created)
+				return clientside_scales_object;
+
+			std::shared_ptr<Scales> empty;
+			return empty;
 		}
 
 		static std::shared_ptr<Scales> get_serverside_scales_object() {
-			std::lock_guard<std::mutex> lck(serverside_mtx);
-			return serverside_scales_object;
+			if(serverside_obj_created)
+				return serverside_scales_object;
+
+			std::shared_ptr<Scales> empty;
+			return empty;
 		}
 	};
+
+private:
 
 	static constexpr const char* CMD_GET_NR_SCALES		= "getnrs";
 	static constexpr const char* CMD_GET_SCALE_NAMES	= "getnames";

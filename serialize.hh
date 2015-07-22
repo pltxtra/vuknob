@@ -28,8 +28,7 @@
 
 #include "common.hh"
 
-//#define __DO_SATAN_DEBUG
-#include "satan_debug.hh"
+#include "satan_error.hh"
 
 namespace Serialize {
 
@@ -104,7 +103,7 @@ namespace Serialize {
 		ItemSerializer subser;
 		t->serderize(subser);
 
-		result_stream << SerializableT::serialize_identifier << encode_string(subser.result()) << ";";
+		result_stream << SerializableT::serialize_identifier << ";" << encode_string(subser.result()) << ";";
 	}
 
 	template <class ArrayT>
@@ -152,11 +151,9 @@ namespace Serialize {
 			std::getline(is, type, ';');
 			if(is.eof()) throw UnexpectedEndWhenDeserializing();
 
-			SATAN_DEBUG("verify_type(%s) (eof: %s) -> %s\n", type_identifier.c_str(), is.eof() ? "true" : "false", type.c_str());
-
 			if(type == type_identifier) return;
 
-			SATAN_DEBUG(" expected type [%s] but found [%s]\n", type_identifier.c_str(), type.c_str());
+			SATAN_ERROR(" expected type [%s] but found [%s]\n", type_identifier.c_str(), type.c_str());
 
 			throw UnexpectedTypeWhenDeserializing();
 		}
@@ -166,13 +163,11 @@ namespace Serialize {
 			std::getline(is, val, ';');
 			if(is.eof()) throw UnexpectedEndWhenDeserializing();
 
-			SATAN_DEBUG("get_string() (eof: %s)-> %s\n", is.eof() ? "true" : "false", val.c_str());
 		}
 
 #define __ITD_GET_STRING(name) std::string name; get_string(name);
 	public:
 		ItemDeserializer(const std::string &input) : is(decode_string(input)) {
-			SATAN_DEBUG("ItemDeserializer() -> %s\n", decode_string(input).c_str());
 		}
 
 		void process(std::string &v) {
@@ -244,8 +239,6 @@ namespace Serialize {
 
 		__ITD_GET_STRING(subserialized);
 
-		SATAN_DEBUG("Will deserialize pair [%s]\n", decode_string(subserialized).c_str());
-
 		ItemDeserializer subdeser(decode_string(subserialized));
 
 		subdeser.process(pair.first);
@@ -257,8 +250,6 @@ namespace Serialize {
 		verify_type("container");
 
 		__ITD_GET_STRING(subserialized);
-
-		SATAN_DEBUG("Will deserialize container [%s]\n", decode_string(subserialized).c_str());
 
 		ItemDeserializer subdeser(decode_string(subserialized));
 
@@ -309,8 +300,6 @@ namespace Serialize {
 		verify_type("container");
 
 		__ITD_GET_STRING(subserialized);
-
-		SATAN_DEBUG("Will deserialize container [%s]\n", decode_string(subserialized).c_str());
 
 		ItemDeserializer subdeser(decode_string(subserialized));
 

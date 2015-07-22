@@ -123,7 +123,11 @@ void ScaleEditor::Setting::change_key(int key_index) {
 		key = key_index;
 
 		std::string octave_text = ((key_index / 12) == 1) ? "2" : "1";
-		setting_text.set_text_content(scalo->get_key_text(key_index) + octave_text);
+		std::string key_text = scalo->get_key_text(key_index) + octave_text;
+		SATAN_DEBUG("change_setting(%d) -- octave: %d -> %s\n", key_index, key_index / 12, key_text.c_str());
+		setting_text.set_text_content(key_text);
+	} else {
+		SATAN_ERROR("ScaleEditor::Setting::change_key() - failed to get Scales object from client.\n");
 	}
 }
 
@@ -241,7 +245,7 @@ ScaleEditor::ScaleEditor(KammoGUI::SVGCanvas *cnv)
 
 			if(auto scalo = Scales::get_scales_object()) {
 				for(auto sett : settings) {
-					scalo->set_custom_scale_note(sett->get_offset(), sett->get_key());
+					scalo->set_custom_scale_key(sett->get_offset(), sett->get_key());
 				}
 			}
 			hide();
@@ -260,7 +264,7 @@ void ScaleEditor::show(std::shared_ptr<RemoteInterface::RIMachine> _mseq) {
 
 	if(auto scalo = Scales::get_scales_object()) {
 		for(auto sett : settings) {
-			sett->change_key(scalo->get_custom_scale_note(sett->get_offset()));
+			sett->change_key(scalo->get_custom_scale_key(sett->get_offset()));
 		}
 	}
 }

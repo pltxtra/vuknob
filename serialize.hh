@@ -78,6 +78,9 @@ namespace Serialize {
 		template <class SerializableT>
 		void process(std::shared_ptr<SerializableT> &t);
 
+		template <class ArrayT>
+		void process(size_t array_size, ArrayT* elements);
+
 		template <class ContainerT>
 		void process(const ContainerT &elements);
 
@@ -102,6 +105,17 @@ namespace Serialize {
 		t->serderize(subser);
 
 		result_stream << SerializableT::serialize_identifier << encode_string(subser.result()) << ";";
+	}
+
+	template <class ArrayT>
+	void ItemSerializer::process(size_t array_size, ArrayT* elements) {
+		ItemSerializer subser;
+
+		for(size_t k = 0; k < array_size; k++) {
+			subser.process(elements[k]);
+		}
+
+		result_stream << "array;" << encode_string(subser.result()) << ";";
 	}
 
 	template <class ContainerT>
@@ -212,6 +226,9 @@ namespace Serialize {
 		template <class SerializableT>
 		void process(std::shared_ptr<SerializableT> &t);
 
+		template <class ArrayT>
+		void process(size_t array_size, ArrayT* elements);
+
 		template <class ContainerT>
 		void process(ContainerT &elements);
 
@@ -268,6 +285,23 @@ namespace Serialize {
 		t->serderize(subdeser);
 	}
 
+	template <class ArrayT>
+	void ItemDeserializer::process(size_t array_size, ArrayT* elements) {
+		verify_type("array");
+		__ITD_GET_STRING(subserialized);
+
+		ItemDeserializer subdeser(decode_string(subserialized));
+		size_t index = 0;
+
+		while((index < array_size) && (!subdeser.eof())) {
+			try {
+				subdeser.process(elements[index++]);
+			} catch(UnexpectedEndWhenDeserializing& ignored) {
+				/* ignore - this indicates end of contained data */
+			}
+		}
+	}
+
 	template <class ContainerT>
 	void ItemDeserializer::process(ContainerT &elements) {
 		typedef typename ContainerT::value_type ElementT;
@@ -279,6 +313,8 @@ namespace Serialize {
 		SATAN_DEBUG("Will deserialize container [%s]\n", decode_string(subserialized).c_str());
 
 		ItemDeserializer subdeser(decode_string(subserialized));
+
+		elements.clear();
 
 		ElementT element;
 		while(!subdeser.eof()) {

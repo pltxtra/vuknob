@@ -23,9 +23,18 @@
 #include "remote_interface.hh"
 #include "serialize.hh"
 
+#define __DO_SATAN_DEBUG
+#include "satan_debug.hh"
+
 class Scales : public RemoteInterface::SimpleBaseObject {
 public:
 	static constexpr const char* FACTORY_NAME		= "Scales";
+
+	class ServersideOnlyFunction : public std::runtime_error {
+	public:
+		ServersideOnlyFunction() : runtime_error("Tried to call serverside function from clientside.") {}
+		virtual ~ServersideOnlyFunction() {}
+	};
 
 private:
 	class ScalesFactory : public Factory {
@@ -44,12 +53,14 @@ private:
 		virtual std::shared_ptr<BaseObject> create(const RemoteInterface::Message &serialized) override {
 			std::lock_guard<std::mutex> lck(clientside_mtx);
 			clientside_scales_object = std::make_shared<Scales>(this, serialized);
+			SATAN_ERROR("Clientside object created - %s\n", FACTORY_NAME);
 			return clientside_scales_object;
 		}
 
 		virtual std::shared_ptr<BaseObject> create(int32_t new_obj_id) override {
 			std::lock_guard<std::mutex> lck(serverside_mtx);
 			serverside_scales_object = std::make_shared<Scales>(new_obj_id, this);
+			SATAN_ERROR("Serverside object created - %s\n", FACTORY_NAME);
 			return serverside_scales_object;
 		}
 
@@ -67,8 +78,9 @@ private:
 	static constexpr const char* CMD_GET_NR_SCALES		= "getnrs";
 	static constexpr const char* CMD_GET_SCALE_NAMES	= "getnames";
 	static constexpr const char* CMD_GET_SCALE_KEYS		= "getskeys";
-	static constexpr const char* CMD_GET_CUSTOM_SCALE_NOTE	= "getcsn";
-	static constexpr const char* CMD_SET_CUSTOM_SCALE_NOTE	= "setcsn";
+	static constexpr const char* CMD_GET_SCALE_KEYSN       	= "getskeysn";
+	static constexpr const char* CMD_GET_CUSTOM_SCALE_KEY	= "getcsk";
+	static constexpr const char* CMD_SET_CUSTOM_SCALE_KEY	= "setcsk";
 
 	void handle_get_nr_scales(RemoteInterface::Context *context, RemoteInterface::MessageHandler *src,
 				  const RemoteInterface::Message& msg);
@@ -76,9 +88,11 @@ private:
 				    const RemoteInterface::Message& msg);
 	void handle_get_scale_keys(RemoteInterface::Context *context, RemoteInterface::MessageHandler *src,
 				   const RemoteInterface::Message& msg);
-	void handle_get_custom_scale_note(
+	void handle_get_scale_keysn(RemoteInterface::Context *context, RemoteInterface::MessageHandler *src,
+				    const RemoteInterface::Message& msg);
+	void handle_get_custom_scale_key(
 		RemoteInterface::Context *context, RemoteInterface::MessageHandler *src, const RemoteInterface::Message& msg);
-	void handle_set_custom_scale_note(
+	void handle_set_custom_scale_key(
 		RemoteInterface::Context *context, RemoteInterface::MessageHandler *src, const RemoteInterface::Message& msg);
 
 	void register_handlers() {
@@ -91,11 +105,14 @@ private:
 		register_handler(CMD_GET_SCALE_KEYS,
 				 std::bind(&Scales::handle_get_scale_keys, this,
 					   std::placeholders::_1, std::placeholders::_2, std::placeholders::_3));
-		register_handler(CMD_GET_CUSTOM_SCALE_NOTE,
-				 std::bind(&Scales::handle_get_custom_scale_note, this,
+		register_handler(CMD_GET_SCALE_KEYSN,
+				 std::bind(&Scales::handle_get_scale_keysn, this,
 					   std::placeholders::_1, std::placeholders::_2, std::placeholders::_3));
-		register_handler(CMD_SET_CUSTOM_SCALE_NOTE,
-				 std::bind(&Scales::handle_set_custom_scale_note, this,
+		register_handler(CMD_GET_CUSTOM_SCALE_KEY,
+				 std::bind(&Scales::handle_get_custom_scale_key, this,
+					   std::placeholders::_1, std::placeholders::_2, std::placeholders::_3));
+		register_handler(CMD_SET_CUSTOM_SCALE_KEY,
+				 std::bind(&Scales::handle_set_custom_scale_key, this,
 					   std::placeholders::_1, std::placeholders::_2, std::placeholders::_3));
 	}
 
@@ -104,12 +121,12 @@ private:
 		static constexpr const char* serialize_identifier = "Scales::Scale";
 
 		std::string name;
-		std::vector<int> notes;
+		int keys[7];
 
 		template <class SerderClassT>
 		void serderize(SerderClassT& iserder) {
 			iserder.process(name);
-			iserder.process(notes);
+			iserder.process(7, keys);
 		}
 	};
 
@@ -128,10 +145,13 @@ public:
 
 	int get_number_of_scales();
 	std::vector<std::string> get_scale_names();
+
 	std::vector<int> get_scale_keys(const std::string &scale_name);
 	std::vector<int> get_scale_keys(int index);
-	int get_custom_scale_note(int offset);
-	void set_custom_scale_note(int offset, int note);
+	void get_scale_keys(int index, int* result); // serverside only
+
+	int get_custom_scale_key(int offset);
+	void set_custom_scale_key(int offset, int note);
 
 	static std::shared_ptr<Scales> get_scales_object() {
 		return ScalesFactory::get_clientside_scales_object();

@@ -27,7 +27,7 @@ static bool scales_library_initialized = false;
 struct ScaleEntry {
 	int offset;
 	const char *name;
-	int notes[21];
+	int keys[21];
 };
 
 static struct ScaleEntry scales_library[] = {
@@ -131,8 +131,8 @@ static struct ScaleEntry scales_library[] = {
 
 static void initialize_scale(ScaleEntry *s) {
 	for(int x = 0; x < 7; x++) {
-		s->notes[x +  7] = s->notes[x] + 12;
-		s->notes[x + 14] = s->notes[x] + 24;
+		s->keys[x +  7] = s->keys[x] + 12;
+		s->keys[x + 14] = s->keys[x] + 24;
 	}
 }
 
@@ -169,7 +169,7 @@ void Scales::initialize_scales() {
 		auto scl = std::make_shared<Scale>();
 		scl->name = scales_library[k].name;
 		for(auto l = 0; l < 7; l++) {
-			scl->notes.push_back(scales_library[k].notes[l + scales_library[k].offset]);
+			scl->keys[l] = scales_library[k].keys[l + scales_library[k].offset];
 		}
 		scales.push_back(scl);
 	}
@@ -179,13 +179,13 @@ void Scales::initialize_scales() {
 		auto scl = std::make_shared<Scale>();
 
 		scl->name = "CS1";
-		scl->notes.push_back( 0);
-		scl->notes.push_back( 2);
-		scl->notes.push_back( 4);
-		scl->notes.push_back( 5);
-		scl->notes.push_back( 7);
-		scl->notes.push_back( 9);
-		scl->notes.push_back(11);
+		scl->keys[0] =  0;
+		scl->keys[1] =  2;
+		scl->keys[2] =  4;
+		scl->keys[3] =  5;
+		scl->keys[4] =  7;
+		scl->keys[5] =  9;
+		scl->keys[6] = 11;
 
 		custom_scale = scl;
 		scales.push_back(scl);
@@ -231,19 +231,74 @@ void Scales::handle_get_scale_names(
 void Scales::handle_get_scale_keys(
 	RemoteInterface::Context *context, RemoteInterface::MessageHandler *src, const RemoteInterface::Message& msg)
 {
-	xxx
+	if(is_server_side()) {
+		initialize_scales();
+
+		auto scale_name = msg.get_value("name");
+		int keys[] = {0, 2, 4, 5, 7, 9, 11};
+
+		for(auto scale : scales) {
+			if(scale->name == scale_name) {
+				for(auto k = 0; k < 7; k++)
+					keys[k] = scale->keys[k];
+			}
+		}
+
+		Serialize::ItemSerializer iser;
+		iser.process(keys);
+
+		std::shared_ptr<RemoteInterface::Message> reply = context->acquire_reply(msg);
+		reply->set_value("keys", iser.result());
+		src->deliver_message(reply);
+	}
 }
 
-void Scales::handle_get_custom_scale_note(
+void Scales::handle_get_scale_keysn(
 	RemoteInterface::Context *context, RemoteInterface::MessageHandler *src, const RemoteInterface::Message& msg)
 {
-	xxx
+	if(is_server_side()) {
+		initialize_scales();
+
+		int scale_index = std::stoi(msg.get_value("index"));
+		int keys[] = {0, 2, 4, 5, 7, 9, 11};
+
+		for(auto k = 0; k < 7; k++)
+			keys[k] = scales[scale_index]->keys[k];
+
+		Serialize::ItemSerializer iser;
+		iser.process(keys);
+
+		std::shared_ptr<RemoteInterface::Message> reply = context->acquire_reply(msg);
+		reply->set_value("keys", iser.result());
+		src->deliver_message(reply);
+	}
 }
 
-void Scales::handle_set_custom_scale_note(
+void Scales::handle_get_custom_scale_key(
 	RemoteInterface::Context *context, RemoteInterface::MessageHandler *src, const RemoteInterface::Message& msg)
 {
-	xxx
+	if(is_server_side()) {
+		initialize_scales();
+
+		int offset = std::stoi(msg.get_value("offset"));
+
+		std::shared_ptr<RemoteInterface::Message> reply = context->acquire_reply(msg);
+		reply->set_value("key", std::to_string(custom_scale->keys[offset]));
+		src->deliver_message(reply);
+	}
+}
+
+void Scales::handle_set_custom_scale_key(
+	RemoteInterface::Context *context, RemoteInterface::MessageHandler *src, const RemoteInterface::Message& msg)
+{
+	if(is_server_side()) {
+		initialize_scales();
+
+		int offset = std::stoi(msg.get_value("offset"));
+		int key = std::stoi(msg.get_value("key"));
+
+		custom_scale->keys[offset] = key;
+	}
 }
 
 const char* Scales::get_key_text(int key) {
@@ -292,16 +347,64 @@ std::vector<std::string> Scales::get_scale_names() {
 }
 
 std::vector<int> Scales::get_scale_keys(const std::string &scale_name) {
-	std::vector<int> retval;
+	std::vector<int> retval = {0, 2, 4, 5, 7, 9, 11};
+
+	send_message_to_server(
+		CMD_GET_SCALE_NAMES,
+
+		[&scale_name](std::shared_ptr<RemoteInterface::Message> &msg2send) {
+			msg2send->set_value("name", scale_name);
+		},
+
+		[this, &retval](const RemoteInterface::Message *reply_message) {
+			if(reply_message) {
+				Serialize::ItemDeserializer serder(reply_message->get_value("keys"));
+				serder.process(retval);
+			}
+		}
+		);
+
 	return retval;
 }
 
 std::vector<int> Scales::get_scale_keys(int index) {
-	std::vector<int> retval;
+	std::vector<int> retval = {0, 2, 4, 5, 7, 9, 11};
+
+	send_message_to_server(
+		CMD_GET_SCALE_NAMES,
+
+		[index](std::shared_ptr<RemoteInterface::Message> &msg2send) {
+			msg2send->set_value("index", std::to_string(index));
+		},
+
+		[this, &retval](const RemoteInterface::Message *reply_message) {
+			if(reply_message) {
+				int keys[7];
+
+				Serialize::ItemDeserializer serder(reply_message->get_value("keys"));
+				serder.process(7, keys);
+				retval.clear();
+				for(auto k = 0; k < 7; k++)
+					retval.push_back(keys[k]);
+			}
+		}
+		);
+
 	return retval;
 }
 
-int Scales::get_custom_scale_note(int offset) {
+void Scales::get_scale_keys(int index, int* result) {
+	if(is_client_side())
+		throw ServersideOnlyFunction();
+
+	auto scale = scales[index];
+
+	for(auto k = 0; k < 7; k++) {
+		result[k] = scale->keys[k];
+	}
+}
+
+int Scales::get_custom_scale_key(int offset) {
 	initialize_scales_library();
 	offset = offset % 7;
 
@@ -310,13 +413,13 @@ int Scales::get_custom_scale_note(int offset) {
 		   &&
 		   scales_library[i].name[1] == 'S'
 			) {
-			return scales_library[i].notes[offset];
+			return scales_library[i].keys[offset];
 		}
 	}
 	return -1;
 }
 
-void Scales::set_custom_scale_note(int offset, int note) {
+void Scales::set_custom_scale_key(int offset, int key) {
 	initialize_scales_library();
 	offset = offset % 7;
 
@@ -325,9 +428,9 @@ void Scales::set_custom_scale_note(int offset, int note) {
 		   &&
 		   scales_library[i].name[1] == 'S'
 			) {
-			scales_library[i].notes[offset     ] = note;
-			scales_library[i].notes[offset +  7] = note + 12;
-			scales_library[i].notes[offset + 14] = note + 24;
+			scales_library[i].keys[offset     ] = key;
+			scales_library[i].keys[offset +  7] = key + 12;
+			scales_library[i].keys[offset + 14] = key + 24;
 		}
 	}
 }
@@ -338,19 +441,18 @@ private:
 		if(auto scalo = Scales::get_scales_object()) {
 			unsigned int k, k_max = 0;
 
-			// Parse graph coords
 			try {
 				k_max = scl["k"].get_count();
 			} catch(jException e) { k_max = 0;}
 
 			for(k = 0; k < k_max; k++) {
 				auto v = scl["scale"][k];
-				int offset, note;
+				int offset, key;
 
 				KXML_GET_NUMBER(v, "o", offset, 0);
-				KXML_GET_NUMBER(v, "n", note, 0);
+				KXML_GET_NUMBER(v, "n", key, 0);
 
-				scalo->set_custom_scale_note(offset, note);
+				scalo->set_custom_scale_key(offset, key);
 			}
 		}
 	}
@@ -363,34 +465,27 @@ public:
 	}
 
 	virtual void generate_xml(std::ostream &output) override {
-		output << "\n";
+		if(auto scalo = Scales::get_scales_object()) {
+			output << "\n";
 
-		for(int i; i < max_scales; i++) {
-			if(scales_library[i].name[0] == 'C'
-			   &&
-			   scales_library[i].name[1] == 'S'
-				) {
-				output << "<scale name=\""
-				       << scales_library[i].name
-				       << "\" >\n";
+			output << "<scale name=\""
+			       << "CS1"
+			       << "\" >\n";
 
-				for(int k = 0; k < 7; k++) {
-					output << "<k o=\""
-					       << k
-					       << "\" n=\""
-					       << scales_library[i].notes[k]
-					       << "\" />\n";
-				}
+			for(int k = 0; k < 7; k++) {
+				output << "<k o=\""
+				       << k
+				       << "\" n=\""
+				       << scalo->get_custom_scale_key(k)
+				       << "\" />\n";
 			}
+			output << "\n";
 		}
-
-		output << "\n";
 	}
 
 	virtual void parse_xml(int project_interface_level, KXMLDoc &xml_node) override {
 		unsigned int k, k_max = 0;
 
-		// Parse graph coords
 		try {
 			k_max = xml_node["scale"].get_count();
 		} catch(jException e) { k_max = 0;}
@@ -403,13 +498,13 @@ public:
 
 	virtual void set_defaults() override {
 		if(auto scalo = Scales::get_scales_object()) {
-			scalo->set_custom_scale_note(0,  0);
-			scalo->set_custom_scale_note(1,  2);
-			scalo->set_custom_scale_note(2,  4);
-			scalo->set_custom_scale_note(3,  5);
-			scalo->set_custom_scale_note(4,  7);
-			scalo->set_custom_scale_note(5,  9);
-			scalo->set_custom_scale_note(6, 11);
+			scalo->set_custom_scale_key(0,  0);
+			scalo->set_custom_scale_key(1,  2);
+			scalo->set_custom_scale_key(2,  4);
+			scalo->set_custom_scale_key(3,  5);
+			scalo->set_custom_scale_key(4,  7);
+			scalo->set_custom_scale_key(5,  9);
+			scalo->set_custom_scale_key(6, 11);
 		}
 	}
 };

@@ -1460,8 +1460,12 @@ bool MachineSequencer::PadMotion::process_motion(MachineSequencer::MidiEventBuil
 	int scale_offset = 0;
 	if(scale != last_scale) {
 		if(auto scalo = Scales::get_scales_object_serverside()) {
-			//auto scl = scalo->get_scale(scale);
-			xxx
+			scalo->get_scale_keys(scale, scale_data);
+
+			for(auto k = 0; k < 7; k++) {
+				scale_data[ 7 + k] = scale_data[k] + 12;
+				scale_data[14 + k] = scale_data[k] + 24;
+			}
 		} else {
 			// default to standard C scale
 			static const int def_scale_data[] = {

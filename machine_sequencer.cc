@@ -1459,6 +1459,8 @@ bool MachineSequencer::PadMotion::process_motion(MachineSequencer::MidiEventBuil
 
 	int scale_offset = 0;
 	if(scale != last_scale) {
+		last_scale = scale;
+
 		if(auto scalo = Scales::get_scales_object_serverside()) {
 			scalo->get_scale_keys(scale, scale_data);
 

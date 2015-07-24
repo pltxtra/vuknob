@@ -30,7 +30,7 @@
 #include "scale_editor.hh"
 #include "svg_loader.hh"
 #include "scales.hh"
-#define __DO_SATAN_DEBUG
+//#define __DO_SATAN_DEBUG
 #include "satan_debug.hh"
 
 #include "common.hh"
@@ -238,6 +238,9 @@ ScaleEditor::ScaleEditor(KammoGUI::SVGCanvas *cnv)
 	settings.push_back(new Setting(this, 5, "s6_", select_setting, play_key));
 	settings.push_back(new Setting(this, 6, "s7_", select_setting, play_key));
 
+	active_setting = settings[0];
+	active_setting->set_selected(true);
+
 	bt_OK = KammoGUI::SVGCanvas::ElementReference(this, "bt_OK");
 	bt_OK.set_event_handler(
 		[this](KammoGUI::SVGCanvas::SVGDocument *source,
@@ -260,8 +263,6 @@ ScaleEditor::ScaleEditor(KammoGUI::SVGCanvas *cnv)
 void ScaleEditor::show(std::shared_ptr<RemoteInterface::RIMachine> _mseq) {
 	KammoGUI::SVGCanvas::ElementReference root_element = KammoGUI::SVGCanvas::ElementReference(this);
 	root_element.set_display("inline");
-	if(active_setting) active_setting->set_selected(false);
-	active_setting = 0;
 	mseq = _mseq;
 
 	if(auto scalo = Scales::get_scales_object()) {

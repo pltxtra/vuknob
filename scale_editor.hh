@@ -60,7 +60,7 @@ private:
 	};
 
 	std::list<Key> keys;
-	std::list<Setting*> settings;
+	std::vector<Setting*> settings;
 
 	Setting* active_setting = 0;
 

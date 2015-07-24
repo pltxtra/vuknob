@@ -450,7 +450,7 @@ private:
 			} catch(jException e) { k_max = 0;}
 
 			for(k = 0; k < k_max; k++) {
-				auto v = scl["scale"][k];
+				auto v = scl["k"][k];
 				int offset, key;
 
 				KXML_GET_NUMBER(v, "o", offset, 0);
@@ -483,7 +483,7 @@ public:
 				       << scalo->get_custom_scale_key(k)
 				       << "\" />\n";
 			}
-			output << "\n";
+			output << "</scale>\n";
 		}
 	}
 

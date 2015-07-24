@@ -814,6 +814,7 @@ RemoteInterface::HandleList::HandleListFactory RemoteInterface::HandleList::hand
 RemoteInterface::GlobalControlObject::GlobalControlObjectFactory::GlobalControlObjectFactory() : Factory(__FCT_GLOBALCONTROLOBJECT) {}
 
 std::shared_ptr<RemoteInterface::BaseObject> RemoteInterface::GlobalControlObject::GlobalControlObjectFactory::create(const Message &serialized) {
+	std::lock_guard<std::mutex> lock_guard(gco_mutex);
 	std::shared_ptr<GlobalControlObject> gco = std::make_shared<GlobalControlObject>(this, serialized);
 	clientside_gco = gco;
 	return gco;
@@ -849,6 +850,13 @@ RemoteInterface::GlobalControlObject::GlobalControlObject(const Factory *factory
 	lpb = std::stoi(serialized.get_value("lpb"));
 	is_playing = serialized.get_value("is_playing") == "true" ? true : false;
 	is_recording = serialized.get_value("is_recording") == "true" ? true : false;
+
+	// refresh all listeners
+	for(auto w_clb : playback_state_listeners)
+		if(auto clb = w_clb.lock()) {
+			clb->playback_state_changed(is_playing);
+			clb->recording_state_changed(is_recording);
+		}
 }
 
 RemoteInterface::GlobalControlObject::GlobalControlObject(int32_t new_obj_id, const Factory *factory) : BaseObject(new_obj_id, factory) {
@@ -1199,7 +1207,7 @@ void RemoteInterface::GlobalControlObject::register_playback_state_listener(std:
 
 				// call the callback with the current state
 				listener_object->playback_state_changed(gco->is_playing);
-				listener_object->playback_state_changed(gco->is_recording);
+				listener_object->recording_state_changed(gco->is_recording);
 			}
 			);
 	} else {
@@ -1207,7 +1215,7 @@ void RemoteInterface::GlobalControlObject::register_playback_state_listener(std:
 
 		// call the callback with the current state
 		listener_object->playback_state_changed(false);
-		listener_object->playback_state_changed(false);
+		listener_object->recording_state_changed(false);
 	}
 }
 

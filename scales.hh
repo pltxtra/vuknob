@@ -54,7 +54,6 @@ public:
 			if(clientside_obj_created) throw StaticSingleObjectAlreadyCreated();
 			clientside_obj_created = true;
 			clientside_scales_object = std::make_shared<Scales>(this, serialized);
-			SATAN_ERROR("Clientside object created - %s\n", FACTORY_NAME);
 			return clientside_scales_object;
 		}
 
@@ -63,7 +62,6 @@ public:
 			if(serverside_obj_created) throw StaticSingleObjectAlreadyCreated();
 			serverside_obj_created = true;
 			serverside_scales_object = std::make_shared<Scales>(new_obj_id, this);
-			SATAN_ERROR("Serverside object created - %s\n", FACTORY_NAME);
 			return serverside_scales_object;
 		}
 

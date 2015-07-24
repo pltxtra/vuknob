@@ -302,9 +302,6 @@ void Scales::handle_set_custom_scale_key(
 }
 
 const char* Scales::get_key_text(int key) {
-	SATAN_ERROR("in get_key_text() %d -> %d\n", key, key % 12);
-	SATAN_ERROR("---> %s\n", key_text[key % 12]);
-	SATAN_ERROR("exit get_key_text()\n");
 	return key_text[key % 12];
 }
 

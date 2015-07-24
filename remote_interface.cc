@@ -408,9 +408,6 @@ const char* RemoteInterface::BaseObject::Factory::get_type() const {
 auto RemoteInterface::BaseObject::Factory::create_static_single_object(int32_t new_obj_id) -> std::shared_ptr<BaseObject> {
 	std::shared_ptr<BaseObject> retval;
 
-	SATAN_ERROR("RemoteInterface::...::create_static_single_object(%s) -> %s\n",
-		    type, static_single_object ? "true" : "false");
-
 	if(static_single_object)
 		retval = create(new_obj_id);
 
@@ -543,8 +540,6 @@ std::shared_ptr<RemoteInterface::BaseObject> RemoteInterface::BaseObject::create
 void RemoteInterface::BaseObject::create_static_single_objects_on_server(
 	std::function<int()> get_new_id_callback,
 	std::function<void(std::shared_ptr<BaseObject>)> new_obj_created) {
-
-	SATAN_ERROR("RemoteInterface::...::create_static_single_objects_on_server()\n");
 
 	for(auto factory : factories) {
 		auto obj = factory.second->create_static_single_object(get_new_id_callback());
@@ -3288,7 +3283,6 @@ void RemoteInterface::Server::create_service_objects() {
 		create_object_from_factory(__FCT_SAMPLEBANK, [](std::shared_ptr<BaseObject> new_obj){});
 	}
 	{
-		SATAN_ERROR("RemoteInterface::server::create_service_objects() will create static single objects...\n");
 		BaseObject::create_static_single_objects_on_server(
 			[this](void) -> int {
 				return reserve_new_obj_id();

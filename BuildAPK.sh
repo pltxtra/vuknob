@@ -1,5 +1,8 @@
 #!/bin/bash
 
+APP_NAME=com.holidaystudios.vuknob
+APK_PREFIX=vuknob
+
 if [ -z "$NDK_PATH" ]; then
     echo "NDK_PATH not set."
     exit 1
@@ -38,7 +41,7 @@ if [ ! -f ".ANDROID_PROJECT_CREATED" ]; then
 	exit 1;
     fi
 
-    android update project --name satan --target $2 --path ./
+    android update project --name $APK_PREFIX --target $2 --path ./
 
     if [ $? -ne 0 ]; then
 	echo "Android project NOT properly created!"
@@ -53,7 +56,7 @@ fi
 
 # check if user wants to just uninstall package from device
 if [ "$1" = "-ud" ]; then
-    adb -d uninstall com.holidaystudios.satan
+    adb -d uninstall $APP_NAME
     if [ $? -ne 0 ]; then
 	echo "Failed to uninstall - perhaps already uninstalled?"
 	exit 1
@@ -102,16 +105,16 @@ rm -rf $TMPDIR
 # this is used to make sure we unpack
 # the package with SVG files, dynlib stuff and samples properly on
 # upgrades
-rm -rf src/com/holidaystudios/satan/AutogenDate.java
-echo "package com.holidaystudios.satan;" > src/com/holidaystudios/satan/AutogenDate.java
-echo "" >> src/com/holidaystudios/satan/AutogenDate.java
-echo "public class AutogenDate" >> src/com/holidaystudios/satan/AutogenDate.java
-echo "{" >> src/com/holidaystudios/satan/AutogenDate.java
-echo "    public final static String DATE = \"timestamp$SECONDS_SINCE_EPOCH.file\";" >> src/com/holidaystudios/satan/AutogenDate.java
-echo "}" >> src/com/holidaystudios/satan/AutogenDate.java
-echo "" >> src/com/holidaystudios/satan/AutogenDate.java
+rm -rf src/com/holidaystudios/$APK_PREFIX/AutogenDate.java
+echo "package $APP_NAME;" > src/com/holidaystudios/$APK_PREFIX/AutogenDate.java
+echo "" >> src/com/holidaystudios/$APK_PREFIX/AutogenDate.java
+echo "public class AutogenDate" >> src/com/holidaystudios/$APK_PREFIX/AutogenDate.java
+echo "{" >> src/com/holidaystudios/$APK_PREFIX/AutogenDate.java
+echo "    public final static String DATE = \"timestamp$SECONDS_SINCE_EPOCH.file\";" >> src/com/holidaystudios/$APK_PREFIX/AutogenDate.java
+echo "}" >> src/com/holidaystudios/$APK_PREFIX/AutogenDate.java
+echo "" >> src/com/holidaystudios/$APK_PREFIX/AutogenDate.java
 
-touch src/com/holidaystudios/satan/vuKNOB.java
+touch src/com/holidaystudios/$APK_PREFIX/vuKNOBnet.java
 
 # build native libraries, then run ant to build java stuff 'n create the .apk
 
@@ -136,9 +139,9 @@ for MOD in $CURRENTMODS; do
     echo 'include $(CLEAR_VARS)' >> ../dynlib_auto_Android.mk
     echo "LOCAL_MODULE := $MOD" >> ../dynlib_auto_Android.mk
     echo 'ifeq ($(TARGET_ARCH_ABI),armeabi-v7a)' >> ../dynlib_auto_Android.mk
-    echo "LOCAL_SRC_FILES  := ../vuknob/Android/libs/armeabi-v7a/lib$MOD.so" >> ../dynlib_auto_Android.mk
+    echo "LOCAL_SRC_FILES  := ../libvuknob/export/armeabi-v7a/lib$MOD.so" >> ../dynlib_auto_Android.mk
     echo "else" >> ../dynlib_auto_Android.mk
-    echo "LOCAL_SRC_FILES  := ../vuknob/Android/libs/armeabi/lib$MOD.so" >> ../dynlib_auto_Android.mk
+    echo "LOCAL_SRC_FILES  := ../libvuknob/export/armeabi/lib$MOD.so" >> ../dynlib_auto_Android.mk
     echo "endif" >> ../dynlib_auto_Android.mk
     echo 'include $(PREBUILT_SHARED_LIBRARY)' >> ../dynlib_auto_Android.mk
     echo  >> ../dynlib_auto_Android.mk
@@ -160,17 +163,17 @@ fi
 #if -ie (Install to Emulator == -ie)
 if [ "$1" = "-ie" ]; then
     if [ "$2" = "-c" ]; then
-	adb -e uninstall com.holidaystudios.satan
+	adb -e uninstall $APP_NAME
     fi
-    adb -e install -r bin/satan-debug.apk
+    adb -e install -r bin/$APK_PREFIX-debug.apk
 fi
 
 #if -id (Install to Device == -id)
 if [ "$1" = "-id" ]; then
     if [ "$2" = "-c" ]; then
-	adb -d uninstall com.holidaystudios.satan
+	adb -d uninstall $APP_NAME
     fi
-    adb -d install -r bin/satan-debug.apk
+    adb -d install -r bin/$APK_PREFIX-debug.apk
 fi
 
 echo "Build: $SECONDS_SINCE_EPOCH"

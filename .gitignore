@@ -39,3 +39,4 @@ pathvariable.cc~
 *~
 Android/.ANDROID_PROJECT_CREATED
 build_time_data.hh
+dynlib_auto_Android.mk

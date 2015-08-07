@@ -72,7 +72,13 @@ include $(PREBUILT_SHARED_LIBRARY)
 
 include $(CLEAR_VARS)
 LOCAL_MODULE := wave
-LOCAL_SRC_FILES := ../vuknob/Android/libs/armeabi/libwave.so
+
+ifeq ($(TARGET_ARCH_ABI),armeabi-v7a)
+	LOCAL_SRC_FILES := ../libvuknob/export/armeabi-v7a/libwave.so
+else
+	LOCAL_SRC_FILES := ../libvuknob/export/armeabi/libwave.so
+endif # TARGET_ARCH_ABI == armeabi-v7a
+
 include $(PREBUILT_SHARED_LIBRARY)
 
 $(call import-module,cpufeatures)

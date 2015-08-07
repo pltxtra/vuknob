@@ -55,9 +55,9 @@ import java.util.zip.*;
 import com.toolkits.kamoflage.Kamoflage;
 import com.toolkits.kamoflage.KamoflageActivity;
 
-import com.holidaystudios.vuknobbase.VuknobAndroidAudio;
-import com.holidaystudios.vuknobbase.JavaInterface;
-import com.holidaystudios.vuknobbase.WifiControl;
+import com.holidaystudios.libvuknob.VuknobAndroidAudio;
+import com.holidaystudios.libvuknob.JavaInterface;
+import com.holidaystudios.libvuknob.WifiControl;
 
 public class vuKNOBnet extends KamoflageActivity
 	implements

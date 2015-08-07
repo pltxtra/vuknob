@@ -3,7 +3,7 @@
  *
  * -------------------------------------------------
  *
- * VuKNOB is an instance of SATAN
+ * vuKNOB is an instance of SATAN
  *
  * SATAN, Signal Applications To Any Network
  * Copyright (C) 2003 by Anton Persson & Johan Thim
@@ -300,7 +300,9 @@ public class vuKNOBnet extends KamoflageActivity
 	static {
 		Log.v("vuknob", "Loading native library for kamoflage.");
 		System.loadLibrary("pathvariable");
+		System.loadLibrary("svgandroid");
 		System.loadLibrary("kamoflage");
+		System.loadLibrary("vuknob");
 		Log.v("vuknob", "    Native library loaded.");
 	}
 

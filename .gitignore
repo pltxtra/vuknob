@@ -53,3 +53,4 @@ Applications/vuKNOBnet/Android/libs/armeabi-v7a/
 Applications/vuKNOBnet/Android/obj/
 Applications/vuKNOBnet/Android/proguard-project.txt
 Applications/vuKNOBnet/Android/project.properties
+config.mk

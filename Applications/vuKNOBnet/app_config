@@ -1,0 +1,3 @@
+APP_NAMESPACE=com.holidaystudios.vuknob
+APK_PREFIX=vuknob
+ACTIVITY=vuKNOBnet

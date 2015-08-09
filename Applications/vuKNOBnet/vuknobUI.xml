@@ -1,0 +1,261 @@
+<yapplication>
+  <userevent id="refreshProject" />
+
+  <userevent id="refreshSequenceList" />
+  <userevent id="refreshBlockList" />
+  <userevent id="refreshConvBlockList" />
+
+  <userevent id="refreshBlock" />
+  <userevent id="refreshBlockGeometry" />
+
+  <userevent id="loadExampleSelected"  viewtrigger="mainUIContainer" />
+
+  <userevent id="showConnector_container" viewtrigger="connector_container" />
+  <userevent id="showControlsContainer" viewtrigger="ControlsContainer" />
+  <userevent id="showControllerEnvelope" viewtrigger="controllerEnvelope" />
+  <userevent id="showTrackerContainer" viewtrigger="tracker_container" />
+  <userevent id="showMachineTypeListScroller" viewtrigger="machineTypeListScroller" />
+
+  <userevent id="showSamplesList" viewtrigger="SamplesListContainer" />
+  <userevent id="showSamplesDirectories" viewtrigger="SamplesDirectoriesContainerMaster" />
+  <userevent id="showSamplesDirectory" viewtrigger="SamplesDirectoryContainerMaster" />
+
+  <userevent id="showComposeContainer" viewtrigger="sequence_container" />
+  <userevent id="showProjectContainer" viewtrigger="projectContainer" />
+  <userevent id="showLivePadContainer" viewtrigger="livepad_container" />
+  <userevent id="showLivePad2" viewtrigger="livePad2" />
+
+  <userevent id="showAdvancedFileRequester" viewtrigger="AdvancedFileRequester" />
+
+  <userevent id="showMainUIContainer" viewtrigger="mainUIContainer" />
+
+  <window align="vertical" title="Satan" id="MainWindow" fullscreen="true" >
+    <tabs id="topTaps" title="topT" expand="true" hidetabs="true" fill="true" >
+
+      <container id="logoContainer" title="logo" align="vertical" expand="true" fill="true" >
+	<svgcanvas id="logoScreen" title="logoScreen" expand="true" fill="true" />
+      </container>
+
+      <container id="mainUIContainer" title="mainContain" align="vertical" exapnd="true" fill="true" >
+	<canvas title="TopMenu" id="topMenuNoCompose" expand="false" fill="false" />
+
+	<tabs id="modeTabs" title="ModeT" expand="true" hidetabs="true" fill="true">
+
+	  <container title="Sequencer" id="sequence_container" align="vertical" expand="true" fill="true" >
+	    <canvas title="Sequ" id="pncSequencer" expand="true" fill="true" />
+	    <canvas title="kbd" id="numericKeyboard" expand="false" fill="false" />
+	  </container>
+
+	  <svgcanvas id="controllerEnvelope" title="Controller" expand="true" fill="true" />
+
+	  <svgcanvas id="livePad2" title="Livepad" expand="true" fill="true" />
+
+	  <container id="whistleStartUI" title="WHISTLE" align="vertical" expand="true" fill="true" scrollable="false" >
+	    <container id="whistleUIStartTop" align="horizontal" expand="true" fill="true" />
+	    <container id="whistleUIStart" align="horizontal" expand="false" fill="false" >
+	      <container id="whistleUIStartLeft" align="horizontal" expand="true" fill="true" />
+
+	      <button id="whistleStart" title="START" expand="false" fill="false" viewtrigger="whistleStopUI" />
+
+	      <container id="whistleUIStartRight" align="horizontal" expand="true" fill="true" />
+	    </container>
+	    <container id="whistleUIStartBottom" align="horizontal" expand="true" fill="true" />
+
+	  </container>
+
+	  <container id="whistleStopUI" title="WHISTLE" align="vertical" expand="true" fill="true" scrollable="false" >
+	    <container id="whistleUIStop" align="horizontal" expand="false" fill="false" >
+	      <button id="whistleStop" title="STOP" expand="true" fill="true" viewtrigger="whistleProgramUI" />
+	    </container>
+	  </container>
+
+	  <container id="whistleProgramUI" title="WHISTLE" align="vertical" expand="true" fill="true" scrollable="false" >
+	    <list title="Machines" id="whistleMachineSelector" expand="false" fill="false" isdropdown="true" >
+	      <column title="Machine" />
+	    </list>
+
+	    <list title="Sequence" id="whistleLoopSelector" expand="false" fill="false" isdropdown="true" >
+	      <column title="Sequence" />
+	    </list>
+
+	    <button id="whistleConvert" title="To Sequencer" expand="true" fill="true" />
+	  </container>
+
+	  <container id="aboutSATAN" title="ABOUT" align="vertical" expand="true" fill="true" scrollable="false" >
+	    <button id="aboutLicense" title="LICENSE" expand="false" fill="false" viewtrigger="aboutLICENSE"/>
+	    <container id="aboutSATANList" title="ABOUT" align="vertical" expand="true" fill="true" scrollable="false" >
+	      <label id="about1" title="VuKNOB (C) 2013" expand="true" fill="true" />
+	      <label id="about2" title="by Anton Persson"  expand="true" fill="true" />
+	      <label id="about3" title=""  expand="true" fill="true" />
+	      <label id="about5" title=""  expand="true" fill="true" />
+	      <label id="about6" title=""  expand="true" fill="true" />
+	      <label id="about9" title="---------------"  expand="true" fill="true" />
+	      <label id="aboutA" title="Based on SATAN "  expand="true" fill="true" />
+	      <label id="aboutB" title="(C) 2006 by Anton Persson and Ted Björling"  expand="true" fill="true" />
+	      <label id="aboutC" title="(C) 2003 by Johan Thim and Anton Persson"  expand="true" fill="true" />
+	      <label id="aboutE" title="---------------"  expand="true" fill="true" />
+	      <label id="aboutF" title="For questions, please visit:"  expand="true" fill="true" />
+	      <label id="aboutG" title="https://launchpad.net/satan"  expand="true" fill="true" />
+	      <label id="acknowledge1" title="---------------" />
+	      <label id="acknowledge2" title="This software contains samples" />
+	      <label id="acknowledge3" title="from the Community Audio project." />
+	      <label id="acknowledge4" title="" />
+	      <label id="acknowledge5" title="Vorbis code (C) 2002-2008 Xiph.org Foundation" />
+	      <label id="acknowledge6" title="KISS FFT (C) 2003-2004 by Mark Borgerding" />
+
+
+	    </container>
+	  </container>
+
+	  <container id="aboutLICENSE" title="LICENSE" align="vertical" expand="true" fill="true" scrollable="true" >
+	    <label id="license1" title="VuKNOB is " />
+	    <label id="license2" title="LICENSED to YOU" />
+	    <label id="license3" title="under the terms of" />
+	    <label id="license4" title="the GNU GPL, as follows:" />
+	    <label id="license5" title="" />
+	    <label id="license6" title="---------------" />
+	    <label id="license7" title="" />
+	  </container>
+
+	  <container id="hiddenStuff">
+	    <label title="BPM: 120" id="scaleBPMlabel" expand="false" fill="false" />
+	    <scale title="BPM" id="scaleBPM" expand="true" fill="true" min="20" max="200" inc="1" />
+	    <label title="LPB: 4" id="scaleLPBlabel" expand="false" fill="false" />
+	    <scale title="LPB" id="scaleLPB" expand="true" fill="true" min="2" max="24" inc="1" />
+	    <label title="Shuffle: 0" id="scaleShufflelabel" expand="false" fill="false" />
+	    <scale title="Shuffle" id="scaleShuffle" expand="true" fill="true" min="0" max="100" inc="1" />
+	    <label id="YouGottaSayYesToAnotherExcess" title="" expand="true" fill="true" />
+	  </container>
+
+	  <container id="projectContainer" title="Project"
+		     align="vertical" expand="true" fill="true">
+	    <label id="prjC_top" title="" expand="true" fill="true" />
+	    <container id="QUITNABOUT" expand="false" fill="false" align="horizontal" >
+	      <button id="quitnow" title="QUIT" expand="true" fill="true" />
+	      <button id="aboutus" title="ABOUT" expand="true" fill="true" viewtrigger="aboutSATAN"/>
+	    </container>
+	    <label id="prjC_bottom" title="" expand="true" fill="true" />
+	  </container>
+
+	  <container title="Save Project" id="SaveUI" align="vertical" expand="true" fill="true" >
+	    <container id="saveUI_fillTop" expand="true" fill="true" align="vertical">
+	    </container>
+
+	    <container id="saveUI_mainContainerBase" expand="true" fill="true" align="horizontal">
+
+	      <container id="saveUI_mainContainerFillLeft" expand="true" fill="true" align="horizontal">
+	      </container>
+
+	      <container id="saveUI_mainContainer" expand="true" fill="true" align="vertical">
+		<container id="saveUI_titleContainer" expand="false" fill="false" align="vertical">
+		  <label id="saveUI_titleLabel" title="Title:" expand="false" fill="false" />
+		  <entry id="saveUI_titleEntry" title="" expand="false" fill="false" />
+		</container>
+
+		<container id="saveUI_artistContainer" expand="false" fill="false" align="vertical">
+		  <label id="saveUI_artistLabel" title="Artist:" expand="false" fill="false" />
+		  <entry id="saveUI_artistEntry" title="" expand="false" fill="false" />
+		</container>
+
+		<container id="saveUI_genreContainer" expand="false" fill="false" align="vertical">
+		  <label id="saveUI_genreLabel" title="Genre:" expand="false" fill="false" />
+		  <entry id="saveUI_genreEntry" title="" expand="false" fill="false" />
+		</container>
+
+		<container id="saveUI_saveButtonContainer" expand="false" fill="false" align="vertical">
+		  <button id="saveUI_saveButton" title="SAVE NOW" expand="false" fill="false" />
+		</container>
+	      </container>
+
+	      <container id="saveUI_mainContainerFillRight" expand="true" fill="true" align="horizontal">
+	      </container>
+
+	    </container>
+
+	    <container id="saveUI_fillBottom" expand="true" fill="true" align="vertical">
+	    </container>
+
+	  </container>
+
+	  <container title="File Request" id="FileRequester" align="vertical" expand="true" fill="true" >
+	    <label id="fReqTitle" title="File Name" />
+	    <entry id="fReqValue" title="" />
+	    <button id="fReqGO" title="OK" />
+	    <label id="fReqHelp" title="WILL BE SET" />
+	  </container>
+
+	  <container title="File Request" id="AdvancedFileRequester" align="vertical" expand="true" fill="true" >
+	    <label title="" id="filReq_target" expand="false" fill="false" />
+	    <list title="File" id="filReq_selected" expand="true" fill="true">
+	      <column title="Type" />
+	      <column title="File" />
+	    </list>
+	    <container id="FileRequester_SELCAN_container" aligh="horizontal" expand="false" fill="false" >
+	      <button id="filReq_select" title="SELECT" expand="true" fill="true" />
+	      <button id="filReq_cancel" title="CANCEL" expand="true" fill="true" />
+	    </container>
+	  </container>
+
+	  <container title="Export" id="ExporterGUI" align="vertical" expand="true" fill="true">
+	    <button id="ExportSequence2MIDI" title="Sequence to MIDI" />
+	    <button id="ExportWav2Vorbis" title="WAV to ogg" />
+	    <button id="ShareOgg" title="Share Ogg" />
+	  </container>
+
+	  <container id="machineTypeListScroller" align="vertical" expand="true" fill="true" >
+	    <list title="Machine Type" id="MachineType" expand="true" fill="true">
+	      <column title="Machine" />
+	    </list>
+	  </container>
+
+	  <container title="Tracker" id="tracker_container" align="vertical" expand="true" fill="true" >
+	    <svgcanvas id="tracker" title="Tracker" expand="true" fill="true" />
+	  </container>
+
+	  <container title="Live" id="livepad_container" align="vertical" expand="true" fill="true" >
+	    <container title="" id="livepad_parameter_container" align="horizontal" expand="false" fill="true">
+	      <list title="Machines" id="livePadMachineSelector" expand="false" fill="false" isdropdown="true" >
+		<column title="Machine" />
+	      </list>
+	      <list title="Scales" id="livePadScaleSelector" expand="false" fill="false" isdropdown="true" >
+		<column title="Scale" />
+	      </list>
+	      <button title="+" id="livepadOctaveUp" fill="fals" expand="false" />
+	      <button title="-" id="livepadOctaveDown" fill="fals" expand="false" />
+	      <checkbutton title="R" id="livepadRecord" fill="false" expand="false" />
+	    </container>
+	    <canvas id="livePad" expand="true" fill="true" />
+	  </container>
+
+	  <container title="Equipment" id="connector_container" align="vertical" expand="true" fill="true" >
+	    <svgcanvas id="connector" title="Connector" expand="true" fill="true" />
+	  </container>
+
+	  <container title="Knobs&amp;Sliders" id="ControlsContainer" align="vertical" expand="true" fill="true" >
+	    <list title="Controllers" id="cgroups" expand="false" fill="false" isdropdown="true" >
+	      <column title="Group" />
+	    </list>
+	    <container id="controllerScroller" align="vertical" expand="true" fill="true" scrollable="true" />
+	  </container>
+
+	  <container title="Samples" id="SamplesListContainer" align="vertical" expand="true" fill="true" scrollable="true" />
+
+	  <container title="Samples Directories" id="SamplesDirectoriesContainerMaster" align="vertical" expand="true" fill="true">
+	    <container title="Samples Directories" id="SamplesDirectoriesContainer" align="vertical" expand="true" fill="true" scrollable="true" />
+	    <button title="ADD NEW DIRECTORY" id="samDirs_Add" />
+	  </container>
+
+	  <container title="Samples Directory" id="SamplesDirectoryContainerMaster" align="vertical" expand="true" fill="true">
+	    <container title="" id="samEd_RetCanContainer" expand="false" fill="false" >
+	      <button title="Return..." id="samEd_Return" expand="true" fill="true" />
+	      <button title="Cancel" id="samEd_Cancel" expand="true" fill="true" />
+	    </container>
+	    <container title="Samples Directory" id="SamplesDirectoryContainer" align="vertical" expand="true" fill="true" scrollable="true" />
+	    <button title="Remove Dir" id="samEd_Remove" expand="false" fill="false" />
+	  </container>
+
+	</tabs>
+      </container>
+    </tabs>
+  </window>
+</yapplication>

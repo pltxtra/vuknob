@@ -1,0 +1,247 @@
+<?xml version="1.0" encoding="UTF-8" standalone="no"?>
+<!-- Created with Inkscape (http://www.inkscape.org/) -->
+
+<svg
+   xmlns:dc="http://purl.org/dc/elements/1.1/"
+   xmlns:cc="http://creativecommons.org/ns#"
+   xmlns:rdf="http://www.w3.org/1999/02/22-rdf-syntax-ns#"
+   xmlns:svg="http://www.w3.org/2000/svg"
+   xmlns="http://www.w3.org/2000/svg"
+   xmlns:sodipodi="http://sodipodi.sourceforge.net/DTD/sodipodi-0.dtd"
+   xmlns:inkscape="http://www.inkscape.org/namespaces/inkscape"
+   width="500"
+   height="500"
+   id="svg2"
+   version="1.1"
+   inkscape:version="0.48.4 r9939"
+   sodipodi:docname="connector.svg">
+  <defs
+     id="defs4" />
+  <sodipodi:namedview
+     id="base"
+     pagecolor="#ffffff"
+     bordercolor="#666666"
+     borderopacity="1.0"
+     inkscape:pageopacity="0.0"
+     inkscape:pageshadow="2"
+     inkscape:zoom="0.7"
+     inkscape:cx="1023.921"
+     inkscape:cy="140.16804"
+     inkscape:document-units="px"
+     inkscape:current-layer="connectorContainerBase"
+     showgrid="false"
+     fit-margin-top="0"
+     fit-margin-left="0"
+     fit-margin-right="0"
+     fit-margin-bottom="0"
+     inkscape:window-width="1855"
+     inkscape:window-height="1056"
+     inkscape:window-x="65"
+     inkscape:window-y="24"
+     inkscape:window-maximized="1" />
+  <metadata
+     id="metadata7">
+    <rdf:RDF>
+      <cc:Work
+         rdf:about="">
+        <dc:format>image/svg+xml</dc:format>
+        <dc:type
+           rdf:resource="http://purl.org/dc/dcmitype/StillImage" />
+        <dc:title />
+      </cc:Work>
+    </rdf:RDF>
+  </metadata>
+  <rect
+     id="panAndZoomSurface"
+     width="500"
+     height="500"
+     x="0"
+     y="0"
+     style="fill:#ffffff;fill-opacity:1;stroke:none" />
+  <g
+     inkscape:label="Layer 1"
+     inkscape:groupmode="layer"
+     id="connectorContainerBase">
+    <g
+       id="machineGraphicTemplateContainer">
+      <g
+         id="outputIndicatorTemplate">
+        <g
+           id="g3016"
+           inkscape:label="#g5432">
+          <text
+             class="nameTemplate"
+             xml:space="preserve"
+             style="font-size:48px;font-style:normal;font-variant:normal;font-weight:normal;font-stretch:normal;line-height:125%;letter-spacing:0px;word-spacing:0px;fill:#000000;fill-opacity:1;stroke:none;font-family:Roboto;-inkscape-font-specification:Roboto"
+             x="527.14288"
+             y="270"
+             id="outputNameTemplate"
+             sodipodi:linespacing="125%"
+             inkscape:label="#text5448"><tspan
+               sodipodi:role="line"
+               id="tspan5450"
+               x="527.14288"
+               y="270">Output</tspan></text>
+          <rect
+             ry="0"
+             rx="0"
+             y="213"
+             x="0"
+             height="75"
+             width="500"
+             id="rect5403"
+             style="fill:#32cdff;fill-opacity:0;stroke:none" />
+          <path
+             sodipodi:type="arc"
+             style="fill:#ff99cb;fill-opacity:0.45205479;stroke:none"
+             id="path4261"
+             sodipodi:cx="461.63971"
+             sodipodi:cy="252.51263"
+             sodipodi:rx="71.720833"
+             sodipodi:ry="71.720833"
+             d="m 533.36054,252.51263 a 71.720833,71.720833 0 1 1 -143.44166,0 71.720833,71.720833 0 1 1 143.44166,0 z"
+             transform="translate(1.5152289,-2.0203051)"
+             class="selectButton" />
+          <path
+             style="fill:#33ccff;fill-opacity:1;stroke:none"
+             d="m 450,213 50,37.5 -50,37.5 z"
+             id="path5405"
+             inkscape:connector-curvature="0" />
+        </g>
+      </g>
+      <g
+         id="inputIndicatorTemplate">
+        <g
+           id="g3025"
+           inkscape:label="#g5428">
+          <text
+             class="nameTemplate"
+             xml:space="preserve"
+             style="font-size:48px;font-style:normal;font-variant:normal;font-weight:normal;font-stretch:normal;line-height:125%;letter-spacing:0px;word-spacing:0px;fill:#000000;fill-opacity:1;stroke:none;font-family:Roboto;-inkscape-font-specification:Roboto"
+             x="-208.57143"
+             y="270"
+             id="inputNameTemplate"
+             sodipodi:linespacing="125%"
+             inkscape:label="#text5452"><tspan
+               sodipodi:role="line"
+               id="tspan5454"
+               x="-208.57143"
+               y="270">Name</tspan></text>
+          <rect
+             ry="0"
+             rx="0"
+             y="213"
+             x="0"
+             height="75"
+             width="500"
+             id="rect5403-4"
+             style="fill:#32cdff;fill-opacity:0;stroke:none" />
+          <path
+             sodipodi:type="arc"
+             style="fill:#ff99cb;fill-opacity:0.45205479;stroke:none"
+             id="path4261-4"
+             sodipodi:cx="461.63971"
+             sodipodi:cy="252.51263"
+             sodipodi:rx="71.720833"
+             sodipodi:ry="71.720833"
+             d="m 533.36054,252.51263 a 71.720833,71.720833 0 1 1 -143.44166,0 71.720833,71.720833 0 1 1 143.44166,0 z"
+             transform="translate(-445.507,-4.5329374)"
+             class="selectButton" />
+          <path
+             style="fill:#33ccff;fill-opacity:1;stroke:none"
+             inkscape:transform-center-x="-8.3333331"
+             inkscape:transform-center-y="6.3882733e-05"
+             d="M 0,213 50,250.5 0,288 z"
+             id="path5405-4"
+             inkscape:connector-curvature="0" />
+        </g>
+      </g>
+      <g
+         id="machineGraphicTemplate">
+        <g
+           class="socketContainer"
+           id="g3014">
+          <path
+             style="fill:#33ccff;fill-opacity:0.49771693;stroke:none"
+             d="M 500,250 C 500,388.07119 388.07119,500 250,500 111.92881,500 0,388.07119 0,250 0,111.92881 111.92881,0 250,0 388.07119,0 500,111.92881 500,250 z"
+             id="circle3015"
+             inkscape:connector-curvature="0" />
+        </g>
+        <path
+           sodipodi:type="arc"
+           style="fill:none;stroke:#33ccff;stroke-width:8;stroke-linecap:butt;stroke-linejoin:miter;stroke-miterlimit:4;stroke-opacity:1;stroke-dasharray:24, 24;stroke-dashoffset:0"
+           id="path3021"
+           sodipodi:cx="1092.8572"
+           sodipodi:cy="380"
+           sodipodi:rx="267.14285"
+           sodipodi:ry="267.14285"
+           d="M 1360,380 A 267.14285,267.14285 0 1 1 825.71432,380 267.14285,267.14285 0 1 1 1360,380 z"
+           transform="translate(-842.85718,-130)"
+           class="selectedIndicator" />
+        <g
+           class="machineBody"
+           id="machineBody"
+           inkscape:label="#g5456">
+          <path
+             style="fill:#000000;fill-opacity:0.49771693;stroke:none"
+             d="M 425,270 C 425,366.64983 346.64983,445 250,445 153.35017,445 75,366.64983 75,270 75,173.35017 153.35017,95 250,95 c 96.64983,0 175,78.35017 175,175 z"
+             id="circle3017"
+             inkscape:connector-curvature="0" />
+          <path
+             style="fill:#33ccff;fill-opacity:1;stroke:none"
+             d="M 425,250 C 425,346.64983 346.64983,425 250,425 153.35017,425 75,346.64983 75,250 75,153.35017 153.35017,75 250,75 c 96.64983,0 175,78.35017 175,175 z"
+             id="circle3021"
+             inkscape:connector-curvature="0" />
+          <text
+             xml:space="preserve"
+             style="font-size:48px;font-style:normal;font-variant:normal;font-weight:normal;font-stretch:normal;line-height:125%;letter-spacing:0px;word-spacing:0px;fill:#000000;fill-opacity:1;stroke:none;font-family:Roboto;-inkscape-font-specification:Roboto"
+             x="90"
+             y="270"
+             id="text5465"
+             sodipodi:linespacing="125%"
+             class="machineName"><tspan
+               sodipodi:role="line"
+               id="tspan5467"
+               x="90"
+               y="270">Machine Name</tspan></text>
+        </g>
+      </g>
+      <g
+         id="connectionTemplate">
+        <g
+           class="selectionPoint"
+           transform="translate(-213.15494,-0.49232918)"
+           id="g3066">
+          <path
+             class="selectButton"
+             transform="translate(1.5152289,-2.0203051)"
+             d="m 533.36054,252.51263 c 0,39.61033 -32.11051,71.72084 -71.72083,71.72084 -39.61032,0 -71.72083,-32.11051 -71.72083,-71.72084 0,-39.61032 32.11051,-71.72083 71.72083,-71.72083 39.61032,0 71.72083,32.11051 71.72083,71.72083 z"
+             sodipodi:ry="71.720833"
+             sodipodi:rx="71.720833"
+             sodipodi:cy="252.51263"
+             sodipodi:cx="461.63971"
+             id="path4261-5"
+             style="fill:#ff99cb;fill-opacity:0.45205479;stroke:none"
+             sodipodi:type="arc" />
+          <path
+             inkscape:connector-curvature="0"
+             id="path5405-2"
+             d="m 450,213 50,37.5 -50,37.5 z"
+             style="fill:#33ccff;fill-opacity:1;stroke:none" />
+        </g>
+        <line
+           class="connectionLine"
+           style="fill:#33ccff;fill-opacity:1;stroke:#33ccff;stroke-width:6;stroke-miterlimit:4;stroke-opacity:1;stroke-dasharray:none"
+           y2="250"
+           x2="500"
+           y1="250"
+           x1="0"
+           id="line3072" />
+      </g>
+    </g>
+    <g
+       id="connectionContainer" />
+    <g
+       id="connectorContainer" />
+  </g>
+</svg>

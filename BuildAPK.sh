@@ -154,7 +154,7 @@ cat $BASEDIR/AndroidManifest.xml.template | sed "s/APP_NAMESPACE/$APP_NAMESPACE/
 # check if we have a Android project that is usable, if not, fix it automatically
 
 if [ ! -f ".ANDROID_PROJECT_CREATED" ]; then
-    if [ "$MODE" != "--update-android-project" ]; then
+    if [ "$MODE" != "update" ]; then
 	echo "To build using this script you must have a properly updated Android project."
 	echo " - If you have done that manually, please create the file .ANDROID_PROJECT_CREATED"
 	echo " - If you have NOT done that and want this script to do it for you, run this script again like this:"

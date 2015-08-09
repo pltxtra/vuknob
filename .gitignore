@@ -40,3 +40,16 @@ pathvariable.cc~
 Android/.ANDROID_PROJECT_CREATED
 build_time_data.hh
 dynlib_auto_Android.mk
+Applications/vuKNOB/Android/.ANDROID_PROJECT_CREATED
+Applications/vuKNOB/Android/build.xml
+Applications/vuKNOB/Android/libs/armeabi-v7a/
+Applications/vuKNOB/Android/libs/armeabi/
+Applications/vuKNOB/Android/obj/
+Applications/vuKNOB/Android/proguard-project.txt
+Applications/vuKNOB/Android/project.properties
+Applications/vuKNOBnet/Android/.ANDROID_PROJECT_CREATED
+Applications/vuKNOBnet/Android/build.xml
+Applications/vuKNOBnet/Android/libs/armeabi-v7a/
+Applications/vuKNOBnet/Android/obj/
+Applications/vuKNOBnet/Android/proguard-project.txt
+Applications/vuKNOBnet/Android/project.properties

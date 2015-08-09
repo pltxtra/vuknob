@@ -18,3 +18,7 @@ Make sure you create a config.mk file, with the following content:
 LIBSVGANDROID_DIRECTORY := <absolute path to libsvgandroid>
 LIBKAMOFLAGE_DIRECTORY := <absolute path to libkamoflage>
 LIBVUKNOB_DIRECTORY := <absolute path to libvuknob>
+
+# BuildAPK.sh
+
+Call ./BuildAPK.sh to generate APKs for vuKNOB and vuKNOBnet.

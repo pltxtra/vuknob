@@ -54,3 +54,7 @@ Applications/vuKNOBnet/Android/obj/
 Applications/vuKNOBnet/Android/proguard-project.txt
 Applications/vuKNOBnet/Android/project.properties
 config.mk
+Applications/vuKNOB/Android/res/raw/nativefiletreearchive
+Applications/vuKNOB/Android/src/com/holidaystudios/satan/AutogenDate.java
+Applications/vuKNOB/Android/AndroidManifest.xml
+Applications/vuKNOBnet/Android/AndroidManifest.xml

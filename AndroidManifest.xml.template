@@ -20,7 +20,7 @@
           />
     <application android:label="@string/app_name"
 		 android:hardwareAccelerated="true"
-		 android:debuggable="false"
+		 android:debuggable="DEBUGGABLE"
 		 android:icon="@drawable/icon"
 		 android:theme="@style/LightThemeSelector"
 	  >

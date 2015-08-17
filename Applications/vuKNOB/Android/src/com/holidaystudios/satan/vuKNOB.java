@@ -50,6 +50,7 @@ import java.util.zip.*;
 
 import com.toolkits.kamoflage.Kamoflage;
 import com.toolkits.kamoflage.KamoflageActivity;
+import com.toolkits.kamoflage.SensorHandler;
 
 import com.holidaystudios.libvuknob.VuknobAndroidAudio;
 import com.holidaystudios.libvuknob.JavaInterface;
@@ -261,7 +262,9 @@ public class vuKNOB extends KamoflageActivity
 				}
 			}).start();
 
+		shandler = new SensorHandler(this);
 	}
+	SensorHandler shandler = null;
 
 	@Override
 	protected void onStart() {

@@ -53,6 +53,7 @@ MODE="NONE"
 TARGET=""
 DO_CLEAR="false"
 APPLICATION=""
+DEBUGGABLE="true"
 
 while [[ $# > 0 ]]
 do
@@ -93,6 +94,7 @@ case $key in
 	;;
     --release)
 	MODE="release"
+	DEBUGGABLE="false"
 	;;
     -*)
 	echo
@@ -149,7 +151,7 @@ SECONDS_SINCE_EPOCH="`date +%s`"
 cd Applications/$APPLICATION/Android
 
 rm AndroidManifest.xml
-cat $BASEDIR/AndroidManifest.xml.template | sed "s/APP_NAMESPACE/$APP_NAMESPACE/" | sed "s/APP_ACTIVITY/$ACTIVITY/" > AndroidManifest.xml
+cat $BASEDIR/AndroidManifest.xml.template | sed "s/APP_NAMESPACE/$APP_NAMESPACE/" | sed "s/DEBUGGABLE/$DEBUGGABLE/" | sed "s/APP_ACTIVITY/$ACTIVITY/" > AndroidManifest.xml
 
 # check if we have a Android project that is usable, if not, fix it automatically
 
@@ -294,21 +296,10 @@ if [ "$MODE" = "release" ]; then
     echo
 fi
 
-#if -ie (Install to Emulator == -ie)
-if [ "$TARGET" = "e" ]; then
-    if [ "$DO_CLEAR" = "true" ]; then
-	adb -e uninstall $APP_NAMESPACE
-    fi
-    adb -e install -r bin/${APK_PREFIX}${APK_SUFIX}.apk
+if [ "$DO_CLEAR" = "true" ]; then
+    adb -$TARGET uninstall $APP_NAMESPACE
 fi
-
-#if -id (Install to Device == -id)
-if [ "$TARGET" = "d" ]; then
-    if [ "$DO_CLEAR" = "true" ]; then
-	adb -d uninstall $APP_NAMESPACE
-    fi
-    adb -e install -r bin/${APK_PREFIX}${APK_SUFIX}.apk
-fi
+adb -$TARGET install -r bin/${APK_PREFIX}${APK_SUFIX}.apk
 
 echo "Build: $SECONDS_SINCE_EPOCH"
 echo "   at:" `date`

@@ -60,6 +60,8 @@ public class vuKNOB extends KamoflageActivity
 	implements
 	android.media.AudioManager.OnAudioFocusChangeListener
 {
+	final String LOG_TAG = "vuKNOB";
+
 	final int BUFFER = 2048;
 
 	private void unpack_native_files(String destdir) throws IOException {
@@ -126,7 +128,7 @@ public class vuKNOB extends KamoflageActivity
 	public void onCreate(Bundle savedInstanceState) {
 		super.onCreate(savedInstanceState);
 
-		Log.v("VuKNOB", "Bringing up VuKNOB - entered onCreate()");
+		Log.v(LOG_TAG, "Bringing up VuKNOB - entered onCreate()");
 
 		this.requestWindowFeature(
 			android.view.Window.FEATURE_NO_TITLE);
@@ -137,15 +139,15 @@ public class vuKNOB extends KamoflageActivity
 			android.view.WindowManager.LayoutParams.FLAG_KEEP_SCREEN_ON,
 			android.view.WindowManager.LayoutParams.FLAG_KEEP_SCREEN_ON);
 
-		Log.v("VuKNOB", "Bringing up VuKNOB - get android layout");
+		Log.v(LOG_TAG, "Bringing up VuKNOB - get android layout");
 		k = new Kamoflage(this, R.layout.listrow, R.id.listlayout);
-		Log.v("VuKNOB", "Bringing up VuKNOB - setContent");
+		Log.v(LOG_TAG, "Bringing up VuKNOB - setContent");
 
 		wfctrl = new WifiControl(this);
 		wfctrl.acquire();
 
 		setContentView(R.layout.main);
-		Log.v("VuKNOB", "Bringing up VuKNOB - content set!");
+		Log.v(LOG_TAG, "Bringing up VuKNOB - content set!");
 		mProgress = (ProgressBar) findViewById(R.id.progress_bar);
 		statusField = (TextView) findViewById(R.id.statusField);
 		buffersizeField = (TextView) findViewById(R.id.buffersizeField);
@@ -153,27 +155,27 @@ public class vuKNOB extends KamoflageActivity
 		exceptionMessage = (TextView) findViewById(R.id.exceptionMessage);
 		exceptionStack = (TextView) findViewById(R.id.exceptionStack);
 
-		Log.v("VuKNOB", "Bringing up VuKNOB - reading Kamoflage UI layout");
+		Log.v(LOG_TAG, "Bringing up VuKNOB - reading Kamoflage UI layout");
 		istream = this.getResources().openRawResource(R.raw.satanui);
 
-		Log.v("VuKNOB", "Bringing up VuKNOB - request audio focus");
+		Log.v(LOG_TAG, "Bringing up VuKNOB - request audio focus");
 		android.media.AudioManager audioManager = (AudioManager) getSystemService(this.AUDIO_SERVICE);
 		int ignored_result = audioManager.requestAudioFocus(this,
 								    AudioManager.STREAM_MUSIC,
 								    AudioManager.AUDIOFOCUS_GAIN);
 
-		Log.v("VuKNOB", "Bringing up VuKNOB - prepare(audioManager);");
+		Log.v(LOG_TAG, "Bringing up VuKNOB - prepare(audioManager);");
 		VuknobAndroidAudio.prepare(this, audioManager);
 		buffersizeField.setText(
 			"Device: " + android.os.Build.DEVICE + ", " +
 			"Frequency: " + String.valueOf(VuknobAndroidAudio.default_frequency) + ", " +
 			"Buffer: " + String.valueOf(VuknobAndroidAudio.default_buffer_size)
 			);
-		Log.v("VuKNOB", "   prepare returned OK.");
+		Log.v(LOG_TAG, "   prepare returned OK.");
 		JavaInterface.SetupNativeJavaInterface(this);
-		Log.v("VuKNOB", "   SetupNativeJavaInterface returned OK.");
+		Log.v(LOG_TAG, "   SetupNativeJavaInterface returned OK.");
 
-//		Log.v("SATAN", "AutogenDate.DATE: " + AutogenDate.DATE);
+//		Log.v(LOG_TAG, "AutogenDate.DATE: " + AutogenDate.DATE);
 		statusField.setText("Starting new thread...");
 		final Activity uiAct = this;
 		new Thread(new Runnable() {
@@ -194,7 +196,7 @@ public class vuKNOB extends KamoflageActivity
 										statusField.setText("Unpacking...");
 									}
 								});
-//							Log.v("SATAN", "Unpacking fresh new files.");
+//							Log.v(LOG_TAG, "Unpacking fresh new files.");
 							unpack_native_files(nativedatadir);
 							test.createNewFile();
 						} else {
@@ -203,10 +205,10 @@ public class vuKNOB extends KamoflageActivity
 									statusField.setText("Unpacking not needed...");
 									}
 								});
-//							Log.v("SATAN", "No need to unpack files.");
+//							Log.v(LOG_TAG, "No need to unpack files.");
 						}
-//						Log.v("SATAN", "TJOOOOOZAN");
-//						Log.v("SATAN", "   THREAD ID: " + Thread.currentThread().getId());
+//						Log.v(LOG_TAG, "TJOOOOOZAN");
+//						Log.v(LOG_TAG, "   THREAD ID: " + Thread.currentThread().getId());
 						uiAct.runOnUiThread(new Runnable() {
 								public void run() {
 									statusField.setText("Unpacking finished...");
@@ -252,7 +254,7 @@ public class vuKNOB extends KamoflageActivity
 									exceptionStack.setText(stck);
 								}
 							});
-						Log.v("SATAN", "Failed to unpack native data.");
+						Log.v(LOG_TAG, "Failed to unpack native data.");
 						android.os.SystemClock.sleep(120 * 1000);
 						java.lang.System.exit(0);
 						return; // don't continue this thread...
@@ -262,7 +264,9 @@ public class vuKNOB extends KamoflageActivity
 				}
 			}).start();
 
+		Log.v(LOG_TAG, "Creating SensorHandler...");
 		shandler = new SensorHandler(this);
+		Log.v(LOG_TAG, "SensorHandler created!");
 	}
 	SensorHandler shandler = null;
 

@@ -84,10 +84,8 @@
 	  <container id="aboutSATAN" title="ABOUT" align="vertical" expand="true" fill="true" scrollable="false" >
 	    <button id="aboutLicense" title="LICENSE" expand="false" fill="false" viewtrigger="aboutLICENSE"/>
 	    <container id="aboutSATANList" title="ABOUT" align="vertical" expand="true" fill="true" scrollable="false" >
-	      <label id="about1" title="VuKNOB (C) 2013" expand="true" fill="true" />
+	      <label id="about1" title="vuKNOB (C) 2015" expand="true" fill="true" />
 	      <label id="about2" title="by Anton Persson"  expand="true" fill="true" />
-	      <label id="about3" title=""  expand="true" fill="true" />
-	      <label id="about5" title=""  expand="true" fill="true" />
 	      <label id="about6" title=""  expand="true" fill="true" />
 	      <label id="about9" title="---------------"  expand="true" fill="true" />
 	      <label id="aboutA" title="Based on SATAN "  expand="true" fill="true" />
@@ -95,7 +93,7 @@
 	      <label id="aboutC" title="(C) 2003 by Johan Thim and Anton Persson"  expand="true" fill="true" />
 	      <label id="aboutE" title="---------------"  expand="true" fill="true" />
 	      <label id="aboutF" title="For questions, please visit:"  expand="true" fill="true" />
-	      <label id="aboutG" title="https://launchpad.net/satan"  expand="true" fill="true" />
+	      <label id="aboutG" title="https://github.com/pltxtra/vuknob"  expand="true" fill="true" />
 	      <label id="acknowledge1" title="---------------" />
 	      <label id="acknowledge2" title="This software contains samples" />
 	      <label id="acknowledge3" title="from the Community Audio project." />

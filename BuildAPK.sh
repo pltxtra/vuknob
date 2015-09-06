@@ -36,7 +36,10 @@ function usage {
     echo "    --release"
     echo "                  Build release package."
     echo "    <application>"
-    echo "                  One of the following: `ls Applications`"
+    echo "                  One of the following:"
+    for APP in $(ls Applications) ; do
+	echo "                     $APP"
+    done
     echo
     echo
 }

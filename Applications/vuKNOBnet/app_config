@@ -1,3 +1,5 @@
 APP_NAMESPACE=com.holidaystudios.vuknob
 APK_PREFIX=vuknob
 ACTIVITY=vuKNOBnet
+APP_MIN_SDK=17
+APP_TARGET_SDK=17

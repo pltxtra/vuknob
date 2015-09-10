@@ -57,6 +57,7 @@ TARGET=""
 DO_CLEAR="false"
 APPLICATION=""
 DEBUGGABLE="true"
+DORELEASE="false"
 
 while [[ $# > 0 ]]
 do
@@ -66,6 +67,9 @@ case $key in
     -h|--help)
 	usage
 	exit 0
+	;;
+    --clean)
+	MODE="cleanup"
 	;;
     -i)
 	MODE="install"
@@ -96,7 +100,7 @@ case $key in
 	shift # skip val
 	;;
     --release)
-	MODE="release"
+	DORELEASE="true"
 	DEBUGGABLE="false"
 	;;
     -*)
@@ -151,10 +155,24 @@ fi
 SECONDS_SINCE_EPOCH="`date +%s`"
 
 # step into the Android directory
+
+if [ "$MODE" = "cleanup" ]; then
+    rm -rf Applications/$APPLICATION/Android/bin/*
+    rm -rf Applications/$APPLICATION/Android/bin/*
+    rm -rf Applications/$APPLICATION/Android/libs/armeab*/*
+    rm -rf Applications/$APPLICATION/Android/obj/*
+
+    echo
+    echo "Cleanup completed."
+    echo
+
+    exit 0
+fi
+
 cd Applications/$APPLICATION/Android
 
 rm AndroidManifest.xml
-cat $BASEDIR/AndroidManifest.xml.template | sed "s/APP_NAMESPACE/$APP_NAMESPACE/" | sed "s/DEBUGGABLE/$DEBUGGABLE/" | sed "s/APP_ACTIVITY/$ACTIVITY/" > AndroidManifest.xml
+cat $BASEDIR/AndroidManifest.xml.template | sed "s/APP_NAMESPACE/$APP_NAMESPACE/" | sed "s/APP_TARGET_SDK/$APP_TARGET_SDK/" | sed "s/APP_MIN_SDK/$APP_MIN_SDK/" | sed "s/DEBUGGABLE/$DEBUGGABLE/" | sed "s/APP_ACTIVITY/$ACTIVITY/" > AndroidManifest.xml
 
 # check if we have a Android project that is usable, if not, fix it automatically
 
@@ -254,9 +272,10 @@ touch src/com/holidaystudios/$APK_PREFIX/${ACTIVITY}.java
 
 # build native libraries, then run ant to build java stuff 'n create the .apk
 
+APK_SUFIX="-debug"
 RELEASE_OR_DEBUG=debug
-if [ "$MODE" = "release" ]; then
-    APK_SUFIX=""
+if [ "$DORELEASE" = "true" ]; then
+    APK_SUFIX="-release"
     grep 'debuggable="true"' AndroidManifest.xml > /dev/null
     if [ $? -eq 0 ]; then
 	echo ""
@@ -265,8 +284,6 @@ if [ "$MODE" = "release" ]; then
 	exit 1
     fi
     RELEASE_OR_DEBUG=release
-else
-    APK_SUFIX="-debug"
 fi
 
 # copy current dynlib modules from vuknob
@@ -293,16 +310,19 @@ if [ $? -ne 0 ]; then
     exit -1
 fi
 
-if [ "$MODE" = "release" ]; then
+if [ "$DORELEASE" = "true" ]; then
     echo
     echo "Release build finished."
     echo
 fi
 
-if [ "$DO_CLEAR" = "true" ]; then
-    adb -$TARGET uninstall $APP_NAMESPACE
-fi
-adb -$TARGET install -r bin/${APK_PREFIX}${APK_SUFIX}.apk
+if [ "$MODE" = "install" ]; then
 
-echo "Build: $SECONDS_SINCE_EPOCH"
-echo "   at:" `date`
+    if [ "$DO_CLEAR" = "true" ]; then
+	adb -$TARGET uninstall $APP_NAMESPACE
+    fi
+    adb -$TARGET install -r bin/${APK_PREFIX}${APK_SUFIX}.apk
+
+    echo "Build: $SECONDS_SINCE_EPOCH"
+    echo "   at:" `date`
+fi

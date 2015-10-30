@@ -305,6 +305,9 @@ public class vuKNOB extends KamoflageActivity
 		System.loadLibrary("svgandroid");
 		System.loadLibrary("kamoflage");
 		System.loadLibrary("vuknob");
+		System.loadLibrary("vuknob_server");
+		System.loadLibrary("vuknob_client");
+		System.loadLibrary("vuknob_ui");
 		Log.v("vuknob", "    Native library loaded.");
 	}
 

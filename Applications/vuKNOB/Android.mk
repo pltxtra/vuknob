@@ -33,6 +33,12 @@ LOCAL_PATH := $(call my-dir)
 
 include ../../../config.mk
 
+ifeq ($(TARGET_ARCH_ABI),armeabi-v7a)
+	FLOAT_CFLAGS += -D__SATAN_USES_FLOATS -mfloat-abi=softfp -mfpu=neon
+else
+	FLOAT_CFLAGS += -D__SATAN_USES_FXP -DFIXED_POINT=32
+endif # TARGET_ARCH_ABI == armeabi-v7a
+
 include $(CLEAR_VARS)
 LOCAL_CPP_EXTENSION := .cc
 LOCAL_MODULE    := pathvariable
@@ -51,14 +57,26 @@ include $(PREBUILT_SHARED_LIBRARY)
 
 include $(CLEAR_VARS)
 LOCAL_MODULE := libvuknob
-ifeq ($(TARGET_ARCH_ABI),armeabi-v7a)
-	LOCAL_CFLAGS += -D__SATAN_USES_FLOATS -mfloat-abi=softfp -mfpu=neon
-	LOCAL_SRC_FILES := $(LIBVUKNOB_DIRECTORY)/export/armeabi-v7a/libvuknob.so
-else
-	LOCAL_CFLAGS += -D__SATAN_USES_FXP -DFIXED_POINT=32
-	LOCAL_SRC_FILES := $(LIBVUKNOB_DIRECTORY)/export/armeabi/libvuknob.so
-endif # TARGET_ARCH_ABI == armeabi-v7a
+LOCAL_CFLAGS += $(FLOAT_CFLAGS)
+LOCAL_SRC_FILES := $(LIBVUKNOB_DIRECTORY)/export/$(TARGET_ARCH_ABI)/libvuknob.so
+include $(PREBUILT_SHARED_LIBRARY)
 
+include $(CLEAR_VARS)
+LOCAL_MODULE := libvuknob_client
+LOCAL_CFLAGS += $(FLOAT_CFLAGS)
+LOCAL_SRC_FILES := $(LIBVUKNOB_DIRECTORY)/export/$(TARGET_ARCH_ABI)/libvuknob_client.so
+include $(PREBUILT_SHARED_LIBRARY)
+
+include $(CLEAR_VARS)
+LOCAL_MODULE := libvuknob_server
+LOCAL_CFLAGS += $(FLOAT_CFLAGS)
+LOCAL_SRC_FILES := $(LIBVUKNOB_DIRECTORY)/export/$(TARGET_ARCH_ABI)/libvuknob_server.so
+include $(PREBUILT_SHARED_LIBRARY)
+
+include $(CLEAR_VARS)
+LOCAL_MODULE := libvuknob_ui
+LOCAL_CFLAGS += $(FLOAT_CFLAGS)
+LOCAL_SRC_FILES := $(LIBVUKNOB_DIRECTORY)/export/$(TARGET_ARCH_ABI)/libvuknob_ui.so
 include $(PREBUILT_SHARED_LIBRARY)
 
 include $(LOCAL_PATH)/dynlib_auto_Android.mk

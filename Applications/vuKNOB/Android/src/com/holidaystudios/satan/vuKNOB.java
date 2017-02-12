@@ -303,6 +303,7 @@ public class vuKNOB extends KamoflageActivity
 		Log.v("vuknob", "Loading native library for kamoflage.");
 		System.loadLibrary("pathvariable");
 		System.loadLibrary("svgandroid");
+		System.loadLibrary("gnuVG");
 		System.loadLibrary("kamoflage");
 		System.loadLibrary("vuknob");
 		System.loadLibrary("vuknob_server");

@@ -1,0 +1,182 @@
+<?xml version="1.0" encoding="UTF-8" standalone="no"?>
+<!-- Created with Inkscape (http://www.inkscape.org/) -->
+
+<svg
+   xmlns:dc="http://purl.org/dc/elements/1.1/"
+   xmlns:cc="http://creativecommons.org/ns#"
+   xmlns:rdf="http://www.w3.org/1999/02/22-rdf-syntax-ns#"
+   xmlns:svg="http://www.w3.org/2000/svg"
+   xmlns="http://www.w3.org/2000/svg"
+   xmlns:sodipodi="http://sodipodi.sourceforge.net/DTD/sodipodi-0.dtd"
+   xmlns:inkscape="http://www.inkscape.org/namespaces/inkscape"
+   width="1080"
+   height="1400"
+   id="svg4320"
+   version="1.1"
+   inkscape:version="0.91 r13725"
+   sodipodi:docname="testGnuVG.svg">
+  <metadata
+     id="metadata3473">
+    <rdf:RDF>
+      <cc:Work
+         rdf:about="">
+        <dc:format>image/svg+xml</dc:format>
+        <dc:type
+           rdf:resource="http://purl.org/dc/dcmitype/StillImage" />
+        <dc:title />
+      </cc:Work>
+    </rdf:RDF>
+  </metadata>
+  <sodipodi:namedview
+     pagecolor="#ffa123"
+     bordercolor="#666666"
+     borderopacity="1"
+     objecttolerance="10"
+     gridtolerance="10"
+     guidetolerance="10"
+     inkscape:pageopacity="1"
+     inkscape:pageshadow="2"
+     inkscape:window-width="3086"
+     inkscape:window-height="1758"
+     id="namedview3471"
+     showgrid="false"
+     inkscape:zoom="1.2473364"
+     inkscape:cx="683.27808"
+     inkscape:cy="869.83328"
+     inkscape:window-x="114"
+     inkscape:window-y="42"
+     inkscape:window-maximized="1"
+     inkscape:current-layer="layer1" />
+  <defs
+     id="defs4322">
+    <marker
+       inkscape:stockid="Arrow1Lend"
+       orient="auto"
+       refY="0.0"
+       refX="0.0"
+       id="Arrow1Lend"
+       style="overflow:visible;">
+      <path
+         id="path4818"
+         d="M 0.0,0.0 L 5.0,-5.0 L -12.5,0.0 L 5.0,5.0 L 0.0,0.0 z "
+         style="fill-rule:evenodd;stroke:#000000;stroke-width:1.0pt;"
+         transform="scale(0.8) rotate(180) translate(12.5,0)" />
+    </marker>
+    <linearGradient
+       id="linearGradient5442">
+      <stop
+         style="stop-color:#000000;stop-opacity:1;"
+         offset="0"
+         id="stop5444" />
+      <stop
+         style="stop-color:#d2d2d2;stop-opacity:1"
+         offset="1"
+         id="stop5446" />
+    </linearGradient>
+    <filter
+       style="color-interpolation-filters:sRGB;"
+       inkscape:label="Drop Shadow"
+       id="filter4685">
+      <feFlood
+         flood-opacity="0.458824"
+         flood-color="rgb(41,41,41)"
+         result="flood"
+         id="feFlood4687" />
+      <feComposite
+         in="flood"
+         in2="SourceGraphic"
+         operator="in"
+         result="composite1"
+         id="feComposite4689" />
+      <feGaussianBlur
+         in="composite1"
+         stdDeviation="9"
+         result="blur"
+         id="feGaussianBlur4691" />
+      <feOffset
+         dx="4.57967e-15"
+         dy="9"
+         result="offset"
+         id="feOffset4693" />
+      <feComposite
+         in="SourceGraphic"
+         in2="offset"
+         operator="over"
+         result="composite2"
+         id="feComposite4695" />
+    </filter>
+    <filter
+       style="color-interpolation-filters:sRGB"
+       inkscape:label="Drop Shadow"
+       id="filter4685-8">
+      <feFlood
+         flood-opacity="0.458824"
+         flood-color="rgb(41,41,41)"
+         result="flood"
+         id="feFlood4687-3" />
+      <feComposite
+         in="flood"
+         in2="SourceGraphic"
+         operator="in"
+         result="composite1"
+         id="feComposite4689-4" />
+      <feGaussianBlur
+         in="composite1"
+         stdDeviation="9"
+         result="blur"
+         id="feGaussianBlur4691-3" />
+      <feOffset
+         dx="4.57967e-15"
+         dy="9"
+         result="offset"
+         id="feOffset4693-7" />
+      <feComposite
+         in="SourceGraphic"
+         in2="offset"
+         operator="over"
+         result="composite2"
+         id="feComposite4695-0" />
+    </filter>
+  </defs>
+  <g
+     id="layer1"
+     inkscape:label="Layer 1"
+     inkscape:groupmode="layer">
+    <rect
+       style="fill:#0000ff;fill-opacity:1;stroke:none;stroke-width:10;stroke-linecap:butt;stroke-linejoin:round;stroke-miterlimit:4;stroke-dasharray:none;stroke-opacity:1"
+       id="rect4081"
+       width="477.01648"
+       height="466.59427"
+       x="230.0903"
+       y="166.97256" />
+    <g
+       id="g4909"
+       style="opacity:0.5"
+       transform="translate(-29.663209,3.2068334)">
+      <ellipse
+         ry="177.5784"
+         rx="175.97498"
+         cy="589.07202"
+         cx="615.31116"
+         id="path4083"
+         style="opacity:1;fill:#ff0000;fill-opacity:1;stroke:none;stroke-width:10;stroke-linecap:butt;stroke-linejoin:round;stroke-miterlimit:4;stroke-dasharray:none;stroke-opacity:1" />
+      <path
+         inkscape:transform-center-y="-3.4362381"
+         inkscape:transform-center-x="16.239936"
+         d="M 840.9921,527.74131 708.53062,497.53021 608.549,589.5217 596.34861,454.2076 477.96349,387.54636 l 124.92123,-53.41762 26.81559,-133.1904 89.40595,102.30021 134.95807,-15.65496 -69.66531,116.64262 z"
+         inkscape:randomized="0"
+         inkscape:rounded="0"
+         inkscape:flatsided="false"
+         sodipodi:arg2="1.3110152"
+         sodipodi:arg1="0.68269671"
+         sodipodi:r2="102.29638"
+         sodipodi:r1="204.59277"
+         sodipodi:cy="398.66626"
+         sodipodi:cx="682.25385"
+         sodipodi:sides="5"
+         id="path4891"
+         style="opacity:1;fill:#008000;fill-opacity:1;stroke:none;stroke-width:10;stroke-linecap:butt;stroke-linejoin:round;stroke-miterlimit:4;stroke-dasharray:none;stroke-opacity:1"
+         sodipodi:type="star" />
+    </g>
+  </g>
+</svg>

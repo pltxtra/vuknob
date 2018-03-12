@@ -76,9 +76,51 @@
     <filter
        style="color-interpolation-filters:sRGB;"
        inkscape:label="Drop Shadow"
-       id="filter4685">
+       id="filter_XX">
       <feFlood
-         flood-opacity="0.458824"
+         flood-color="rgb(0,255,0)"
+         result="flood1"
+         id="feFlood4687" />
+      <feFlood
+         flood-color="rgb(255,0,255)"
+         result="flood"
+         id="feFlood4687_33" />
+      <feComposite
+         in="flood1"
+         in2="SourceGraphic"
+         operator="in"
+         result="composite2"
+         id="feComposite4689_22" />
+      <feComposite
+         in="flood"
+         in2="SourceGraphic"
+         operator="in"
+         result="composite1"
+         id="feComposite4689" />
+      <feOffset
+         in="composite2"
+	 dx="64"
+	 dy="64"
+         result="offsetX"
+         id="feOffset4689_22" />
+      <feGaussianBlur
+         in="offsetX"
+         stdDeviation="9"
+         result="blur"
+         id="feGaussianBlur4691" />
+      <feBlend
+         in="composite1"
+         in2="blur"
+         operator="normal"
+         result="blend_32x"
+         id="blend_x2" />
+    </filter>
+    <filter
+       style="color-interpolation-filters:sRGB;"
+       inkscape:label="Drop Shadow"
+       id="filter_YY">
+      <feFlood
+         flood-opacity="0.8"
          flood-color="rgb(41,41,41)"
          result="flood"
          id="feFlood4687" />
@@ -90,12 +132,12 @@
          id="feComposite4689" />
       <feGaussianBlur
          in="composite1"
-         stdDeviation="9"
+         stdDeviation="12"
          result="blur"
          id="feGaussianBlur4691" />
       <feOffset
-         dx="4.57967e-15"
-         dy="9"
+         dx="45"
+         dy="45"
          result="offset"
          id="feOffset4693" />
       <feComposite
@@ -104,38 +146,6 @@
          operator="over"
          result="composite2"
          id="feComposite4695" />
-    </filter>
-    <filter
-       style="color-interpolation-filters:sRGB"
-       inkscape:label="Drop Shadow"
-       id="filter4685-8">
-      <feFlood
-         flood-opacity="0.458824"
-         flood-color="rgb(41,41,41)"
-         result="flood"
-         id="feFlood4687-3" />
-      <feComposite
-         in="flood"
-         in2="SourceGraphic"
-         operator="in"
-         result="composite1"
-         id="feComposite4689-4" />
-      <feGaussianBlur
-         in="composite1"
-         stdDeviation="9"
-         result="blur"
-         id="feGaussianBlur4691-3" />
-      <feOffset
-         dx="4.57967e-15"
-         dy="9"
-         result="offset"
-         id="feOffset4693-7" />
-      <feComposite
-         in="SourceGraphic"
-         in2="offset"
-         operator="over"
-         result="composite2"
-         id="feComposite4695-0" />
     </filter>
   </defs>
   <g
@@ -150,9 +160,9 @@
        x="230.0903"
        y="166.97256" />
     <g
-       id="g4909"
-       style="opacity:0.5"
-       transform="translate(-29.663209,3.2068334)">
+       id="knobBody"
+       transform="translate(-29.663209,3.2068334)"
+       style="filter:url(#filter_YY)">
       <ellipse
          ry="177.5784"
          rx="175.97498"

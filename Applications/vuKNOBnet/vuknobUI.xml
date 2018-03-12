@@ -83,6 +83,9 @@
 
 	  <container id="aboutSATAN" title="ABOUT" align="vertical" expand="true" fill="true" scrollable="false" >
 	    <button id="aboutLicense" title="LICENSE" expand="false" fill="false" viewtrigger="aboutLICENSE"/>
+	    <button id="aboutPrivacy" title="PRIVACY" expand="false"
+		    fill="false"
+		    exturi="https://www.vuknob.com/?q=node/3" />
 	    <container id="aboutSATANList" title="ABOUT" align="vertical" expand="true" fill="true" scrollable="false" >
 	      <label id="about1" title="vuKNOB (C) 2015" expand="true" fill="true" />
 	      <label id="about2" title="by Anton Persson"  expand="true" fill="true" />

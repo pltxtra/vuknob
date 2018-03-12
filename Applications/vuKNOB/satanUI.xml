@@ -42,12 +42,12 @@
 	<tabs id="modeTabs" title="ModeT" expand="true"
 	      hidetabs="true" fill="true">
 
-	  <container title="SequencerOLD" id="sequence_container" align="vertical" expand="true" fill="true" >
+	  <gnuvgcanvas title="Sequencer" id="sequence_container" expand="true" fill="true" />
+
+	  <container title="SequencerOLD" id="sequence_container_OLD" align="vertical" expand="true" fill="true" >
 	    <canvas title="Sequ" id="pncSequencer" expand="true" fill="true" />
 	    <canvas title="kbd" id="numericKeyboard" expand="false" fill="false" />
 	  </container>
-
-	  <gnuvgcanvas title="gnuVG" id="gnuVG_test" />
 
 	  <svgcanvas id="controllerEnvelope" title="Controller" expand="true" fill="true" />
 

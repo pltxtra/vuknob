@@ -285,6 +285,7 @@
 	id="instanceTemplate"
 	x="0" y="0"
 	width="250" height="100"
+	display="none"
 	>
       <g transform="scale(0.38, 0.38)">
 	<g

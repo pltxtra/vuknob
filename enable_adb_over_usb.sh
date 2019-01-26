@@ -6,7 +6,6 @@ echo
 echo "Press enter."
 read YORNO
 echo "Will connect to $IP_ADDR"
-exit 0
 adb connect $IP_ADDR
 echo
 echo "Press enter."

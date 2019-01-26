@@ -20,8 +20,8 @@ function usage {
     echo "Options:"
     echo "    -h, --help"
     echo "                  Prints this help information."
-    echo "    -i <d/e> [-c]"
-    echo "                  install to either <d>evice or <e>mulator, "
+    echo "    -i <d/e/''> [-c]"
+    echo "                  install to either <d>evice or <e>mulator, or use '' for first available target."
     echo "                  [-c] clears previous install"
     echo "    -u <d/e>"
     echo "                  do uninstall on either <d>evice or <e>mulator"
@@ -318,10 +318,16 @@ fi
 
 if [ "$MODE" = "install" ]; then
 
-    if [ "$DO_CLEAR" = "true" ]; then
-	adb -$TARGET uninstall $APP_NAMESPACE
+    if [ "$TARGET" != "" ]; then
+	ADB_TARGET="-$TARGET"
+    else
+	ADB_TARGET=""
     fi
-    adb -$TARGET install -r bin/${APK_PREFIX}${APK_SUFIX}.apk
+
+    if [ "$DO_CLEAR" = "true" ]; then
+	adb $ADB_TARGET uninstall $APP_NAMESPACE
+    fi
+    adb $ADB_TARGET install -r bin/${APK_PREFIX}${APK_SUFIX}.apk
 
     echo "Build: $SECONDS_SINCE_EPOCH"
     echo "   at:" `date`

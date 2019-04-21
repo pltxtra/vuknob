@@ -1,0 +1,152 @@
+<?xml version="1.0" encoding="UTF-8" standalone="no"?>
+<!-- Created with Inkscape (http://www.inkscape.org/) -->
+
+<svg
+   xmlns:dc="http://purl.org/dc/elements/1.1/"
+   xmlns:cc="http://creativecommons.org/ns#"
+   xmlns:rdf="http://www.w3.org/1999/02/22-rdf-syntax-ns#"
+   xmlns:svg="http://www.w3.org/2000/svg"
+   xmlns="http://www.w3.org/2000/svg"
+   xmlns:sodipodi="http://sodipodi.sourceforge.net/DTD/sodipodi-0.dtd"
+   xmlns:inkscape="http://www.inkscape.org/namespaces/inkscape"
+   width="250"
+   height="100"
+   viewBox="0 0 250 99.999998"
+   id="svg2"
+   version="1.1"
+   inkscape:version="0.92.3 (2405546, 2018-03-11)"
+   sodipodi:docname="loopEditor.svg">
+  <defs
+     id="defs4" />
+  <sodipodi:namedview
+     id="base"
+     pagecolor="#ffffff"
+     bordercolor="#666666"
+     borderopacity="1.0"
+     inkscape:pageopacity="0.0"
+     inkscape:pageshadow="2"
+     inkscape:zoom="1.979899"
+     inkscape:cx="-169.1819"
+     inkscape:cy="54.052556"
+     inkscape:document-units="px"
+     inkscape:current-layer="layer1"
+     showgrid="false"
+     fit-margin-top="0"
+     fit-margin-left="0"
+     fit-margin-right="0"
+     fit-margin-bottom="0"
+     inkscape:window-width="3373"
+     inkscape:window-height="1385"
+     inkscape:window-x="67"
+     inkscape:window-y="27"
+     inkscape:window-maximized="1"
+     showguides="false"
+     units="px" />
+  <metadata
+     id="metadata7">
+    <rdf:RDF>
+      <cc:Work
+         rdf:about="">
+        <dc:format>image/svg+xml</dc:format>
+        <dc:type
+           rdf:resource="http://purl.org/dc/dcmitype/StillImage" />
+        <dc:title />
+      </cc:Work>
+    </rdf:RDF>
+  </metadata>
+  <g
+     inkscape:label="Layer 1"
+     inkscape:groupmode="layer"
+     id="layer1">
+    <rect
+       y="-1.4363855e-05"
+       x="-4.6856935e-06"
+       height="96.958466"
+       width="250.05077"
+       id="rect4136"
+       style="fill:#4444ff;fill-opacity:1;stroke:none;stroke-width:2.04123092;stroke-linecap:butt;stroke-linejoin:round;stroke-miterlimit:4;stroke-dasharray:none;stroke-opacity:1" />
+    <g
+       transform="matrix(1.0418782,0,0,1.0626554,-5.4971025e-6,3.4856889)"
+       id="g4036-8"
+       style="fill:#ffffff">
+      <svg
+         id="rect3865-6-2-2-17"
+         overflow="hidden"
+         width="240"
+         height="30"
+         x="0"
+         y="0"
+         rx="0"
+         ry="0"
+         version="1.1"
+         inkscape:version="0.91 r13725"
+         style="overflow:hidden;fill:#ffffff">
+        <text
+           class="machineId"
+           inkscape:label="#text4319-5-8"
+           xml:space="preserve"
+           style="font-style:normal;font-variant:normal;font-weight:normal;font-stretch:normal;font-size:18px;line-height:0%;font-family:Roboto;-inkscape-font-specification:Roboto;letter-spacing:0px;word-spacing:0px;fill:#ffffff;fill-opacity:1;stroke:none"
+           x="4"
+           y="20"
+           id="machineId">Loop Settings</text>
+      </svg>
+    </g>
+    <g
+       id="loopSettingsButton">
+      <rect
+         style="fill:#ffffff;fill-opacity:1;stroke:none;stroke-width:2.10443115;stroke-linecap:butt;stroke-linejoin:round;stroke-miterlimit:4;stroke-dasharray:none;stroke-opacity:1"
+         id="rect9722-3"
+         width="83.350258"
+         height="63.759323"
+         x="83.350243"
+         y="33.199127" />
+      <rect
+         style="fill:#4444ff;fill-opacity:1;stroke:none;stroke-width:2.10443115;stroke-linecap:butt;stroke-linejoin:round;stroke-miterlimit:4;stroke-dasharray:none;stroke-opacity:1"
+         id="rect9960-0"
+         width="78.140862"
+         height="58.446049"
+         x="85.954941"
+         y="35.855766" />
+      <path
+         inkscape:connector-curvature="0"
+         id="playAsLoop"
+         d="m 107.57748,45.449904 c -10.814904,0 -19.628884,8.813982 -19.628884,19.628885 0,10.076944 7.654938,18.409878 17.447894,19.501092 v -4.404574 c -7.413735,-1.055244 -13.08592,-7.38222 -13.08592,-15.096518 0,-8.457517 6.809395,-15.266915 15.26691,-15.266911 h 34.89579 c 8.4575,0 15.26691,6.809394 15.26691,15.266911 0,8.45751 -6.80941,15.26691 -15.26691,15.26691 h -22.99408 v -5.363015 l -5.35875,5.363015 -4.36198,4.361974 h 9.72073 22.99408 c 10.81488,0 19.62888,-8.813984 19.62888,-19.628884 0,-10.814905 -8.814,-19.628885 -19.62888,-19.628885 z"
+         style="color:#000000;font-style:normal;font-variant:normal;font-weight:normal;font-stretch:normal;font-size:medium;line-height:normal;font-family:sans-serif;font-variant-ligatures:normal;font-variant-position:normal;font-variant-caps:normal;font-variant-numeric:normal;font-variant-alternates:normal;font-feature-settings:normal;text-indent:0;text-align:start;text-decoration:none;text-decoration-line:none;text-decoration-style:solid;text-decoration-color:#000000;letter-spacing:normal;word-spacing:normal;text-transform:none;writing-mode:lr-tb;direction:ltr;text-orientation:mixed;dominant-baseline:auto;baseline-shift:baseline;text-anchor:start;white-space:normal;shape-padding:0;clip-rule:nonzero;display:inline;overflow:visible;visibility:visible;opacity:1;isolation:auto;mix-blend-mode:normal;color-interpolation:sRGB;color-interpolation-filters:linearRGB;solid-color:#000000;solid-opacity:1;vector-effect:none;fill:#ffffff;fill-opacity:1;fill-rule:nonzero;stroke:none;stroke-width:4.36197424;stroke-linecap:butt;stroke-linejoin:miter;stroke-miterlimit:4;stroke-dasharray:none;stroke-dashoffset:0;stroke-opacity:1;color-rendering:auto;image-rendering:auto;shape-rendering:auto;text-rendering:auto;enable-background:accumulate" />
+      <path
+         inkscape:connector-curvature="0"
+         id="playAsEndless"
+         d="m 152.38143,55.353801 v 7.544002 H 87.948596 v 4.361974 h 64.432834 v 7.544 l 9.72072,-9.724987 z"
+         style="fill:#ffffff;fill-opacity:1;stroke:none;stroke-width:5.29164124;stroke-miterlimit:4;stroke-dasharray:none;stroke-opacity:1" />
+    </g>
+    <g
+       id="loopParameterSettingButton">
+      <rect
+         style="fill:#ffffff;fill-opacity:1;stroke:none;stroke-width:2.10443115;stroke-linecap:butt;stroke-linejoin:round;stroke-miterlimit:4;stroke-dasharray:none;stroke-opacity:1"
+         id="rect9722-2"
+         width="83.350258"
+         height="63.759323"
+         x="166.7005"
+         y="33.199127" />
+      <rect
+         style="fill:#4444ff;fill-opacity:1;stroke:none;stroke-width:2.10443115;stroke-linecap:butt;stroke-linejoin:round;stroke-miterlimit:4;stroke-dasharray:none;stroke-opacity:1"
+         id="rect9960-1"
+         width="78.140862"
+         height="58.446049"
+         x="169.30521"
+         y="35.855766" />
+      <g
+         id="g5409">
+        <path
+           style="fill:#ffffff;fill-opacity:1;stroke:none;stroke-width:5.29164124;stroke-miterlimit:4;stroke-dasharray:none;stroke-opacity:1"
+           d="m 181.01919,41.463607 -9.7207,9.72656 9.7207,9.72461 v -7.54492 h 54.71289 v 7.54492 l 9.72071,-9.72461 -9.72071,-9.72656 v 7.54492 h -54.71289 z"
+           id="startStopIcon"
+           inkscape:connector-curvature="0" />
+        <path
+           style="fill:#ffffff;fill-opacity:1;stroke:none;stroke-width:0.99003708;stroke-miterlimit:4;stroke-dasharray:none;stroke-opacity:1"
+           d="m 192.60066,84.980428 4.77396,4.773957 2.1665,-2.166502 v -0.0014 l 25.54474,-25.54474 -4.77328,-4.773274 -25.5461,25.546108 z m -0.93524,1.010438 v 4.699439 h 4.69945 z"
+           id="editStartStopIcon"
+           inkscape:connector-curvature="0" />
+      </g>
+    </g>
+  </g>
+</svg>

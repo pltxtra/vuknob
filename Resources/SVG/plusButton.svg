@@ -13,10 +13,43 @@
    height="371.89536"
    id="svg5486"
    version="1.1"
-   inkscape:version="0.48.4 r9939"
+   inkscape:version="0.92.3 (2405546, 2018-03-11)"
    sodipodi:docname="plusButton.svg">
   <defs
-     id="defs5488" />
+     id="defs5488">
+    <filter
+       style="color-interpolation-filters:sRGB;"
+       inkscape:label="Drop Shadow"
+       id="filter4777">
+      <feFlood
+         flood-opacity="0.498039"
+         flood-color="rgb(0,0,0)"
+         result="flood"
+         id="feFlood4767" />
+      <feComposite
+         in="flood"
+         in2="SourceGraphic"
+         operator="in"
+         result="composite1"
+         id="feComposite4769" />
+      <feGaussianBlur
+         in="composite1"
+         stdDeviation="3"
+         result="blur"
+         id="feGaussianBlur4771" />
+      <feOffset
+         dx="16"
+         dy="16"
+         result="offset"
+         id="feOffset4773" />
+      <feComposite
+         in="SourceGraphic"
+         in2="offset"
+         operator="over"
+         result="composite2"
+         id="feComposite4775" />
+    </filter>
+  </defs>
   <sodipodi:namedview
      id="base"
      pagecolor="#ffffff"
@@ -26,7 +59,7 @@
      inkscape:pageshadow="2"
      inkscape:zoom="0.98994949"
      inkscape:cx="-66.160148"
-     inkscape:cy="146.45945"
+     inkscape:cy="227.27165"
      inkscape:document-units="px"
      inkscape:current-layer="layer1"
      showgrid="false"
@@ -34,11 +67,11 @@
      fit-margin-left="0"
      fit-margin-right="0"
      fit-margin-bottom="0"
-     inkscape:window-width="1855"
-     inkscape:window-height="1056"
-     inkscape:window-x="65"
-     inkscape:window-y="24"
-     inkscape:window-maximized="1" />
+     inkscape:window-width="1683"
+     inkscape:window-height="1085"
+     inkscape:window-x="1241"
+     inkscape:window-y="219"
+     inkscape:window-maximized="0" />
   <metadata
      id="metadata5491">
     <rdf:RDF>
@@ -56,33 +89,26 @@
      inkscape:groupmode="layer"
      id="layer1"
      transform="translate(-165,-337.84307)">
-    <path
-       sodipodi:type="arc"
-       style="fill:#000000;fill-opacity:0.49771693;stroke:none"
-       id="path5359-0"
-       sodipodi:cx="-358.57144"
-       sodipodi:cy="403.79074"
-       sodipodi:rx="134.28572"
-       sodipodi:ry="134.28572"
-       d="m -224.28572,403.79074 a 134.28572,134.28572 0 1 1 -268.57144,0 134.28572,134.28572 0 1 1 268.57144,0 z"
-       transform="matrix(1.3031914,0,0,1.3031914,807.28722,8.521821)" />
-    <path
-       sodipodi:type="arc"
-       style="fill:#f1a123;fill-opacity:1;stroke:none"
-       id="buttonBody"
-       sodipodi:cx="-358.57144"
-       sodipodi:cy="403.79074"
-       sodipodi:rx="134.28572"
-       sodipodi:ry="134.28572"
-       d="m -224.28572,403.79074 a 134.28572,134.28572 0 1 1 -268.57144,0 134.28572,134.28572 0 1 1 268.57144,0 z"
-       transform="matrix(1.3031914,0,0,1.3031914,807.28722,-13.373556)"
-       inkscape:label="#path5359" />
-    <path
-       inkscape:label="#rect4910-2"
-       transform="matrix(1.0533217,0,0,1.0533217,-1142.254,284.60142)"
-       inkscape:connector-curvature="0"
-       id="menuNext"
-       d="m 1393.9062,162.78125 0,40.625 -40.5937,0 0,26.59375 40.5937,0 0,40.59375 26.5938,0 0,-40.59375 40.625,0 0,-26.59375 -40.625,0 0,-40.625 -26.5938,0 z"
-       style="fill:#ffffff;fill-opacity:1;stroke:none" />
+    <g
+       id="g1026">
+      <path
+         inkscape:label="#path5359"
+         transform="matrix(1.3031914,0,0,1.3031914,807.28722,-13.373556)"
+         d="M -224.28572,403.79074 A 134.28572,134.28572 0 0 1 -358.57144,538.07646 134.28572,134.28572 0 0 1 -492.85716,403.79074 134.28572,134.28572 0 0 1 -358.57144,269.50502 134.28572,134.28572 0 0 1 -224.28572,403.79074 Z"
+         sodipodi:ry="134.28572"
+         sodipodi:rx="134.28572"
+         sodipodi:cy="403.79074"
+         sodipodi:cx="-358.57144"
+         id="buttonBody"
+         style="fill:#f1a123;fill-opacity:1;stroke:none;filter:url(#filter4777)"
+         sodipodi:type="arc" />
+      <path
+         style="fill:#ffffff;fill-opacity:1;stroke:none"
+         d="m 1393.9062,162.78125 0,40.625 -40.5937,0 0,26.59375 40.5937,0 0,40.59375 26.5938,0 0,-40.59375 40.625,0 0,-26.59375 -40.625,0 0,-40.625 -26.5938,0 z"
+         id="menuNext"
+         inkscape:connector-curvature="0"
+         transform="matrix(1.0533217,0,0,1.0533217,-1142.254,284.60142)"
+         inkscape:label="#rect4910-2" />
+    </g>
   </g>
 </svg>

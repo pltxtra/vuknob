@@ -7,7 +7,6 @@
    xmlns:rdf="http://www.w3.org/1999/02/22-rdf-syntax-ns#"
    xmlns:svg="http://www.w3.org/2000/svg"
    xmlns="http://www.w3.org/2000/svg"
-   xmlns:xlink="http://www.w3.org/1999/xlink"
    xmlns:sodipodi="http://sodipodi.sourceforge.net/DTD/sodipodi-0.dtd"
    xmlns:inkscape="http://www.inkscape.org/namespaces/inkscape"
    width="250"
@@ -18,39 +17,7 @@
    inkscape:version="0.92.3 (2405546, 2018-03-11)"
    sodipodi:docname="sequencerMachine.svg">
   <defs
-     id="defs4">
-    <linearGradient
-       inkscape:collect="always"
-       id="linearGradient198">
-      <stop
-         style="stop-color:#ffa123;stop-opacity:1;"
-         offset="0"
-         id="stop194" />
-      <stop
-         style="stop-color:#ffa123;stop-opacity:0;"
-         offset="1"
-         id="stop196" />
-    </linearGradient>
-    <linearGradient
-       inkscape:collect="always"
-       xlink:href="#linearGradient198"
-       id="linearGradient200"
-       x1="-194.70691"
-       y1="106.81853"
-       x2="-66.922607"
-       y2="-0.25763941"
-       gradientUnits="userSpaceOnUse" />
-    <linearGradient
-       inkscape:collect="always"
-       xlink:href="#linearGradient198"
-       id="linearGradient200-6"
-       x1="-194.70691"
-       y1="106.81853"
-       x2="-66.922607"
-       y2="-0.25763941"
-       gradientUnits="userSpaceOnUse"
-       gradientTransform="matrix(0.84149184,0,0,0.84149184,48.950311,48.67459)" />
-  </defs>
+     id="defs4" />
   <sodipodi:namedview
      id="base"
      pagecolor="#ffffff"
@@ -58,9 +25,9 @@
      borderopacity="1.0"
      inkscape:pageopacity="0.0"
      inkscape:pageshadow="2"
-     inkscape:zoom="3.959798"
-     inkscape:cx="8.560204"
-     inkscape:cy="29.475294"
+     inkscape:zoom="4.3274935"
+     inkscape:cx="132.17302"
+     inkscape:cy="64.263928"
      inkscape:document-units="px"
      inkscape:current-layer="layer1"
      showgrid="false"
@@ -343,18 +310,16 @@
       </g>
     </svg>
     <g
-       id="trashcanIcon"
-       transform="matrix(0.84149184,0,0,0.84149184,173.36971,-130.1122)">
-      <circle
-         style="fill:url(#linearGradient200);fill-opacity:1;stroke:#ffffff;stroke-opacity:1;stroke-width:2.37673131;stroke-miterlimit:4;stroke-dasharray:none"
-         r="54.16943"
-         cy="154.92705"
-         cx="-198.62125"
-         id="path140" />
+       id="trashcanIcon">
+      <path
+         style="fill:#ffa123;fill-opacity:1;stroke:#ffffff;stroke-width:2;stroke-miterlimit:4;stroke-dasharray:none;stroke-opacity:1"
+         d="M 51.814682,0.25764837 A 45.583133,45.583133 0 0 1 6.2315489,45.840782 45.583133,45.583133 0 0 1 -39.351584,0.25764837 45.583133,45.583133 0 0 1 6.2315489,-45.325485 45.583133,45.583133 0 0 1 51.814682,0.25764837 Z"
+         id="path140"
+         inkscape:connector-curvature="0" />
       <path
          id="path140-3"
-         d="m -197.87109,128.42188 -2.13282,10.34374 -34.23047,-7.19335 -2.80859,13.59765 86.4082,18.0625 2.81055,-13.54687 -34.23242,-7.19336 2.08203,-10.29102 z m -36.89063,34.70507 v 32.07227 a 54.16943,54.16943 0 0 0 5.53711,4.42187 v -28.58007 h 14.39453 v 35.5625 a 54.16943,54.16943 0 0 0 10.45313,2.16992 v -37.73242 h 14.36133 v 37.33984 a 54.16943,54.16943 0 0 0 10.45507,-2.77539 v -34.56445 h 14.42578 v 26.45117 a 54.16943,54.16943 0 0 0 5.50391,-5.04883 v -29.31641 z"
-         style="fill:#ffffff;fill-opacity:1"
+         d="m 6.8628024,-22.046236 -1.7947506,8.704173 -28.8046608,-6.053145 -2.363406,11.4423111 72.711795,15.1994464 2.365055,-11.3995806 -28.806302,-6.0531539 1.752011,-8.659809 z M -24.180362,7.1577973 V 34.146351 a 45.583133,45.583133 0 0 0 4.659433,3.720967 V 13.817423 h 12.1128797 v 29.925553 a 45.583133,45.583133 0 0 0 8.7962236,1.82597 V 13.817423 H 13.473116 v 31.42117 a 45.583133,45.583133 0 0 0 8.797856,-2.335468 V 13.817423 h 12.139177 v 22.258443 a 45.583133,45.583133 0 0 0 4.631495,-4.248549 V 7.1577973 Z"
+         style="fill:#ffffff;fill-opacity:1;stroke-width:0.84149182"
          inkscape:connector-curvature="0" />
     </g>
     <g
@@ -362,7 +327,7 @@
        transform="translate(228.06921,-131.29768)"
        style="stroke-width:2;stroke-miterlimit:4;stroke-dasharray:none;stroke:#ffffff;stroke-opacity:1">
       <circle
-         style="fill:url(#linearGradient200-6);fill-opacity:1;stroke-width:2;stroke-miterlimit:4;stroke-dasharray:none;stroke:#ffffff;stroke-opacity:1"
+         style="fill:#ffa123;fill-opacity:1;stroke-width:2;stroke-miterlimit:4;stroke-dasharray:none;stroke:#ffffff;stroke-opacity:1"
          r="45.583134"
          cy="179.04443"
          cx="-118.18784"

@@ -106,24 +106,17 @@
            style="display:none;fill:#00ff00;fill-opacity:0.8" />
       </g>
       <g
-         class="buttonContainer"
-         id="g639">
-        <rect
-           y="5"
-           x="5"
-           height="95"
-           width="245"
-           id="rect4136-9"
-           style="fill:#000000;fill-opacity:0.26666667;stroke:none;stroke-width:2;stroke-linecap:butt;stroke-linejoin:round;stroke-miterlimit:4;stroke-dasharray:none;stroke-opacity:1" />
+         id="g1015"
+         class="buttonContainer">
         <rect
            y="0"
            x="0"
-           height="95"
-           width="245"
+           height="100"
+           width="250.00002"
            id="rect4136"
-           style="fill:#ffa123;fill-opacity:1;stroke:none;stroke-width:2;stroke-linecap:butt;stroke-linejoin:round;stroke-miterlimit:4;stroke-dasharray:none;stroke-opacity:1" />
+           style="fill:#ffa123;fill-opacity:1;stroke:none;stroke-width:2.07278943;stroke-linecap:butt;stroke-linejoin:round;stroke-miterlimit:4;stroke-dasharray:none;stroke-opacity:1" />
         <g
-           transform="matrix(1.0047487,0,0,0.98228678,-5.3082824e-6,6.850003)"
+           transform="matrix(1.0252538,0,0,1.0339861,-5.4166149e-6,7.2105296)"
            id="g4224">
           <g
              id="controllsButton"

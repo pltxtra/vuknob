@@ -25,9 +25,9 @@
      borderopacity="1.0"
      inkscape:pageopacity="0.0"
      inkscape:pageshadow="2"
-     inkscape:zoom="4"
-     inkscape:cx="-35.909031"
-     inkscape:cy="37.669686"
+     inkscape:zoom="2.8284271"
+     inkscape:cx="68.100015"
+     inkscape:cy="28.921646"
      inkscape:document-units="px"
      inkscape:current-layer="layer1"
      showgrid="false"
@@ -114,7 +114,8 @@
            height="100"
            width="250.00002"
            id="rect4136"
-           style="fill:#ffa123;fill-opacity:1;stroke:none;stroke-width:2.07278943;stroke-linecap:butt;stroke-linejoin:round;stroke-miterlimit:4;stroke-dasharray:none;stroke-opacity:1" />
+           style="fill:#ffa123;fill-opacity:1;stroke:none;stroke-width:2.07278943;stroke-linecap:butt;stroke-linejoin:round;stroke-miterlimit:4;stroke-dasharray:none;stroke-opacity:1"
+           class="machineButtonBackground" />
         <g
            transform="matrix(1.0252538,0,0,1.0339861,-5.4166149e-6,7.2105296)"
            id="g4224">

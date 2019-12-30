@@ -39,16 +39,16 @@
      borderopacity="1.0"
      inkscape:pageopacity="0.0"
      inkscape:pageshadow="2"
-     inkscape:zoom="1.01"
-     inkscape:cx="-576.68754"
-     inkscape:cy="158.85204"
+     inkscape:zoom="2.8567114"
+     inkscape:cx="-26.135568"
+     inkscape:cy="262.20291"
      inkscape:document-units="px"
      inkscape:current-layer="layer1"
      showgrid="false"
-     inkscape:window-width="3373"
-     inkscape:window-height="1385"
-     inkscape:window-x="67"
-     inkscape:window-y="27"
+     inkscape:window-width="3706"
+     inkscape:window-height="2049"
+     inkscape:window-x="134"
+     inkscape:window-y="55"
      inkscape:window-maximized="1"
      showguides="false"
      inkscape:guide-bbox="true"
@@ -388,7 +388,7 @@
          y="1165.0249"
          ry="19.811283" />
       <g
-         id="g3057">
+         id="patternIdMinusButton">
         <rect
            ry="23.762377"
            y="1304.6292"
@@ -421,7 +421,7 @@
         </g>
       </g>
       <g
-         id="g3050">
+         id="patternIdPlusButton">
         <rect
            ry="23.762377"
            y="1177.8962"
@@ -450,7 +450,7 @@
          y="877.2276"
          ry="10.479896" />
       <g
-         id="g3067">
+         id="pasteButton">
         <rect
            ry="23.762377"
            y="889.10901"
@@ -466,7 +466,7 @@
            inkscape:connector-curvature="0" />
       </g>
       <g
-         id="g3063">
+         id="deleteButton">
         <rect
            ry="23.762377"
            y="889.10901"
@@ -493,7 +493,7 @@
         </g>
       </g>
       <g
-         id="g3073">
+         id="copyButton">
         <rect
            ry="23.762377"
            y="889.10901"
@@ -530,12 +530,14 @@
            transform="matrix(1.4459017,0,0,0.80691193,-1739.0273,9.0998575)"
            style="fill:#000000;fill-opacity:0.28235294;stroke:none"
            d="m 1257.7182,34.653465 h 508.3259 c 26.4908,0 47.8173,38.214839 47.8173,85.683495 v 48.435 c 0,47.46865 -21.3265,85.68349 -47.8173,85.68349 h -508.3259 c -26.4907,0 -47.8172,-38.21484 -47.8172,-85.68349 v -48.435 c 0,-47.468656 21.3265,-85.683495 47.8172,-85.683495 z"
-           id="rect3874-3" />
+           id="rect3874-3"
+           inkscape:connector-curvature="0" />
         <path
            transform="matrix(1.4459017,0,0,0.80691193,-1739.0273,-10.7663)"
            style="fill:#f1a123;fill-opacity:1;stroke:none"
            d="m 1257.7182,34.653465 h 508.3259 c 26.4908,0 47.8173,38.214839 47.8173,85.683495 v 48.435 c 0,47.46865 -21.3265,85.68349 -47.8173,85.68349 h -508.3259 c -26.4907,0 -47.8172,-38.21484 -47.8172,-85.68349 v -48.435 c 0,-47.468656 21.3265,-85.683495 47.8172,-85.683495 z"
-           id="rect3874" />
+           id="rect3874"
+           inkscape:connector-curvature="0" />
         <text
            id="text3782"
            class="helpText"

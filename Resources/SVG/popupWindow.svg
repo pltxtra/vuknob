@@ -40,8 +40,8 @@
      inkscape:pageopacity="0.0"
      inkscape:pageshadow="2"
      inkscape:zoom="1.01"
-     inkscape:cx="76.61425"
-     inkscape:cy="14.821306"
+     inkscape:cx="-50.613473"
+     inkscape:cy="107.89061"
      inkscape:document-units="px"
      inkscape:current-layer="layer1"
      showgrid="false"
@@ -97,11 +97,11 @@
          style="font-style:normal;font-variant:normal;font-weight:normal;font-stretch:normal;line-height:0%;font-family:Roboto;-inkscape-font-specification:Roboto;letter-spacing:0px;word-spacing:0px;fill:#ffffff;fill-opacity:1;stroke:none"
          xml:space="preserve"
          class="helpText"
-         id="textRow1"><tspan
+         id="t1"><tspan
            style="font-size:64px;line-height:1.25;fill:#ffffff;fill-opacity:1"
            y="73.687653"
            x="20.846325"
-           id="deselectText"
+           id="textRow1"
            sodipodi:role="line">DESELECT+gq</tspan></text>
       <text
          y="143.46255"
@@ -109,11 +109,11 @@
          style="font-style:normal;font-variant:normal;font-weight:normal;font-stretch:normal;line-height:0%;font-family:Roboto;-inkscape-font-specification:Roboto;letter-spacing:0px;word-spacing:0px;fill:#ffffff;fill-opacity:1;stroke:none"
          xml:space="preserve"
          class="helpText"
-         id="textRow2"><tspan
+         id="t2"><tspan
            style="font-size:64px;line-height:1.25;fill:#ffffff;fill-opacity:1"
            y="143.46255"
            x="20.846325"
-           id="deselectText-5"
+           id="textRow2"
            sodipodi:role="line">DESELECT+gq</tspan></text>
       <text
          y="213.23746"
@@ -121,11 +121,11 @@
          style="font-style:normal;font-variant:normal;font-weight:normal;font-stretch:normal;line-height:0%;font-family:Roboto;-inkscape-font-specification:Roboto;letter-spacing:0px;word-spacing:0px;fill:#ffffff;fill-opacity:1;stroke:none"
          xml:space="preserve"
          class="helpText"
-         id="textRow3"><tspan
+         id="t3"><tspan
            style="font-size:64px;line-height:1.25;fill:#ffffff;fill-opacity:1"
            y="213.23746"
            x="20.846325"
-           id="deselectText-56"
+           id="textRow3"
            sodipodi:role="line">DESELECT+gq</tspan></text>
       <rect
          ry="23.762377"

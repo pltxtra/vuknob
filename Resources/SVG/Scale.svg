@@ -13,7 +13,7 @@
    height="1052.3622047"
    id="svg2"
    version="1.1"
-   inkscape:version="0.48.4 r9939"
+   inkscape:version="0.92.3 (2405546, 2018-03-11)"
    sodipodi:docname="Scale.svg">
   <defs
      id="defs4" />
@@ -24,16 +24,16 @@
      borderopacity="1.0"
      inkscape:pageopacity="0.0"
      inkscape:pageshadow="2"
-     inkscape:zoom="0.49497475"
-     inkscape:cx="884.57131"
-     inkscape:cy="350.96204"
+     inkscape:zoom="0.9899495"
+     inkscape:cx="185.81408"
+     inkscape:cy="473.46231"
      inkscape:document-units="px"
-     inkscape:current-layer="g4405"
+     inkscape:current-layer="layer1"
      showgrid="false"
-     inkscape:window-width="1855"
-     inkscape:window-height="1056"
-     inkscape:window-x="65"
-     inkscape:window-y="24"
+     inkscape:window-width="3373"
+     inkscape:window-height="1385"
+     inkscape:window-x="67"
+     inkscape:window-y="27"
      inkscape:window-maximized="1" />
   <metadata
      id="metadata7">
@@ -321,60 +321,60 @@
        transform="matrix(0.61300856,0,0,0.61300856,80.53332,183.24703)">
       <text
          transform="translate(-22.857143,52.616062)"
-         sodipodi:linespacing="125%"
          id="text5630-3"
          y="538.07648"
          x="474.28571"
-         style="font-size:144px;font-style:normal;font-variant:normal;font-weight:normal;font-stretch:normal;line-height:125%;letter-spacing:0px;word-spacing:0px;fill:#000000;fill-opacity:0.28627451;stroke:none;font-family:Roboto;-inkscape-font-specification:Roboto"
+         style="font-style:normal;font-variant:normal;font-weight:normal;font-stretch:normal;line-height:0%;font-family:Roboto;-inkscape-font-specification:Roboto;letter-spacing:0px;word-spacing:0px;fill:#000000;fill-opacity:0.28627451;stroke:none"
          xml:space="preserve"
          class="shadedText"><tspan
            y="538.07648"
            x="474.28571"
            id="tspan5632-9"
-           sodipodi:role="line">100.0%</tspan></text>
+           sodipodi:role="line"
+           style="font-size:144px;line-height:1.25">50.0%</tspan></text>
       <text
          transform="translate(-22.857143,39.292114)"
-         sodipodi:linespacing="125%"
          id="text5630"
          y="538.07648"
          x="474.28571"
-         style="font-size:144px;font-style:normal;font-variant:normal;font-weight:normal;font-stretch:normal;line-height:125%;letter-spacing:0px;word-spacing:0px;fill:#000000;fill-opacity:1;stroke:none;font-family:Roboto;-inkscape-font-specification:Roboto"
+         style="font-style:normal;font-variant:normal;font-weight:normal;font-stretch:normal;line-height:0%;font-family:Roboto;-inkscape-font-specification:Roboto;letter-spacing:0px;word-spacing:0px;fill:#000000;fill-opacity:1;stroke:none"
          xml:space="preserve"
          class="frontText"><tspan
            y="538.07648"
            x="474.28571"
            id="tspan5632"
-           sodipodi:role="line">100.0%</tspan></text>
+           sodipodi:role="line"
+           style="font-size:144px;line-height:1.25">50.0%</tspan></text>
     </g>
     <g
        id="labelContent"
        transform="matrix(0.61300856,0,0,0.61300856,80.53332,-274.32619)">
       <text
          transform="translate(-22.857143,52.616062)"
-         sodipodi:linespacing="125%"
          id="text5630-3-8"
          y="538.07648"
          x="474.28571"
-         style="font-size:144px;font-style:normal;font-variant:normal;font-weight:normal;font-stretch:normal;line-height:125%;letter-spacing:0px;word-spacing:0px;fill:#000000;fill-opacity:0.28627451;stroke:none;font-family:Roboto;-inkscape-font-specification:Roboto"
+         style="font-style:normal;font-variant:normal;font-weight:normal;font-stretch:normal;line-height:0%;font-family:Roboto;-inkscape-font-specification:Roboto;letter-spacing:0px;word-spacing:0px;fill:#000000;fill-opacity:0.28627451;stroke:none"
          xml:space="preserve"
          class="shadedText"><tspan
            y="538.07648"
            x="474.28571"
            id="tspan5632-9-1"
-           sodipodi:role="line">100.0%</tspan></text>
+           sodipodi:role="line"
+           style="font-size:144px;line-height:1.25">100.0%</tspan></text>
       <text
          transform="translate(-22.857143,39.292114)"
-         sodipodi:linespacing="125%"
          id="text5630-1"
          y="538.07648"
          x="474.28571"
-         style="font-size:144px;font-style:normal;font-variant:normal;font-weight:normal;font-stretch:normal;line-height:125%;letter-spacing:0px;word-spacing:0px;fill:#000000;fill-opacity:1;stroke:none;font-family:Roboto;-inkscape-font-specification:Roboto"
+         style="font-style:normal;font-variant:normal;font-weight:normal;font-stretch:normal;line-height:0%;font-family:Roboto;-inkscape-font-specification:Roboto;letter-spacing:0px;word-spacing:0px;fill:#000000;fill-opacity:1;stroke:none"
          xml:space="preserve"
          class="frontText"><tspan
            y="538.07648"
            x="474.28571"
            id="tspan5632-1"
-           sodipodi:role="line">100.0%</tspan></text>
+           sodipodi:role="line"
+           style="font-size:144px;line-height:1.25">100.0%</tspan></text>
     </g>
   </g>
 </svg>

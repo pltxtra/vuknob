@@ -1,0 +1,165 @@
+<?xml version="1.0" encoding="UTF-8" standalone="no"?>
+<!-- Created with Inkscape (http://www.inkscape.org/) -->
+
+<svg
+   xmlns:dc="http://purl.org/dc/elements/1.1/"
+   xmlns:cc="http://creativecommons.org/ns#"
+   xmlns:rdf="http://www.w3.org/1999/02/22-rdf-syntax-ns#"
+   xmlns:svg="http://www.w3.org/2000/svg"
+   xmlns="http://www.w3.org/2000/svg"
+   xmlns:sodipodi="http://sodipodi.sourceforge.net/DTD/sodipodi-0.dtd"
+   xmlns:inkscape="http://www.inkscape.org/namespaces/inkscape"
+   width="120.79208"
+   height="120.79208"
+   id="svg2"
+   version="1.1"
+   inkscape:version="0.92.3 (2405546, 2018-03-11)"
+   sodipodi:docname="knobsEditor.svg">
+  <defs
+     id="defs4">
+    <marker
+       inkscape:stockid="Arrow2Lend"
+       orient="auto"
+       refY="0"
+       refX="0"
+       id="Arrow2Lend"
+       style="overflow:visible">
+      <path
+         id="path4090"
+         style="fill-rule:evenodd;stroke-width:0.625;stroke-linejoin:round"
+         d="M 8.7185878,4.0337352 -2.2072895,0.01601326 8.7185884,-4.0017078 c -1.7454984,2.3720609 -1.7354408,5.6174519 -6e-7,8.035443 z"
+         transform="matrix(-1.1,0,0,-1.1,-1.1,0)"
+         inkscape:connector-curvature="0" />
+    </marker>
+  </defs>
+  <sodipodi:namedview
+     id="base"
+     pagecolor="#ffffff"
+     bordercolor="#666666"
+     borderopacity="1.0"
+     inkscape:pageopacity="0.0"
+     inkscape:pageshadow="2"
+     inkscape:zoom="2.02"
+     inkscape:cx="182.57745"
+     inkscape:cy="42.256697"
+     inkscape:document-units="px"
+     inkscape:current-layer="layer1"
+     showgrid="false"
+     inkscape:window-width="3706"
+     inkscape:window-height="2049"
+     inkscape:window-x="134"
+     inkscape:window-y="55"
+     inkscape:window-maximized="1"
+     showguides="false"
+     inkscape:guide-bbox="true"
+     inkscape:measure-start="0,0"
+     inkscape:measure-end="0,0"
+     fit-margin-top="0"
+     fit-margin-left="0"
+     fit-margin-right="0"
+     fit-margin-bottom="0" />
+  <metadata
+     id="metadata7">
+    <rdf:RDF>
+      <cc:Work
+         rdf:about="">
+        <dc:format>image/svg+xml</dc:format>
+        <dc:type
+           rdf:resource="http://purl.org/dc/dcmitype/StillImage" />
+        <dc:title></dc:title>
+      </cc:Work>
+    </rdf:RDF>
+  </metadata>
+  <g
+     inkscape:label="Layer 1"
+     inkscape:groupmode="layer"
+     id="layer1">
+    <g
+       id="knobTemplate">
+      <g
+         class="valueDecreaseButton"
+         id="valueDecreaseButton">
+        <rect
+           ry="23.762377"
+           y="0"
+           x="0"
+           height="120.79208"
+           width="120.79208"
+           id="rect2440-35-6"
+           style="fill:#f1a123;fill-opacity:1;stroke:none;stroke-width:4;stroke-miterlimit:4;stroke-dasharray:8, 8;stroke-dashoffset:33.59999847;stroke-opacity:1" />
+        <path
+           style="fill:#f1a123;fill-opacity:1;stroke:none;stroke-width:0.85882747"
+           d="m 48.962903,14.099853 v 34.8899 h -34.86299 v 22.8394 h 34.86299 v 34.863107 h 22.83948 V 71.829153 h 34.889867 v -22.8394 H 71.802383 v -34.8899 z"
+           inkscape:connector-curvature="0"
+           inkscape:label="#rect4910-2"
+           id="path3066" />
+        <rect
+           style="fill:#ffffff;fill-opacity:1;stroke:none;stroke-width:0.85882747"
+           width="92.595581"
+           height="22.848261"
+           x="14.098267"
+           y="48.971924"
+           rx="0"
+           ry="0"
+           inkscape:label="#rect4910"
+           id="rect3068" />
+      </g>
+      <g
+         class="valueIncreaseButton"
+         id="valueIncreaseButton">
+        <rect
+           ry="23.762377"
+           y="4.0234376e-05"
+           x="3.4960938e-06"
+           height="120.79208"
+           width="120.79208"
+           id="rect2440-5-3"
+           style="fill:#f1a123;fill-opacity:1;stroke:none;stroke-width:4;stroke-miterlimit:4;stroke-dasharray:8, 8;stroke-dashoffset:33.59999847;stroke-opacity:1" />
+        <path
+           style="fill:#ffffff;fill-opacity:1;stroke:none;stroke-width:0.85882747"
+           d="M 48.96287,14.0999 V 48.9898 H 14.09988 v 22.8394 h 34.86299 v 34.863 h 22.83949 v -34.863 h 34.88986 V 48.9898 H 71.80236 V 14.0999 Z"
+           id="menuNext"
+           inkscape:connector-curvature="0"
+           inkscape:label="#rect4910-2" />
+      </g>
+      <rect
+         class="valueBaseBar"
+         y="108.5854"
+         x="191.65569"
+         height="2.4503701"
+         width="157.34875"
+         id="valueBaseBar"
+         style="opacity:1;fill:#999999;fill-opacity:1;stroke:none;stroke-width:2;stroke-miterlimit:4;stroke-dasharray:none;stroke-opacity:1" />
+      <rect
+         class="valueActualBar"
+         y="126.96309"
+         x="197.43156"
+         height="18.727829"
+         width="128.11935"
+         id="valueActualBar"
+         style="opacity:1;fill:#f1a123;fill-opacity:1;stroke:none;stroke-width:2;stroke-miterlimit:4;stroke-dasharray:none;stroke-opacity:1" />
+      <circle
+         class="valueSliderKnob"
+         r="32.029839"
+         cy="0"
+         cx="0"
+         id="valueSliderKnob"
+         style="opacity:1;fill:#f1a123;fill-opacity:0.64484127;stroke:none;stroke-width:2;stroke-miterlimit:4;stroke-dasharray:none;stroke-opacity:1" />
+      <text
+         y="43.010262"
+         x="153.62057"
+         style="font-style:normal;font-variant:normal;font-weight:normal;font-stretch:normal;font-size:2.64605498px;line-height:0%;font-family:Roboto;-inkscape-font-specification:Roboto;letter-spacing:0px;word-spacing:0px;fill:#000000;fill-opacity:1;stroke:none;stroke-width:0.22050457"
+         xml:space="preserve"
+         class="helpText"
+         id="helpText"><tspan
+           class="valueText"
+           style="font-size:26.4605484px;line-height:1.25;stroke-width:0.22050457"
+           y="43.010262"
+           x="153.62057"
+           id="deselectText"
+           sodipodi:role="line">DESELECT+99</tspan></text>
+      <g
+         id="knobContainer" />
+    </g>
+  </g>
+</svg>

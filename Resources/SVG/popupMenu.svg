@@ -9,8 +9,8 @@
    xmlns="http://www.w3.org/2000/svg"
    xmlns:sodipodi="http://sodipodi.sourceforge.net/DTD/sodipodi-0.dtd"
    xmlns:inkscape="http://www.inkscape.org/namespaces/inkscape"
-   width="640"
-   height="100.45718"
+   width="100"
+   height="100"
    id="svg2"
    version="1.1"
    inkscape:version="0.92.3 (2405546, 2018-03-11)"
@@ -40,7 +40,7 @@
      inkscape:pageopacity="0.0"
      inkscape:pageshadow="2"
      inkscape:zoom="1.4283557"
-     inkscape:cx="369.24787"
+     inkscape:cx="164.817"
      inkscape:cy="-22.040584"
      inkscape:document-units="px"
      inkscape:current-layer="layer1"
@@ -86,13 +86,13 @@
     <g
        id="itemTemplate">
       <rect
-         style="fill:#f1a123;fill-opacity:1;stroke:none;stroke-width:2.04590225;stroke-miterlimit:4;stroke-dasharray:4.09180445, 4.09180445;stroke-dashoffset:33.59999847;stroke-opacity:1"
+         style="fill:#f1a123;fill-opacity:1;stroke:none;stroke-width:0.80687159;stroke-miterlimit:4;stroke-dasharray:1.61374311, 1.61374311;stroke-dashoffset:33.59999847;stroke-opacity:1"
          id="rect2440-7-7-8"
-         width="640"
-         height="100.45718"
+         width="100"
+         height="100"
          x="0"
-         y="0"
-         ry="6.2164097"
+         y="0.45717621"
+         ry="6.1881189"
          class="itemBackground" />
       <text
          y="73.687653"
@@ -105,7 +105,8 @@
            y="73.687653"
            x="20.846325"
            id="textRow1"
-           sodipodi:role="line">DESELECT+gq</tspan></text>
+           sodipodi:role="line"
+           class="itemTspan">DESELECT+gq</tspan></text>
     </g>
   </g>
 </svg>

@@ -63,7 +63,8 @@
          x="52.71088"
          style="font-size:40px;font-style:normal;font-variant:normal;font-weight:normal;font-stretch:normal;line-height:125%;letter-spacing:0px;word-spacing:0px;fill:#000000;fill-opacity:1;stroke:none;font-family:Roboto;-inkscape-font-specification:Roboto"
          xml:space="preserve"
-         class="listItemText"><tspan
+         ><tspan
+           class="listItemText"
            id="tspan4321-9-6"
            sodipodi:role="line"
            x="52.71088"
@@ -132,14 +133,14 @@
          inkscape:label="#text5605"
          transform="translate(-21.999999,14.796852)"
          sodipodi:linespacing="125%"
-         id="titleText"
+         id="tuxt5607"
          y="33.000019"
          x="29.999998"
          style="font-size:36px;font-style:normal;font-variant:normal;font-weight:normal;font-stretch:normal;line-height:125%;letter-spacing:0px;word-spacing:0px;fill:#efefef;fill-opacity:1;stroke:none;font-family:Roboto;-inkscape-font-specification:Roboto"
          xml:space="preserve"><tspan
            y="33.000019"
            x="29.999998"
-           id="tspan5607"
+           id="titleText"
            sodipodi:role="line">TITLE</tspan></text>
       <g
          transform="matrix(1.4,0,0,1.4,59,-366.80002)"

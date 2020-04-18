@@ -70,7 +70,6 @@
            id="g3016"
            inkscape:label="#g5432">
           <text
-             class="nameTemplate"
              xml:space="preserve"
              style="font-size:48px;font-style:normal;font-variant:normal;font-weight:normal;font-stretch:normal;line-height:125%;letter-spacing:0px;word-spacing:0px;fill:#000000;fill-opacity:1;stroke:none;font-family:Roboto;-inkscape-font-specification:Roboto"
              x="527.14288"
@@ -78,6 +77,7 @@
              id="outputNameTemplate"
              sodipodi:linespacing="125%"
              inkscape:label="#text5448"><tspan
+               class="nameTemplate"
                sodipodi:role="line"
                id="tspan5450"
                x="527.14288"
@@ -115,7 +115,6 @@
            id="g3025"
            inkscape:label="#g5428">
           <text
-             class="nameTemplate"
              xml:space="preserve"
              style="font-size:48px;font-style:normal;font-variant:normal;font-weight:normal;font-stretch:normal;line-height:125%;letter-spacing:0px;word-spacing:0px;fill:#000000;fill-opacity:1;stroke:none;font-family:Roboto;-inkscape-font-specification:Roboto"
              x="-208.57143"
@@ -123,6 +122,7 @@
              id="inputNameTemplate"
              sodipodi:linespacing="125%"
              inkscape:label="#text5452"><tspan
+               class="nameTemplate"
                sodipodi:role="line"
                id="tspan5454"
                x="-208.57143"
@@ -198,9 +198,9 @@
              x="90"
              y="270"
              id="text5465"
-             sodipodi:linespacing="125%"
-             class="machineName"><tspan
-               sodipodi:role="line"
+             sodipodi:linespacing="125%"><tspan
+	       class="machineName"
+	       sodipodi:role="line"
                id="tspan5467"
                x="90"
                y="270">Machine Name</tspan></text>

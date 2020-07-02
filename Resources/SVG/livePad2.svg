@@ -13,7 +13,7 @@
    height="1100"
    id="rootElement"
    version="1.1"
-   inkscape:version="0.91 r13725"
+   inkscape:version="0.92.3 (2405546, 2018-03-11)"
    sodipodi:docname="livePad2.svg">
   <metadata
      id="metadata3039">
@@ -34,16 +34,16 @@
      borderopacity="1.0"
      inkscape:pageopacity="0.0"
      inkscape:pageshadow="2"
-     inkscape:zoom="4.0000001"
-     inkscape:cx="358.80882"
-     inkscape:cy="110.22697"
+     inkscape:zoom="0.50000001"
+     inkscape:cx="-917.73326"
+     inkscape:cy="602.04066"
      inkscape:document-units="px"
-     inkscape:current-layer="arpDirection"
+     inkscape:current-layer="layer1"
      showgrid="false"
-     inkscape:window-width="3102"
-     inkscape:window-height="1764"
-     inkscape:window-x="98"
-     inkscape:window-y="36"
+     inkscape:window-width="3373"
+     inkscape:window-height="1385"
+     inkscape:window-x="67"
+     inkscape:window-y="27"
      inkscape:window-maximized="1"
      inkscape:snap-grids="true"
      inkscape:snap-to-guides="false">
@@ -110,23 +110,30 @@
          id="rect3081-8"
          style="fill:none;stroke:#e9e9e9;stroke-width:2;stroke-linejoin:bevel;stroke-miterlimit:4;stroke-opacity:1;stroke-dasharray:none;stroke-dashoffset:0" />
       <text
-         sodipodi:linespacing="125%"
          id="text4319-8-5"
          y="50"
          x="52.71088"
-         style="font-size:40px;font-style:normal;font-variant:normal;font-weight:normal;font-stretch:normal;line-height:125%;letter-spacing:0px;word-spacing:0px;fill:#000000;fill-opacity:1;stroke:none;font-family:Roboto;-inkscape-font-specification:Roboto"
+         style="font-style:normal;font-variant:normal;font-weight:normal;font-stretch:normal;line-height:0%;font-family:Roboto;-inkscape-font-specification:Roboto;letter-spacing:0px;word-spacing:0px;fill:#000000;fill-opacity:1;stroke:none"
          xml:space="preserve"
          class="listItemText"><tspan
            id="tspan4321-9-6"
            sodipodi:role="line"
            x="52.71088"
-           y="50">ListViewItemTeqst</tspan></text>
+           y="50"
+           style="font-size:40px;line-height:1.25">ListViewItemTeqst</tspan></text>
     </g>
   </defs>
   <g
      id="layer1"
      inkscape:groupmode="layer"
      inkscape:label="Layer 1">
+    <rect
+       style="fill:#ffffff;fill-opacity:1;stroke:none;stroke-width:0.09751827;stroke-miterlimit:4;stroke-dasharray:0.19503654, 0.19503654;stroke-dashoffset:0.83999997;stroke-opacity:1"
+       id="background"
+       width="800"
+       height="1100"
+       x="0"
+       y="0" />
     <rect
        style="fill:#ffffff;fill-rule:evenodd"
        id="graphArea"
@@ -147,107 +154,107 @@
       <text
          inkscape:label="#text3699"
          transform="matrix(1.0541482,0,0,1.0541482,681.30667,420.98539)"
-         sodipodi:linespacing="125%"
          id="key_name_0"
          y="382.49121"
          x="-627.91083"
-         style="font-size:24px;font-style:normal;font-variant:normal;font-weight:normal;font-stretch:normal;line-height:125%;letter-spacing:0px;word-spacing:0px;fill:#000000;fill-opacity:1;stroke:none;font-family:Roboto;-inkscape-font-specification:Roboto"
+         style="font-style:normal;font-variant:normal;font-weight:normal;font-stretch:normal;line-height:0%;font-family:Roboto;-inkscape-font-specification:Roboto;letter-spacing:0px;word-spacing:0px;fill:#000000;fill-opacity:1;stroke:none"
          xml:space="preserve"><tspan
            y="382.49121"
            x="-627.91083"
            id="tspan3701"
-           sodipodi:role="line">C#18</tspan></text>
+           sodipodi:role="line"
+           style="font-size:24px;line-height:1.25">C#18</tspan></text>
       <text
          inkscape:label="#text3699-6"
          transform="matrix(1.0541482,0,0,1.0541482,779.57371,420.98539)"
-         sodipodi:linespacing="125%"
          id="key_name_1"
          y="382.49121"
          x="-627.91083"
-         style="font-size:24px;font-style:normal;font-variant:normal;font-weight:normal;font-stretch:normal;line-height:125%;letter-spacing:0px;word-spacing:0px;fill:#000000;fill-opacity:1;stroke:none;font-family:Roboto;-inkscape-font-specification:Roboto"
+         style="font-style:normal;font-variant:normal;font-weight:normal;font-stretch:normal;line-height:0%;font-family:Roboto;-inkscape-font-specification:Roboto;letter-spacing:0px;word-spacing:0px;fill:#000000;fill-opacity:1;stroke:none"
          xml:space="preserve"><tspan
            y="382.49121"
            x="-627.91083"
            id="tspan3701-0"
-           sodipodi:role="line">C#18</tspan></text>
+           sodipodi:role="line"
+           style="font-size:24px;line-height:1.25">C#18</tspan></text>
       <text
          inkscape:label="#text3699-8"
          transform="matrix(1.0541482,0,0,1.0541482,877.84076,420.98539)"
-         sodipodi:linespacing="125%"
          id="key_name_2"
          y="382.49121"
          x="-627.91083"
-         style="font-size:24px;font-style:normal;font-variant:normal;font-weight:normal;font-stretch:normal;line-height:125%;letter-spacing:0px;word-spacing:0px;fill:#000000;fill-opacity:1;stroke:none;font-family:Roboto;-inkscape-font-specification:Roboto"
+         style="font-style:normal;font-variant:normal;font-weight:normal;font-stretch:normal;line-height:0%;font-family:Roboto;-inkscape-font-specification:Roboto;letter-spacing:0px;word-spacing:0px;fill:#000000;fill-opacity:1;stroke:none"
          xml:space="preserve"><tspan
            y="382.49121"
            x="-627.91083"
            id="tspan3701-9"
-           sodipodi:role="line">C#18</tspan></text>
+           sodipodi:role="line"
+           style="font-size:24px;line-height:1.25">C#18</tspan></text>
       <text
          inkscape:label="#text3699-0"
          transform="matrix(1.0541482,0,0,1.0541482,976.10779,420.98539)"
-         sodipodi:linespacing="125%"
          id="key_name_3"
          y="382.49121"
          x="-627.91083"
-         style="font-size:24px;font-style:normal;font-variant:normal;font-weight:normal;font-stretch:normal;line-height:125%;letter-spacing:0px;word-spacing:0px;fill:#000000;fill-opacity:1;stroke:none;font-family:Roboto;-inkscape-font-specification:Roboto"
+         style="font-style:normal;font-variant:normal;font-weight:normal;font-stretch:normal;line-height:0%;font-family:Roboto;-inkscape-font-specification:Roboto;letter-spacing:0px;word-spacing:0px;fill:#000000;fill-opacity:1;stroke:none"
          xml:space="preserve"><tspan
            y="382.49121"
            x="-627.91083"
            id="tspan3701-09"
-           sodipodi:role="line">C#18</tspan></text>
+           sodipodi:role="line"
+           style="font-size:24px;line-height:1.25">C#18</tspan></text>
       <text
          inkscape:label="#text3699-64"
          transform="matrix(1.0541482,0,0,1.0541482,1074.3748,420.98539)"
-         sodipodi:linespacing="125%"
          id="key_name_4"
          y="382.49121"
          x="-627.91083"
-         style="font-size:24px;font-style:normal;font-variant:normal;font-weight:normal;font-stretch:normal;line-height:125%;letter-spacing:0px;word-spacing:0px;fill:#000000;fill-opacity:1;stroke:none;font-family:Roboto;-inkscape-font-specification:Roboto"
+         style="font-style:normal;font-variant:normal;font-weight:normal;font-stretch:normal;line-height:0%;font-family:Roboto;-inkscape-font-specification:Roboto;letter-spacing:0px;word-spacing:0px;fill:#000000;fill-opacity:1;stroke:none"
          xml:space="preserve"><tspan
            y="382.49121"
            x="-627.91083"
            id="tspan3701-1"
-           sodipodi:role="line">C#18</tspan></text>
+           sodipodi:role="line"
+           style="font-size:24px;line-height:1.25">C#18</tspan></text>
       <text
          inkscape:label="#text3699-00"
          transform="matrix(1.0541482,0,0,1.0541482,1172.6419,420.98539)"
-         sodipodi:linespacing="125%"
          id="key_name_5"
          y="382.49121"
          x="-627.91083"
-         style="font-size:24px;font-style:normal;font-variant:normal;font-weight:normal;font-stretch:normal;line-height:125%;letter-spacing:0px;word-spacing:0px;fill:#000000;fill-opacity:1;stroke:none;font-family:Roboto;-inkscape-font-specification:Roboto"
+         style="font-style:normal;font-variant:normal;font-weight:normal;font-stretch:normal;line-height:0%;font-family:Roboto;-inkscape-font-specification:Roboto;letter-spacing:0px;word-spacing:0px;fill:#000000;fill-opacity:1;stroke:none"
          xml:space="preserve"><tspan
            y="382.49121"
            x="-627.91083"
            id="tspan3701-19"
-           sodipodi:role="line">C#18</tspan></text>
+           sodipodi:role="line"
+           style="font-size:24px;line-height:1.25">C#18</tspan></text>
       <text
          inkscape:label="#text3699-4"
          transform="matrix(1.0541482,0,0,1.0541482,1369.1759,420.98539)"
-         sodipodi:linespacing="125%"
          id="key_name_7"
          y="382.49121"
          x="-627.91083"
-         style="font-size:24px;font-style:normal;font-variant:normal;font-weight:normal;font-stretch:normal;line-height:125%;letter-spacing:0px;word-spacing:0px;fill:#000000;fill-opacity:1;stroke:none;font-family:Roboto;-inkscape-font-specification:Roboto"
+         style="font-style:normal;font-variant:normal;font-weight:normal;font-stretch:normal;line-height:0%;font-family:Roboto;-inkscape-font-specification:Roboto;letter-spacing:0px;word-spacing:0px;fill:#000000;fill-opacity:1;stroke:none"
          xml:space="preserve"><tspan
            y="382.49121"
            x="-627.91083"
            id="tspan3701-4"
-           sodipodi:role="line">C#18</tspan></text>
+           sodipodi:role="line"
+           style="font-size:24px;line-height:1.25">C#18</tspan></text>
       <text
          inkscape:label="#text3699-00"
          transform="matrix(1.0541482,0,0,1.0541482,1270.909,420.98539)"
-         sodipodi:linespacing="125%"
          id="key_name_6"
          y="382.49121"
          x="-627.91083"
-         style="font-size:24px;font-style:normal;font-variant:normal;font-weight:normal;font-stretch:normal;line-height:125%;letter-spacing:0px;word-spacing:0px;fill:#000000;fill-opacity:1;stroke:none;font-family:Roboto;-inkscape-font-specification:Roboto"
+         style="font-style:normal;font-variant:normal;font-weight:normal;font-stretch:normal;line-height:0%;font-family:Roboto;-inkscape-font-specification:Roboto;letter-spacing:0px;word-spacing:0px;fill:#000000;fill-opacity:1;stroke:none"
          xml:space="preserve"><tspan
            y="382.49121"
            x="-627.91083"
            id="tspan3701-19-1"
-           sodipodi:role="line">C#18</tspan></text>
+           sodipodi:role="line"
+           style="font-size:24px;line-height:1.25">C#18</tspan></text>
     </g>
     <g
        id="octaveDown"
@@ -475,11 +482,10 @@
            overflow="hidden"
            id="rect3865-6-2-2-3">
           <text
-             sodipodi:linespacing="125%"
              id="machineId-86"
              y="60"
              x="4"
-             style="font-style:normal;font-variant:normal;font-weight:normal;font-stretch:normal;font-size:40px;line-height:125%;font-family:Roboto;-inkscape-font-specification:Roboto;letter-spacing:0px;word-spacing:0px;fill:#000000;fill-opacity:1;stroke:none"
+             style="font-style:normal;font-variant:normal;font-weight:normal;font-stretch:normal;font-size:40px;line-height:0%;font-family:Roboto;-inkscape-font-specification:Roboto;letter-spacing:0px;word-spacing:0px;fill:#000000;fill-opacity:1;stroke:none"
              xml:space="preserve"
              inkscape:label="#text4319-5-8"
              class="selectedText">Mchn</text>
@@ -527,11 +533,10 @@
            overflow="hidden"
            id="rect3865-6-2-2-17">
           <text
-             sodipodi:linespacing="125%"
              id="machineId-73"
              y="60"
              x="4"
-             style="font-style:normal;font-variant:normal;font-weight:normal;font-stretch:normal;font-size:40px;line-height:125%;font-family:Roboto;-inkscape-font-specification:Roboto;letter-spacing:0px;word-spacing:0px;fill:#000000;fill-opacity:1;stroke:none"
+             style="font-style:normal;font-variant:normal;font-weight:normal;font-stretch:normal;font-size:40px;line-height:0%;font-family:Roboto;-inkscape-font-specification:Roboto;letter-spacing:0px;word-spacing:0px;fill:#000000;fill-opacity:1;stroke:none"
              xml:space="preserve"
              inkscape:label="#text4319-5-8"
              class="selectedText">Scale</text>
@@ -579,11 +584,10 @@
            overflow="hidden"
            id="rect3865-6-2-2-4">
           <text
-             sodipodi:linespacing="125%"
              id="machineId-9"
              y="60"
              x="4"
-             style="font-style:normal;font-variant:normal;font-weight:normal;font-stretch:normal;font-size:40px;line-height:125%;font-family:Roboto;-inkscape-font-specification:Roboto;letter-spacing:0px;word-spacing:0px;fill:#000000;fill-opacity:1;stroke:none"
+             style="font-style:normal;font-variant:normal;font-weight:normal;font-stretch:normal;font-size:40px;line-height:0%;font-family:Roboto;-inkscape-font-specification:Roboto;letter-spacing:0px;word-spacing:0px;fill:#000000;fill-opacity:1;stroke:none"
              xml:space="preserve"
              inkscape:label="#text4319-5-8"
              class="selectedText">Ctrl</text>
@@ -631,11 +635,10 @@
            overflow="hidden"
            id="rect3865-6-2-2-2">
           <text
-             sodipodi:linespacing="125%"
              id="machineId-5"
              y="60"
              x="4"
-             style="font-style:normal;font-variant:normal;font-weight:normal;font-stretch:normal;font-size:40px;line-height:125%;font-family:Roboto;-inkscape-font-specification:Roboto;letter-spacing:0px;word-spacing:0px;fill:#000000;fill-opacity:1;stroke:none"
+             style="font-style:normal;font-variant:normal;font-weight:normal;font-stretch:normal;font-size:40px;line-height:0%;font-family:Roboto;-inkscape-font-specification:Roboto;letter-spacing:0px;word-spacing:0px;fill:#000000;fill-opacity:1;stroke:none"
              xml:space="preserve"
              inkscape:label="#text4319-5-8"
              class="selectedText">Mode</text>

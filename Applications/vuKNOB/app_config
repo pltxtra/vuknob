@@ -1,5 +1,0 @@
-APP_NAMESPACE=com.holidaystudios.satan
-APK_PREFIX=satan
-ACTIVITY=vuKNOB
-APP_MIN_SDK=10
-APP_TARGET_SDK=17
